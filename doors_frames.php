@@ -3,7 +3,7 @@
 Plugin Name: Doors Frames
 Plugin URI: https://github.com/iztokinvest/doors_frames
 Description: Цени на каси.
-Version: 0.1.0
+Version: 0.2.0
 Author: Martin Mladenov
 GitHub Plugin URI: https://github.com/iztokinvest/doors_frames
 GitHub Branch: main
@@ -110,72 +110,13 @@ function create_tables()
 	$charset_collate = $wpdb->get_charset_collate();
 
 	$sql_frames = "CREATE TABLE IF NOT EXISTS $frames_table (
-		fp_id int(11) NOT NULL AUTO_INCREMENT,
+		id int(11) NOT NULL AUTO_INCREMENT,
 		product_id int(11) NOT NULL,
-		price1 float NOT NULL,
-		price2 float NOT NULL,
-		price3 float NOT NULL,
-		price4 float NOT NULL,
-		price5 float NOT NULL,
-		price6 float NOT NULL,
-		price7 float NOT NULL,
-		price8 float NOT NULL,
-		price9 float NOT NULL,
-		price10 float NOT NULL,
-		price11 float NOT NULL,
-		price12 float NOT NULL,
-		price13 float NOT NULL,
-		price14 float NOT NULL,
-		price15 float NOT NULL,
-		promo1 float NOT NULL,
-		promo2 float NOT NULL,
-		promo3 float NOT NULL,
-		promo4 float NOT NULL,
-		promo5 float NOT NULL,
-		promo6 float NOT NULL,
-		promo7 float NOT NULL,
-		promo8 float NOT NULL,
-		promo9 float NOT NULL,
-		promo10 float NOT NULL,
-		promo11 float NOT NULL,
-		promo12 float NOT NULL,
-		promo13 float NOT NULL,
-		promo14 float NOT NULL,
-		promo15 float NOT NULL,
-		price0_desc varchar(400) NOT NULL,
-		price1_desc varchar(400) NOT NULL,
-		price2_desc varchar(400) NOT NULL,
-		price3_desc varchar(400) NOT NULL,
-		price4_desc varchar(400) NOT NULL,
-		price5_desc varchar(400) NOT NULL,
-		price6_desc varchar(400) NOT NULL,
-		price7_desc varchar(400) NOT NULL,
-		price8_desc varchar(400) NOT NULL,
-		price9_desc varchar(400) NOT NULL,
-		price10_desc varchar(400) NOT NULL,
-		price11_desc varchar(400) NOT NULL,
-		price12_desc varchar(400) NOT NULL,
-		price13_desc varchar(400) NOT NULL,
-		price14_desc varchar(400) NOT NULL,
-		price15_desc varchar(400) NOT NULL,
-		pic0 varchar(120) DEFAULT NULL,
-		pic1 varchar(120) DEFAULT NULL,
-		pic2 varchar(120) DEFAULT NULL,
-		pic3 varchar(120) DEFAULT NULL,
-		pic4 varchar(120) DEFAULT NULL,
-		pic5 varchar(120) DEFAULT NULL,
-		pic6 varchar(120) DEFAULT NULL,
-		pic7 varchar(120) DEFAULT NULL,
-		pic8 varchar(120) DEFAULT NULL,
-		pic9 varchar(120) DEFAULT NULL,
-		pic10 varchar(120) DEFAULT NULL,
-		pic11 varchar(120) DEFAULT NULL,
-		pic12 varchar(120) DEFAULT NULL,
-		pic13 varchar(120) DEFAULT NULL,
-		pic14 varchar(120) DEFAULT NULL,
-		pic15 varchar(120) DEFAULT NULL,
-		description varchar(500) NOT NULL,
-		PRIMARY KEY (fp_id)
+		frame_price float NOT NULL,
+		frame_promo_price float NOT NULL,
+		frame_description varchar(500) NOT NULL,
+		frame_image varchar(250) DEFAULT NULL,
+		PRIMARY KEY (id)
 	) $charset_collate;";
 
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');

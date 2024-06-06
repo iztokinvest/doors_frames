@@ -52,73 +52,11 @@ function frames_list_page()
 					<table class="table table-bordered table-striped">
 						<thead>
 							<tr>
-								<th>ID</th>
-								<th>Име</th>
-								<th>Цена 0</th>
-								<th>Цена 1</th>
-								<th>Цена 2</th>
-								<th>Цена 3</th>
-								<th>Цена 4</th>
-								<th>Цена 5</th>
-								<th>Цена 6</th>
-								<th>Цена 7</th>
-								<th>Цена 8</th>
-								<th>Цена 9</th>
-								<th>Цена 10</th>
-								<th>Цена 11</th>
-								<th>Цена 12</th>
-								<th>Цена 13</th>
-								<th>Цена 14</th>
-								<th>Цена 15</th>
-								<th>Промо 0</th>
-								<th>Промо 1</th>
-								<th>Промо 2</th>
-								<th>Промо 3</th>
-								<th>Промо 4</th>
-								<th>Промо 5</th>
-								<th>Промо 6</th>
-								<th>Промо 7</th>
-								<th>Промо 8</th>
-								<th>Промо 9</th>
-								<th>Промо 10</th>
-								<th>Промо 11</th>
-								<th>Промо 12</th>
-								<th>Промо 13</th>
-								<th>Промо 14</th>
-								<th>Промо 15</th>
-								<th>Описание 0</th>
-								<th>Описание 1</th>
-								<th>Описание 2</th>
-								<th>Описание 3</th>
-								<th>Описание 4</th>
-								<th>Описание 5</th>
-								<th>Описание 6</th>
-								<th>Описание 7</th>
-								<th>Описание 8</th>
-								<th>Описание 9</th>
-								<th>Описание 10</th>
-								<th>Описание 11</th>
-								<th>Описание 12</th>
-								<th>Описание 13</th>
-								<th>Описание 14</th>
-								<th>Описание 15</th>
-								<th>Снимка 0</th>
-								<th>Снимка 1</th>
-								<th>Снимка 2</th>
-								<th>Снимка 3</th>
-								<th>Снимка 4</th>
-								<th>Снимка 5</th>
-								<th>Снимка 6</th>
-								<th>Снимка 7</th>
-								<th>Снимка 8</th>
-								<th>Снимка 9</th>
-								<th>Снимка 10</th>
-								<th>Снимка 11</th>
-								<th>Снимка 12</th>
-								<th>Снимка 13</th>
-								<th>Снимка 14</th>
-								<th>Снимка 15</th>
-								<th>Описание в края</th>
+								<th><span class="badge bg-secondary">ID</span></th>
+								<th><span class="badge bg-secondary">Име</span></th>
+								<th><span class="badge bg-secondary">Цена</span></th>
+								<th><span class="badge bg-secondary">Промоция</span></th>
+								<th><span class="badge bg-secondary">Действия</span></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -149,9 +87,13 @@ function frames_list_page()
 									$product = wc_get_product(get_the_ID());
 									$regular_price = $product->get_regular_price();
 									$sale_price = $product->get_sale_price();
-									echo '<tr><td>' . get_the_ID() . '</td><td>' . get_the_title() . '</td>';
-									echo '<td>' . $regular_price . '</td>';
-									echo '<td>' . ($sale_price ? $sale_price : '-') . '</td></tr>';
+									echo '<tr>';
+									echo '<td>' . get_the_ID() . '</td>';
+									echo '<td>' . get_the_title() . '</td>';
+									echo '<td><input type="number" step="0.01" class="price-input" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
+									echo '<td><input type="number" step="0.01" class="price-input" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
+									echo '<td><button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button></td>';
+									echo '</tr>';
 								}
 								wp_reset_postdata();
 							} else {
@@ -164,5 +106,139 @@ function frames_list_page()
 			<?php endif; ?>
 		</div>
 	</div>
+	<!-- Modal Structure -->
+	<div id="frameModal" class="modal" style="display:none;">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Цени на каси</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div id="modal-body">
+					<!-- Dynamic content will be loaded here -->
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary close" data-bs-dismiss="modal">Затвори</button>
+					<button type="button" id="save-modal-prices" class="btn btn-primary">Запази промените</button>
+				</div>
+			</div>
+		</div>
+
+
+	</div>
 <?php
 }
+
+// Add AJAX actions
+add_action('wp_ajax_update_product_price', 'update_product_price');
+function update_product_price()
+{
+	if (isset($_POST['product_id']) && isset($_POST['new_price']) && isset($_POST['price_type'])) {
+		$product_id = intval($_POST['product_id']);
+		$new_price = floatval($_POST['new_price']);
+		$price_type = sanitize_text_field($_POST['price_type']);
+
+		$product = wc_get_product($product_id);
+		if ($product) {
+			if ($price_type == 'regular') {
+				$product->set_regular_price($new_price);
+			} elseif ($price_type == 'sale') {
+				$product->set_sale_price($new_price);
+			}
+			$product->save();
+			wp_send_json_success();
+		} else {
+			wp_send_json_error();
+		}
+	} else {
+		wp_send_json_error();
+	}
+}
+
+add_action('wp_ajax_update_frame_prices', 'update_frame_prices');
+function update_frame_prices()
+{
+	global $wpdb;
+
+	if (isset($_POST['product_id']) && isset($_POST['price1']) && isset($_POST['price2']) && isset($_POST['price3'])) {
+		$product_id = intval($_POST['product_id']);
+		$price1 = floatval($_POST['price1']);
+		$price2 = floatval($_POST['price2']);
+		$price3 = floatval($_POST['price3']);
+
+		$table_name = $wpdb->prefix . 'doors_frames';
+
+		$result = $wpdb->update(
+			$table_name,
+			array(
+				'price1' => $price1,
+				'price2' => $price2,
+				'price3' => $price3,
+			),
+			array('product_id' => $product_id),
+			array('%f', '%f', '%f'),
+			array('%d')
+		);
+
+		if ($result !== false) {
+			wp_send_json_success();
+		} else {
+			wp_send_json_error();
+		}
+	} else {
+		wp_send_json_error();
+	}
+}
+
+add_action('wp_ajax_fetch_frame_prices', 'fetch_frame_prices');
+function fetch_frame_prices()
+{
+	global $wpdb;
+
+	if (isset($_POST['product_id'])) {
+		$product_id = intval($_POST['product_id']);
+
+		$table_name = $wpdb->prefix . 'doors_frames';
+		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d", $product_id));
+
+		if (!empty($results)) {
+			$result = $results[0];
+
+			$html = <<<HTML
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>Каса</th>
+							<th>Описание</th>
+							<th>Цена</th>
+							<th>Промоция</th>
+						</tr>
+					</thead>
+					<tbody>
+			HTML;
+
+			$html .= <<<HTML
+				<tr>
+					<td>$result->pic1</td>
+					<td>$result->price1_desc</td>
+					<td><input type="number" step="0.01" id="price1-input" value="$result->price1"></td>
+					<td>$result->promo1</td>
+				</tr>
+			HTML;
+
+			$html .= <<<HTML
+			</tbody>
+				</table>
+				<input type="number" step="0.01" id="price2-input" value="$result->price2">
+				<input type="number" step="0.01" id="price3-input" value="$result->price3">
+			HTML;
+
+			wp_send_json_success($html);
+		} else {
+			wp_send_json_error();
+		}
+	} else {
+		wp_send_json_error();
+	}
+}
+?>

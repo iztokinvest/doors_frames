@@ -2,3 +2,11 @@
 
 wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css', array(), '5.0.2');
 wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js', array('jquery'), null, true);
+
+wp_enqueue_script('awesome-notifications-js', plugin_dir_url(__FILE__) .
+	'../assets/js/awesome_notifications.js', array(), '1.0', true);
+wp_enqueue_style('awesome-notifications-css', plugin_dir_url(__FILE__) .
+	'../assets/css/awesome_notifications.css', array(), '1.0');
+
+$script_version = filemtime(plugin_dir_path(__FILE__) . '../assets/js/main.js');
+wp_enqueue_script('main-js', plugins_url('../assets/js/main.js', __FILE__), array('jquery'), $script_version, true);
