@@ -1,9 +1,46 @@
+const datepickers = document.querySelectorAll(".datepicker-input");
 const frame_notifier = new AWN({
 	durations: {
 		global: 5000,
 		position: "bottom-right",
 	},
 });
+
+(function () {
+	Datepicker.locales.bg = {
+		days: ["Неделя", "Понеделник", "Вторник", "Сряда", "Четвъртък", "Петък", "Събота"],
+		daysShort: ["Нед", "Пон", "Вто", "Сря", "Чет", "Пет", "Съб"],
+		daysMin: ["Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+		months: [
+			"Януари",
+			"Февруари",
+			"Март",
+			"Април",
+			"Май",
+			"Юни",
+			"Юли",
+			"Август",
+			"Септември",
+			"Октомври",
+			"Ноември",
+			"Декември",
+		],
+		monthsShort: ["Ян", "Фев", "Мар", "Апр", "Май", "Юни", "Юли", "Авг", "Сеп", "Окт", "Ное", "Дек"],
+	};
+})();
+
+function initializeDatepickers() {
+	jQuery(".datepicker-input").each(function () {
+		const datepicker = new Datepicker(this, {
+			format: "dd/mm/yyyy",
+			daysOfWeekHighlighted: [6, 0],
+			autohide: true,
+			weekStart: 1,
+			language: "bg",
+		});
+	});
+}
+initializeDatepickers();
 
 jQuery(document).ready(function ($) {
 	$(".price-input").on("change", function () {
@@ -46,8 +83,9 @@ jQuery(document).ready(function ($) {
 				if (response.success) {
 					$("#modal-body").html(response.data);
 					$("#frameModal").show();
+					initializeDatepickers();
 				} else {
-					frame_notifier.alert("Failed to load data.");
+					frame_notifier.warning("Няма добавени цени на каси за този продукт.");
 				}
 			},
 		});
@@ -58,40 +96,54 @@ jQuery(document).ready(function ($) {
 		$("#frameModal").hide();
 	});
 
-	// Close modal when clicking outside of the modal content
-	$(window).on("click", function (event) {
-		if ($(event.target).is("#frameModal")) {
-			$("#frameModal").hide();
-		}
-	});
-
 	// Save changes in modal
 	$("#save-modal-prices").on("click", function () {
-		var productId = 66;
-		var price1 = $("#price1-input").val();
-		var price2 = $("#price2-input").val();
-		var price3 = $("#price3-input").val();
+		var ajaxRequests = [];
 
-		console.log(productId);
+		$(".frame-id").each(function () {
+			var frameId = $(this).data("id");
+			var price = $(this).find(".frame-price").val();
+			var promo_price = $(this).find(".frame-promo-price").val();
+			var image = $(this).find(".frame-image").val();
+			var description = $(this).find(".frame-description").val();
+			var startDate = $(this).find(".frame-start-date").val();
+			var endDate = $(this).find(".frame-end-date").val();
 
-		$.ajax({
-			url: ajaxurl,
-			type: "POST",
-			data: {
-				action: "update_frame_prices",
-				product_id: productId,
-				price1: price1,
-				price2: price2,
-				price3: price3,
-			},
-			success: function (response) {
-				if (response.success) {
-					frame_notifier.success("Цените са променени.");
-					$("#frameModal").hide();
-				} else {
-					frame_notifier.alert("Цените не са променени.");
+			var request = $.ajax({
+				url: ajaxurl,
+				type: "POST",
+				data: {
+					action: "update_frame_prices",
+					frame_id: frameId,
+					frame_price: price,
+					frame_promo_price: promo_price,
+					frame_image: image,
+					frame_description: description,
+					frame_start_date: startDate,
+					frame_end_date: endDate,
+				},
+			});
+
+			ajaxRequests.push(request);
+		});
+
+		$.when.apply($, ajaxRequests).then(function () {
+			var allSuccessful = true;
+			for (var i = 0; i < arguments.length; i++) {
+				var response = arguments[i][0];
+				if (!response.success) {
+					allSuccessful = false;
+					break;
 				}
-			},
+			}
+
+			if (allSuccessful) {
+				frame_notifier.success("Цените са променени.");
+			} else {
+				frame_notifier.alert("Цените не са променени.");
+			}
+
+			$("#frameModal").hide();
 		});
 	});
 });

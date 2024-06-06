@@ -108,10 +108,10 @@ function frames_list_page()
 	</div>
 	<!-- Modal Structure -->
 	<div id="frameModal" class="modal" style="display:none;">
-		<div class="modal-dialog">
+		<div class="modal-dialog modal-dialog-scrollable modal-xl">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h5 class="modal-title">Цени на каси</h5>
+					<h4 class="modal-title">Цени на каси</h4>
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 				<div id="modal-body">
@@ -160,23 +160,29 @@ function update_frame_prices()
 {
 	global $wpdb;
 
-	if (isset($_POST['product_id']) && isset($_POST['price1']) && isset($_POST['price2']) && isset($_POST['price3'])) {
-		$product_id = intval($_POST['product_id']);
-		$price1 = floatval($_POST['price1']);
-		$price2 = floatval($_POST['price2']);
-		$price3 = floatval($_POST['price3']);
+	if (isset($_POST['frame_id']) && isset($_POST['frame_price']) && isset($_POST['frame_promo_price'])) {
+		$frame_id = intval($_POST['frame_id']);
+		$frame_price = floatval($_POST['frame_price']);
+		$frame_promo_price = floatval($_POST['frame_promo_price']);
+		$frame_image = sanitize_text_field($_POST['frame_image']);
+		$frame_description = sanitize_textarea_field($_POST['frame_description']);
+		$frame_start_date = sanitize_text_field($_POST['frame_start_date']);
+		$frame_end_date = sanitize_text_field($_POST['frame_end_date']);
 
 		$table_name = $wpdb->prefix . 'doors_frames';
 
 		$result = $wpdb->update(
 			$table_name,
 			array(
-				'price1' => $price1,
-				'price2' => $price2,
-				'price3' => $price3,
+				'frame_price' => $frame_price,
+				'frame_promo_price' => $frame_promo_price,
+				'frame_image' => $frame_image,
+				'frame_description' => $frame_description,
+				'frame_start_date' => $frame_start_date,
+				'frame_end_date' => $frame_end_date
 			),
-			array('product_id' => $product_id),
-			array('%f', '%f', '%f'),
+			array('id' => $frame_id),
+			array('%f', '%f', '%s', '%s' , '%s', '%s'),
 			array('%d')
 		);
 
@@ -197,6 +203,7 @@ function fetch_frame_prices()
 
 	if (isset($_POST['product_id'])) {
 		$product_id = intval($_POST['product_id']);
+		$product_title = get_the_title($product_id);
 
 		$table_name = $wpdb->prefix . 'doors_frames';
 		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d", $product_id));
@@ -205,32 +212,39 @@ function fetch_frame_prices()
 			$result = $results[0];
 
 			$html = <<<HTML
-				<table class="table table-striped">
-					<thead>
-						<tr>
-							<th>Каса</th>
-							<th>Описание</th>
-							<th>Цена</th>
-							<th>Промоция</th>
-						</tr>
-					</thead>
-					<tbody>
+				<div class="m-1">
+					<h5>$product_title</h5>
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th>Каса</th>
+								<th>Описание</th>
+								<th>Цена</th>
+								<th>Промоция</th>
+								<th>Начална дата</th>
+								<th>Крайна дата</th>
+							</tr>
+						</thead>
+						<tbody>
 			HTML;
 
-			$html .= <<<HTML
-				<tr>
-					<td>$result->pic1</td>
-					<td>$result->price1_desc</td>
-					<td><input type="number" step="0.01" id="price1-input" value="$result->price1"></td>
-					<td>$result->promo1</td>
-				</tr>
-			HTML;
+			foreach ($results as $result) {
+				$html .= <<<HTML
+					<tr class="frame-id" data-id="$result->id">
+						<td><input type="text" class="form-control frame-image" value="$result->frame_image"></td>
+						<td><textarea class="form-control frame-description">$result->frame_description</textarea></td>
+						<td><input type="number" step="0.01" class="form-control frame-price" value="$result->frame_price"></td>
+						<td><input type="number" step="0.01" class="form-control frame-promo-price" value="$result->frame_promo_price"></td>
+						<td><input required type="text" class="form-control datepicker-input frame-start-date" /></td>
+						<td><input required type="text" class="form-control datepicker-input frame-end-date" /></td>
+					</tr>
+				HTML;
+			}
 
 			$html .= <<<HTML
-			</tbody>
-				</table>
-				<input type="number" step="0.01" id="price2-input" value="$result->price2">
-				<input type="number" step="0.01" id="price3-input" value="$result->price3">
+				</tbody>
+					</table>
+			</div>
 			HTML;
 
 			wp_send_json_success($html);
