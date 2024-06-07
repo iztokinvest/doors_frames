@@ -11,5 +11,8 @@ wp_enqueue_script('awesome-notifications-js', plugin_dir_url(__FILE__) .
 wp_enqueue_style('awesome-notifications-css', plugin_dir_url(__FILE__) .
 	'../assets/css/awesome_notifications.css', array(), '1.0');
 
-$script_version = filemtime(plugin_dir_path(__FILE__) . '../assets/js/main.js');
-wp_enqueue_script('main-js', plugins_url('../assets/js/main.js', __FILE__), array('jquery'), $script_version, true);
+$css_version = filemtime(plugin_dir_path(__FILE__) . '../assets/css/main.css');
+wp_enqueue_style('main-css', plugin_dir_url(__FILE__) .
+'../assets/css/main.css', array(), $css_version);
+$js_version = filemtime(plugin_dir_path(__FILE__) . '../assets/js/main.js');
+wp_enqueue_script('main-js', plugins_url('../assets/js/main.js', __FILE__), array('jquery'), $js_version, true);

@@ -1,0 +1,11 @@
+.frame-img {
+	max-height: 50px;
+}
+
+.frame-image {
+	width:100px;
+}
+
+.frame-image-container {
+	text-align: center;
+}

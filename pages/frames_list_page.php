@@ -108,23 +108,21 @@ function frames_list_page()
 	</div>
 	<!-- Modal Structure -->
 	<div id="frameModal" class="modal" style="display:none;">
-		<div class="modal-dialog modal-dialog-scrollable modal-xl">
+		<div class="modal-dialog modal-xl">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h4 class="modal-title">Цени на каси</h4>
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
-				<div id="modal-body">
+				<div id="modal-body" style="max-height: calc(100vh - 200px); overflow-y: auto;">
 					<!-- Dynamic content will be loaded here -->
 				</div>
-				<div class="modal-footer">
+				<div class=" modal-footer">
 					<button type="button" class="btn btn-secondary close" data-bs-dismiss="modal">Затвори</button>
 					<button type="button" id="save-modal-prices" class="btn btn-primary">Запази промените</button>
 				</div>
 			</div>
 		</div>
-
-
 	</div>
 <?php
 }
@@ -166,8 +164,8 @@ function update_frame_prices()
 		$frame_promo_price = floatval($_POST['frame_promo_price']);
 		$frame_image = sanitize_text_field($_POST['frame_image']);
 		$frame_description = sanitize_textarea_field($_POST['frame_description']);
-		$frame_start_date = sanitize_text_field($_POST['frame_start_date']);
-		$frame_end_date = sanitize_text_field($_POST['frame_end_date']);
+		$frame_start_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_start_date'])), 'Y-m-d');
+		$frame_end_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_end_date'])), 'Y-m-d');
 
 		$table_name = $wpdb->prefix . 'doors_frames';
 
@@ -182,8 +180,48 @@ function update_frame_prices()
 				'frame_end_date' => $frame_end_date
 			),
 			array('id' => $frame_id),
-			array('%f', '%f', '%s', '%s' , '%s', '%s'),
+			array('%f', '%f', '%s', '%s', '%s', '%s'),
 			array('%d')
+		);
+
+		if ($result !== false) {
+			wp_send_json_success();
+		} else {
+			wp_send_json_error();
+		}
+	} else {
+		wp_send_json_error();
+	}
+}
+
+add_action('wp_ajax_add_frame_prices', 'add_frame_prices');
+function add_frame_prices()
+{
+	global $wpdb;
+
+	if (isset($_POST['product_id']) && isset($_POST['new_frame_price']) && isset($_POST['new_frame_promo_price'])) {
+		$product_id = intval($_POST['product_id']);
+		$new_frame_price = floatval($_POST['new_frame_price']);
+		$new_frame_promo_price = floatval($_POST['new_frame_promo_price']);
+		$new_frame_image = sanitize_text_field($_POST['new_frame_image']);
+		$new_frame_description = sanitize_textarea_field($_POST['new_frame_description']);
+		$new_frame_start_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['new_frame_start_date'])), 'Y-m-d');
+		$new_frame_end_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['new_frame_end_date'])), 'Y-m-d');
+
+		$table_name = $wpdb->prefix . 'doors_frames';
+
+		$result = $wpdb->insert(
+			$table_name,
+			array(
+				'product_id' => $product_id,
+				'frame_price' => $new_frame_price,
+				'frame_promo_price' => $new_frame_promo_price,
+				'frame_image' => $new_frame_image,
+				'frame_description' => $new_frame_description,
+				'frame_start_date' => $new_frame_start_date,
+				'frame_end_date' => $new_frame_end_date
+			),
+			array('%d', '%f', '%f', '%s', '%s', '%s', '%s'),
 		);
 
 		if ($result !== false) {
@@ -200,6 +238,7 @@ add_action('wp_ajax_fetch_frame_prices', 'fetch_frame_prices');
 function fetch_frame_prices()
 {
 	global $wpdb;
+	$upload_dir = wp_upload_dir();
 
 	if (isset($_POST['product_id'])) {
 		$product_id = intval($_POST['product_id']);
@@ -229,22 +268,43 @@ function fetch_frame_prices()
 			HTML;
 
 			foreach ($results as $result) {
+				$start_date_value = date_format(date_create_from_format('Y-m-d', $result->frame_start_date), 'd/m/Y');
+				$end_date_value = date_format(date_create_from_format('Y-m-d', $result->frame_end_date), 'd/m/Y');
+				if ($result->frame_end_date < date('Y-m-d')) {
+					$expired = 'style="background: #ff000040"';
+				} else {
+					$expired = '';
+				}
 				$html .= <<<HTML
-					<tr class="frame-id" data-id="$result->id">
-						<td><input type="text" class="form-control frame-image" value="$result->frame_image"></td>
-						<td><textarea class="form-control frame-description">$result->frame_description</textarea></td>
+					<tr class="frame-id" $expired data-id="$result->id">
+						<td class="frame-image-container">
+							<img src="{$upload_dir['baseurl']}/ceni/$result->frame_image" class="frame-img">
+							<input type="text" class="form-control frame-image" value="$result->frame_image">
+						</td>
+						<td><textarea class="form-control frame-description" cols="30" rows="3">$result->frame_description</textarea></td>
 						<td><input type="number" step="0.01" class="form-control frame-price" value="$result->frame_price"></td>
 						<td><input type="number" step="0.01" class="form-control frame-promo-price" value="$result->frame_promo_price"></td>
-						<td><input required type="text" class="form-control datepicker-input frame-start-date" /></td>
-						<td><input required type="text" class="form-control datepicker-input frame-end-date" /></td>
+						<td><input required type="text" class="form-control datepicker-input frame-start-date" value="$start_date_value" /></td>
+						<td><input required type="text" class="form-control datepicker-input frame-end-date" value="$end_date_value" /></td>
 					</tr>
 				HTML;
 			}
 
 			$html .= <<<HTML
-				</tbody>
-					</table>
+					</tbody>
+				</table>
 			</div>
+			HTML;
+
+			$html .= <<<HTML
+				<div class="m-1">
+					<table class="table bg-info" id="new-frame-table" style="display: none;">
+						<thead>
+							<tbody></tbody>
+						</tbody>
+					</table>
+					<div><button class="btn btn-success mb-3 mx-3" id="add-new-frame" data-id="$product_id">Добави нова каса</button></div>
+				</div>
 			HTML;
 
 			wp_send_json_success($html);

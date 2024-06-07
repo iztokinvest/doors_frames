@@ -44,9 +44,9 @@ initializeDatepickers();
 
 jQuery(document).ready(function ($) {
 	$(".price-input").on("change", function () {
-		var productId = $(this).data("id");
-		var newPrice = $(this).val();
-		var priceType = $(this).data("type");
+		const productId = $(this).data("id");
+		const newPrice = $(this).val();
+		const priceType = $(this).data("type");
 
 		$.ajax({
 			url: ajaxurl,
@@ -69,7 +69,7 @@ jQuery(document).ready(function ($) {
 
 	// Handle modal open button click
 	$(".open-modal").on("click", function () {
-		var productId = $(this).data("id");
+		const productId = $(this).data("id");
 
 		// Fetch data from the server
 		$.ajax({
@@ -96,20 +96,35 @@ jQuery(document).ready(function ($) {
 		$("#frameModal").hide();
 	});
 
+	$(document).on("click", "#add-new-frame", function () {
+		$("#new-frame-table").show();
+		$("#new-frame-table tbody").append(`
+			<tr class="new-frame" data-id="${$(this).data("id")}">>
+				<td><input type="text" class="form-control new-frame-image" placeholder="Изображение"></td>
+				<td><textarea class="form-control new-frame-description" placeholder="Описание"></textarea></td>
+				<td><input type="number" step="0.01" class="form-control new-frame-price" placeholder="Цена"></td>
+				<td><input type="number" step="0.01" class="form-control new-frame-promo-price" placeholder="Промоция"></td>
+				<td><input required type="text" class="form-control datepicker-input new-frame-start-date" placeholder="Начална дата" /></td>
+				<td><input required type="text" class="form-control datepicker-input new-frame-end-date" placeholder="Крайна дата" /></td>
+			</tr>
+    `);
+		initializeDatepickers();
+	});
+
 	// Save changes in modal
 	$("#save-modal-prices").on("click", function () {
-		var ajaxRequests = [];
+		const ajaxRequests = [];
 
 		$(".frame-id").each(function () {
-			var frameId = $(this).data("id");
-			var price = $(this).find(".frame-price").val();
-			var promo_price = $(this).find(".frame-promo-price").val();
-			var image = $(this).find(".frame-image").val();
-			var description = $(this).find(".frame-description").val();
-			var startDate = $(this).find(".frame-start-date").val();
-			var endDate = $(this).find(".frame-end-date").val();
+			const frameId = $(this).data("id");
+			const price = $(this).find(".frame-price").val();
+			const promo_price = $(this).find(".frame-promo-price").val();
+			const image = $(this).find(".frame-image").val();
+			const description = $(this).find(".frame-description").val();
+			const startDate = $(this).find(".frame-start-date").val();
+			const endDate = $(this).find(".frame-end-date").val();
 
-			var request = $.ajax({
+			const request = $.ajax({
 				url: ajaxurl,
 				type: "POST",
 				data: {
@@ -127,10 +142,37 @@ jQuery(document).ready(function ($) {
 			ajaxRequests.push(request);
 		});
 
+		$(".new-frame").each(function () {
+			const product_id = $(this).data("id");
+			const new_price = $(this).find(".new-frame-price").val();
+			const new_promo_price = $(this).find(".new-frame-promo-price").val();
+			const new_image = $(this).find(".new-frame-image").val();
+			const new_description = $(this).find(".new-frame-description").val();
+			const new_startDate = $(this).find(".new-frame-start-date").val();
+			const new_endDate = $(this).find(".new-frame-end-date").val();
+
+			const request = $.ajax({
+				url: ajaxurl,
+				type: "POST",
+				data: {
+					action: "add_frame_prices",
+					product_id: product_id,
+					new_frame_price: new_price,
+					new_frame_promo_price: new_promo_price,
+					new_frame_image: new_image,
+					new_frame_description: new_description,
+					new_frame_start_date: new_startDate,
+					new_frame_end_date: new_endDate,
+				},
+			});
+
+			ajaxRequests.push(request);
+		});
+
 		$.when.apply($, ajaxRequests).then(function () {
-			var allSuccessful = true;
-			for (var i = 0; i < arguments.length; i++) {
-				var response = arguments[i][0];
+			let allSuccessful = true;
+			for (let i = 0; i < arguments.length; i++) {
+				const response = arguments[i][0];
 				if (!response.success) {
 					allSuccessful = false;
 					break;
