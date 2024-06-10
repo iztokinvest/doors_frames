@@ -100,10 +100,10 @@ jQuery(document).ready(function ($) {
 		$("#new-frame-table").show();
 		$("#new-frame-table tbody").append(`
 			<tr class="new-frame" data-id="${$(this).data("id")}">>
-				<td><input type="text" class="form-control new-frame-image" placeholder="Изображение"></td>
-				<td><textarea class="form-control new-frame-description" placeholder="Описание"></textarea></td>
-				<td><input type="number" step="0.01" class="form-control new-frame-price" placeholder="Цена"></td>
-				<td><input type="number" step="0.01" class="form-control new-frame-promo-price" placeholder="Промоция"></td>
+				<td class="frame-image-container"><input type="text" class="form-control new-frame-image" placeholder="Изображение"></td>
+				<td><textarea class="form-control new-frame-description" cols="30" rows="3" placeholder="Описание"></textarea></td>
+				<td><input type="number" step="0.01" class="form-control price-input new-frame-price" placeholder="Цена"></td>
+				<td><input type="number" step="0.01" class="form-control price-input new-frame-promo-price" placeholder="Промо"></td>
 				<td><input required type="text" class="form-control datepicker-input new-frame-start-date" placeholder="Начална дата" /></td>
 				<td><input required type="text" class="form-control datepicker-input new-frame-end-date" placeholder="Крайна дата" /></td>
 			</tr>
@@ -111,9 +111,9 @@ jQuery(document).ready(function ($) {
 		initializeDatepickers();
 	});
 
-	// Save changes in modal
 	$("#save-modal-prices").on("click", function () {
-		const ajaxRequests = [];
+		let requestTrue = [];
+		let requests = [];
 
 		$(".frame-id").each(function () {
 			const frameId = $(this).data("id");
@@ -139,7 +139,11 @@ jQuery(document).ready(function ($) {
 				},
 			});
 
-			ajaxRequests.push(request);
+			request.done(function (response) {
+				requestTrue.push(true);
+			});
+
+			requests.push(request);
 		});
 
 		$(".new-frame").each(function () {
@@ -166,23 +170,18 @@ jQuery(document).ready(function ($) {
 				},
 			});
 
-			ajaxRequests.push(request);
+			request.done(function (response) {
+				requestTrue.push(true);
+			});
+
+			requests.push(request);
 		});
 
-		$.when.apply($, ajaxRequests).then(function () {
-			let allSuccessful = true;
-			for (let i = 0; i < arguments.length; i++) {
-				const response = arguments[i][0];
-				if (!response.success) {
-					allSuccessful = false;
-					break;
-				}
-			}
-
-			if (allSuccessful) {
-				frame_notifier.success("Цените са променени.");
+		$.when.apply($, requests).done(function () {
+			if (requestTrue.length > 0) {
+				frame_notifier.success("Промените са запазени.");
 			} else {
-				frame_notifier.alert("Цените не са променени.");
+				frame_notifier.alert("Промените не са запазени.");
 			}
 
 			$("#frameModal").hide();

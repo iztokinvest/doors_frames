@@ -2,10 +2,21 @@
 	max-height: 50px;
 }
 
-.frame-image {
-	width:100px;
+.frame-image, .new-frame-image {
+	width: 100%;
 }
 
 .frame-image-container {
-	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.price-input {
+	width: 90px;
+}
+
+.datepicker-input {
+	width: 120px;
 }

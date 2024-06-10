@@ -4,7 +4,7 @@ function frames_list_page()
 {
 	global $wpdb;
 
-	// Get categories and subcategories
+	// Get categories
 	$categories = get_terms(array(
 		'taxonomy' => 'product_cat',
 		'hide_empty' => false,
@@ -12,7 +12,20 @@ function frames_list_page()
 	));
 
 	$selected_category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : '';
+	$selected_frame_id = isset($_GET['frame_id']) ? intval($_GET['frame_id']) : '';
 	$search_term = isset($_GET['search_term']) ? sanitize_text_field($_GET['search_term']) : '';
+
+	$frames = array();
+	if ($selected_category_id) {
+		$frames = $wpdb->get_results($wpdb->prepare(
+			"SELECT df.id, df.frame_image 
+			FROM {$wpdb->prefix}doors_frames df 
+			JOIN {$wpdb->prefix}posts p ON df.product_id = p.ID 
+			JOIN {$wpdb->prefix}term_relationships tr ON p.ID = tr.object_id 
+			WHERE tr.term_taxonomy_id = %d",
+			$selected_category_id
+		));
+	}
 
 ?>
 	<div class="wrap">
@@ -25,7 +38,6 @@ function frames_list_page()
 						<option value=""></option>
 						<?php
 						foreach ($categories as $category) {
-							// Add an option for the base category
 							$selected = ($category->term_id == $selected_category_id) ? ' selected' : '';
 							echo '<option style="font-weight:bold" value="' . $category->term_id . '"' . $selected . '>' . $category->name . '</option>';
 							$subcategories = get_terms(array(
@@ -37,17 +49,27 @@ function frames_list_page()
 								$selected = ($subcategory->term_id == $selected_category_id) ? ' selected' : '';
 								echo '<option value="' . $subcategory->term_id . '"' . $selected . '>&nbsp;&nbsp;&nbsp;&nbsp;' . $subcategory->name . '</option>';
 							}
-							echo '</optgroup>';
 						}
 						?>
 					</select>
+					<?php if ($frames) : ?>
+						<select id="frame-select" name="frame_id" onchange="this.form.submit()">
+							<option value=""></option>
+							<?php
+							foreach ($frames as $frame) {
+								$selected = ($frame->id == $selected_frame_id) ? ' selected' : '';
+								echo '<option value="' . $frame->id . '"' . $selected . '>' . $frame->frame_image . '</option>';
+							}
+							?>
+						</select>
+					<?php endif; ?>
 					<input type="text" id="search-input" name="search_term" placeholder="Търсене на продукт" value="<?php echo esc_attr($search_term); ?>" />
 
 					<button type="submit" class="btn btn-primary">Търсене</button>
 				</div>
 			</form>
 
-			<?php if ($selected_category_id || $search_term) : ?>
+			<?php if ($selected_category_id || $search_term || $selected_frame_id) : ?>
 				<div id="products-table" class="mt-4">
 					<table class="table table-bordered table-striped">
 						<thead>
@@ -61,14 +83,12 @@ function frames_list_page()
 						</thead>
 						<tbody>
 							<?php
-							// Fetch products based on selected category and search term
 							$args = array(
 								'post_type' => 'product',
 								'posts_per_page' => -1,
 								's' => $search_term
 							);
 
-							// Add tax_query if a category is selected
 							if ($selected_category_id) {
 								$args['tax_query'] = array(
 									array(
@@ -77,6 +97,20 @@ function frames_list_page()
 										'terms' => $selected_category_id
 									)
 								);
+							}
+
+							if ($selected_frame_id) {
+								$frame_products = $wpdb->get_col($wpdb->prepare(
+									"SELECT product_id 
+									FROM {$wpdb->prefix}doors_frames 
+									WHERE id = %d",
+									$selected_frame_id
+								));
+								if ($frame_products) {
+									$args['post__in'] = $frame_products;
+								} else {
+									$args['post__in'] = array(0); // No products found
+								}
 							}
 
 							$query = new WP_Query($args);
@@ -97,7 +131,7 @@ function frames_list_page()
 								}
 								wp_reset_postdata();
 							} else {
-								echo '<tr><td colspan="4">Няма намерени продукти.</td></tr>';
+								echo '<tr><td colspan="5">Няма намерени продукти.</td></tr>';
 							}
 							?>
 						</tbody>
@@ -127,7 +161,6 @@ function frames_list_page()
 <?php
 }
 
-// Add AJAX actions
 add_action('wp_ajax_update_product_price', 'update_product_price');
 function update_product_price()
 {
@@ -245,7 +278,18 @@ function fetch_frame_prices()
 		$product_title = get_the_title($product_id);
 
 		$table_name = $wpdb->prefix . 'doors_frames';
-		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d", $product_id));
+		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d ORDER by frame_end_date DESC", $product_id));
+
+		$html_new_table = <<<HTML
+			<div class="m-1">
+				<table class="table bg-info" id="new-frame-table" style="display: none;">
+					<thead>
+						<tbody></tbody>
+					</tbody>
+				</table>
+				<div><button class="btn btn-success mb-3 mx-3" id="add-new-frame" data-id="$product_id">Добави нова цена на каса</button></div>
+			</div>
+		HTML;
 
 		if (!empty($results)) {
 			$result = $results[0];
@@ -278,12 +322,12 @@ function fetch_frame_prices()
 				$html .= <<<HTML
 					<tr class="frame-id" $expired data-id="$result->id">
 						<td class="frame-image-container">
-							<img src="{$upload_dir['baseurl']}/ceni/$result->frame_image" class="frame-img">
+							<img src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
 							<input type="text" class="form-control frame-image" value="$result->frame_image">
 						</td>
 						<td><textarea class="form-control frame-description" cols="30" rows="3">$result->frame_description</textarea></td>
-						<td><input type="number" step="0.01" class="form-control frame-price" value="$result->frame_price"></td>
-						<td><input type="number" step="0.01" class="form-control frame-promo-price" value="$result->frame_promo_price"></td>
+						<td><input type="number" step="0.01" class="form-control price-input frame-price" value="$result->frame_price"></td>
+						<td><input type="number" step="0.01" class="form-control price-input frame-promo-price" value="$result->frame_promo_price"></td>
 						<td><input required type="text" class="form-control datepicker-input frame-start-date" value="$start_date_value" /></td>
 						<td><input required type="text" class="form-control datepicker-input frame-end-date" value="$end_date_value" /></td>
 					</tr>
@@ -296,20 +340,11 @@ function fetch_frame_prices()
 			</div>
 			HTML;
 
-			$html .= <<<HTML
-				<div class="m-1">
-					<table class="table bg-info" id="new-frame-table" style="display: none;">
-						<thead>
-							<tbody></tbody>
-						</tbody>
-					</table>
-					<div><button class="btn btn-success mb-3 mx-3" id="add-new-frame" data-id="$product_id">Добави нова каса</button></div>
-				</div>
-			HTML;
+			$html .= $html_new_table;
 
 			wp_send_json_success($html);
 		} else {
-			wp_send_json_error();
+			wp_send_json_success($html_new_table);
 		}
 	} else {
 		wp_send_json_error();
