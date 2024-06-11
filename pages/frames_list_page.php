@@ -3,6 +3,7 @@
 function frames_list_page()
 {
 	global $wpdb;
+	$upload_dir = wp_upload_dir();
 
 	// Get categories
 	$categories = get_terms(array(
@@ -22,7 +23,9 @@ function frames_list_page()
 			FROM {$wpdb->prefix}doors_frames df 
 			JOIN {$wpdb->prefix}posts p ON df.product_id = p.ID 
 			JOIN {$wpdb->prefix}term_relationships tr ON p.ID = tr.object_id 
-			WHERE tr.term_taxonomy_id = %d",
+			WHERE tr.term_taxonomy_id = %d
+			GROUP BY df.frame_image
+			ORDER BY df.frame_end_date DESC",
 			$selected_category_id
 		));
 	}
@@ -69,7 +72,35 @@ function frames_list_page()
 				</div>
 			</form>
 
-			<?php if ($selected_category_id || $search_term || $selected_frame_id) : ?>
+			<?php if ($selected_category_id || $search_term) : ?>
+
+				<?php if ($selected_frame_id) : ?>
+					<!-- Mass Insert Form -->
+					<form id="mass-insert-form">
+						<div class="form-group">
+							<select id="operator-price-select" class="form-control operator-price-select" name="operator_price">
+								<option value="+">+</option>
+								<option value="-">-</option>
+								<option value="+%">+%</option>
+								<option value="-%">-%</option>
+								<option value="=">=</option>
+							</select>
+							<input type="number" step="0.01" id="sum-price-input" name="sum_price" placeholder="Цена (сума)" required />
+						</div>
+						<div class="form-group">
+							<select id="operator-promotion-select" class="form-control operator-promotion-select" name="operator_promotion">
+								<option value="+">+</option>
+								<option value="-">-</option>
+								<option value="+%">+%</option>
+								<option value="-%">-%</option>
+								<option value="=">=</option>
+							</select>
+							<input type="number" step="0.01" id="sum-promotion-input" name="sum_promotion" placeholder="Промоция (сума)" required />
+							<button type="button" id="apply-mass-insert" class="btn btn-warning">Приложи</button>
+						</div>
+					</form>
+				<?php endif; ?>
+
 				<div id="products-table" class="mt-4">
 					<table class="table table-bordered table-striped">
 						<thead>
@@ -78,6 +109,11 @@ function frames_list_page()
 								<th><span class="badge bg-secondary">Име</span></th>
 								<th><span class="badge bg-secondary">Цена</span></th>
 								<th><span class="badge bg-secondary">Промоция</span></th>
+								<?php if ($selected_frame_id) : ?>
+									<th><span class="badge bg-secondary">Каса</span></th>
+									<th><span class="badge bg-secondary">Каса: Описание</span></th>
+									<th><span class="badge bg-secondary">Каса: Цена /Промо</span></th>
+								<?php endif; ?>
 								<th><span class="badge bg-secondary">Действия</span></th>
 							</tr>
 						</thead>
@@ -103,7 +139,11 @@ function frames_list_page()
 								$frame_products = $wpdb->get_col($wpdb->prepare(
 									"SELECT product_id 
 									FROM {$wpdb->prefix}doors_frames 
-									WHERE id = %d",
+									WHERE frame_image = (
+										SELECT frame_image 
+										FROM {$wpdb->prefix}doors_frames 
+										WHERE id = %d
+									)",
 									$selected_frame_id
 								));
 								if ($frame_products) {
@@ -117,6 +157,18 @@ function frames_list_page()
 
 							if ($query->have_posts()) {
 								while ($query->have_posts()) {
+
+									if ($selected_frame_id) {
+										$frame_data = $wpdb->get_row($wpdb->prepare(
+											"SELECT frame_description, frame_image, frame_price, frame_promo_price
+										FROM {$wpdb->prefix}doors_frames 
+										WHERE product_id = %d AND id = '%d'
+										ORDER BY frame_end_date DESC LIMIT 1",
+											$query->post->ID,
+											$selected_frame_id
+										));
+									}
+
 									$query->the_post();
 									$product = wc_get_product(get_the_ID());
 									$regular_price = $product->get_regular_price();
@@ -126,6 +178,11 @@ function frames_list_page()
 									echo '<td>' . get_the_title() . '</td>';
 									echo '<td><input type="number" step="0.01" class="price-input" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
 									echo '<td><input type="number" step="0.01" class="price-input" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
+									if ($selected_frame_id) {
+										echo '<td><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
+										echo '<td>' . $frame_data->frame_description . '</td>';
+										echo '<td>' . $frame_data->frame_price . ' / ' . $frame_data->frame_promo_price . '</td>';
+									}
 									echo '<td><button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button></td>';
 									echo '</tr>';
 								}
@@ -348,6 +405,68 @@ function fetch_frame_prices()
 		}
 	} else {
 		wp_send_json_error();
+	}
+}
+
+add_action('wp_ajax_mass_insert_frames', 'mass_insert_frames');
+function mass_insert_frames()
+{
+	global $wpdb;
+
+	if (isset($_POST['product_ids']) && isset($_POST['operator_price']) && isset($_POST['operator_promotion'])) {
+		$product_ids = array_map('intval', $_POST['product_ids']);
+		$operator_price = sanitize_text_field($_POST['operator_price']);
+		$sum_price = floatval($_POST['sum_price']);
+		$operator_promotion = sanitize_text_field($_POST['operator_promotion']);
+		$sum_promotion = floatval($_POST['sum_promotion']);
+
+		$table_name = $wpdb->prefix . 'doors_frames';
+
+		foreach ($product_ids as $product_id) {
+			$current_values = $wpdb->get_results($wpdb->prepare(
+				"SELECT * FROM {$table_name} WHERE product_id = %d ORDER BY frame_end_date DESC LIMIT 1",
+				$product_id
+			));
+
+			$new_price = calculate_new_value($current_values[0]->frame_price, $operator_price, $sum_price);
+			$new_promo_price = calculate_new_value($current_values[0]->frame_promo_price, $operator_promotion, $sum_promotion);
+
+			$wpdb->insert(
+				$table_name,
+				array(
+					'product_id' => $product_id,
+					'frame_price' => $new_price > 0 ? $new_price : $current_values[0]->frame_price,
+					'frame_promo_price' => $new_promo_price > 0 ? $new_promo_price : $current_values[0]->frame_promo_price,
+					'frame_image' => $current_values[0]->frame_image,
+					'frame_description' => $current_values[0]->frame_description,
+					'frame_start_date' => current_time('mysql'),
+					'frame_end_date' => current_time('mysql')
+				),
+				array('%d', '%f', '%f', '%s', '%s', '%s', '%s')
+			);
+		}
+
+		wp_send_json_success();
+	} else {
+		wp_send_json_error();
+	}
+}
+
+function calculate_new_value($current_value, $operator, $sum)
+{
+	switch ($operator) {
+		case '+':
+			return $current_value + $sum;
+		case '-':
+			return $current_value - $sum;
+		case '+%':
+			return $current_value + ($current_value * $sum / 100);
+		case '-%':
+			return $current_value - ($current_value * $sum / 100);
+		case '=':
+			return $sum;
+		default:
+			return $current_value;
 	}
 }
 ?>

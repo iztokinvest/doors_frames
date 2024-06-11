@@ -20,3 +20,8 @@
 .datepicker-input {
 	width: 120px;
 }
+
+.operator-price-select, .operator-promotion-select {
+	width: 80px;
+	display: inline;
+}

@@ -187,4 +187,46 @@ jQuery(document).ready(function ($) {
 			$("#frameModal").hide();
 		});
 	});
+
+	$("#apply-mass-insert").on("click", function () {
+		const operator_price = $("#operator-price-select").val();
+		const sum_price = parseFloat($("#sum-price-input").val());
+		const operator_promotion = $("#operator-promotion-select").val();
+		const sum_promotion = parseFloat($("#sum-promotion-input").val());
+
+		if (isNaN(sum_price) || isNaN(sum_promotion)) {
+			frame_notifier.warning(`Невалидна сума.`);
+			return;
+		}
+
+		// Collect product IDs
+		const product_ids = [];
+		$("table tbody tr").each(function () {
+			var product_id = $(this).find(".price-input").data("id");
+			product_ids.push(product_id);
+		});
+
+		$.ajax({
+			url: ajaxurl,
+			method: "POST",
+			data: {
+				action: "mass_insert_frames",
+				product_ids: product_ids,
+				operator_price: operator_price,
+				sum_price: sum_price,
+				operator_promotion: operator_promotion,
+				sum_promotion: sum_promotion,
+			},
+			success: function (response) {
+				if (response.success) {
+					frame_notifier.success(`Цените са променени.`);
+				} else {
+					frame_notifier.alert(`Цените не са променени.`);
+				}
+			},
+			error: function () {
+				frame_notifier.alert(`Цените не са променени.`);
+			},
+		});
+	});
 });
