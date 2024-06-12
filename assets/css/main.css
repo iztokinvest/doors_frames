@@ -22,6 +22,10 @@
 }
 
 .operator-price-select, .operator-promotion-select {
-	width: 80px;
+	width: auto;
 	display: inline;
+}
+
+.table th, td {
+	text-align: center;
 }

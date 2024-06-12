@@ -42,6 +42,64 @@ function initializeDatepickers() {
 }
 initializeDatepickers();
 
+function changePriceVisual() {
+	const checkButton = document.getElementById("check-mass-insert");
+	const confirmButton = document.getElementById("apply-mass-insert");
+
+	checkButton.addEventListener("click", () => {
+		const operatorPrice = document.getElementById("operator-price-select").value;
+		const operatorPromo = document.getElementById("operator-promotion-select").value;
+		const priceInput = document.getElementById("sum-price-input");
+		const promoInput = document.getElementById("sum-promotion-input");
+		const tablePrices = document.getElementsByClassName("frame-table-price");
+		const tablePromos = document.getElementsByClassName("frame-table-promo");
+
+		for (const tablePrice of tablePrices) {
+			calculateSum(tablePrice, operatorPrice, priceInput.value);
+		}
+
+		for (const tablePromo of tablePromos) {
+			calculateSum(tablePromo, operatorPromo, promoInput.value);
+		}
+
+		confirmButton.style.display = "inline";
+	});
+
+	confirmButton.addEventListener("click", () => {
+		confirmButton.style.display = "none";
+	});
+
+	function calculateSum(column, operator, sum) {
+		const oldSum = parseInt(column.innerHTML);
+		const newSum = parseInt(sum);
+		let result = 0;
+
+		if (sum > 0) {
+			switch (operator) {
+				case "+":
+					result = oldSum + newSum;
+					break;
+				case "-":
+					result = oldSum - newSum;
+					break;
+				case "+%":
+					result = (oldSum * (100 + newSum)) / 100;
+					break;
+				case "-%":
+					result = (oldSum * (100 - newSum)) / 100;
+					break;
+				case "=":
+					result = newSum;
+					break;
+				default:
+					break;
+			}
+			column.innerHTML = `${oldSum} / <span class="text-success">${result}</span>`;
+		}
+	}
+}
+changePriceVisual();
+
 jQuery(document).ready(function ($) {
 	$(".price-input").on("change", function () {
 		const productId = $(this).data("id");
@@ -116,7 +174,8 @@ jQuery(document).ready(function ($) {
 		let requests = [];
 
 		$(".frame-id").each(function () {
-			const frameId = $(this).data("id");
+			const id = $(this).data("id");
+			const frame_id = $(this).find(".frame-id").val();
 			const price = $(this).find(".frame-price").val();
 			const promo_price = $(this).find(".frame-promo-price").val();
 			const image = $(this).find(".frame-image").val();
@@ -129,7 +188,8 @@ jQuery(document).ready(function ($) {
 				type: "POST",
 				data: {
 					action: "update_frame_prices",
-					frame_id: frameId,
+					id: id,
+					frame_id: frame_id,
 					frame_price: price,
 					frame_promo_price: promo_price,
 					frame_image: image,
@@ -148,6 +208,7 @@ jQuery(document).ready(function ($) {
 
 		$(".new-frame").each(function () {
 			const product_id = $(this).data("id");
+			const frame_id = $(this).find(".frame-id").val();
 			const new_price = $(this).find(".new-frame-price").val();
 			const new_promo_price = $(this).find(".new-frame-promo-price").val();
 			const new_image = $(this).find(".new-frame-image").val();
@@ -161,6 +222,7 @@ jQuery(document).ready(function ($) {
 				data: {
 					action: "add_frame_prices",
 					product_id: product_id,
+					frame_id: frame_id,
 					new_frame_price: new_price,
 					new_frame_promo_price: new_promo_price,
 					new_frame_image: new_image,
@@ -190,16 +252,17 @@ jQuery(document).ready(function ($) {
 
 	$("#apply-mass-insert").on("click", function () {
 		const operator_price = $("#operator-price-select").val();
-		const sum_price = parseFloat($("#sum-price-input").val());
+		let sum_price = parseFloat($("#sum-price-input").val());
 		const operator_promotion = $("#operator-promotion-select").val();
-		const sum_promotion = parseFloat($("#sum-promotion-input").val());
+		let sum_promotion = parseFloat($("#sum-promotion-input").val());
 
-		if (isNaN(sum_price) || isNaN(sum_promotion)) {
-			frame_notifier.warning(`Невалидна сума.`);
-			return;
+		if (isNaN(sum_price)) {
+			sum_price = 0;
 		}
-
-		// Collect product IDs
+		if (isNaN(sum_promotion)) {
+			sum_promotion = 0;
+		}
+		
 		const product_ids = [];
 		$("table tbody tr").each(function () {
 			var product_id = $(this).find(".price-input").data("id");

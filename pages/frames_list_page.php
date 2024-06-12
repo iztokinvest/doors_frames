@@ -19,13 +19,13 @@ function frames_list_page()
 	$frames = array();
 	if ($selected_category_id) {
 		$frames = $wpdb->get_results($wpdb->prepare(
-			"SELECT df.id, df.frame_image 
+			"SELECT df.id, df.frame_id 
 			FROM {$wpdb->prefix}doors_frames df 
 			JOIN {$wpdb->prefix}posts p ON df.product_id = p.ID 
 			JOIN {$wpdb->prefix}term_relationships tr ON p.ID = tr.object_id 
 			WHERE tr.term_taxonomy_id = %d
-			GROUP BY df.frame_image
-			ORDER BY df.frame_end_date DESC",
+			GROUP BY df.frame_id
+			ORDER BY df.frame_id ASC",
 			$selected_category_id
 		));
 	}
@@ -60,8 +60,8 @@ function frames_list_page()
 							<option value=""></option>
 							<?php
 							foreach ($frames as $frame) {
-								$selected = ($frame->id == $selected_frame_id) ? ' selected' : '';
-								echo '<option value="' . $frame->id . '"' . $selected . '>' . $frame->frame_image . '</option>';
+								$selected = ($frame->frame_id == $selected_frame_id) ? ' selected' : '';
+								echo '<option value="' . $frame->frame_id . '"' . $selected . '>Цена ' . $frame->frame_id . '</option>';
 							}
 							?>
 						</select>
@@ -76,28 +76,43 @@ function frames_list_page()
 
 				<?php if ($selected_frame_id) : ?>
 					<!-- Mass Insert Form -->
-					<form id="mass-insert-form">
-						<div class="form-group">
-							<select id="operator-price-select" class="form-control operator-price-select" name="operator_price">
+					<hr>
+					<form id="mass-insert-form" class="mt-2">
+						<span class="badge bg-info">
+							<select id="operator-price-select" class="operator-price-select" name="operator_price">
 								<option value="+">+</option>
 								<option value="-">-</option>
 								<option value="+%">+%</option>
 								<option value="-%">-%</option>
 								<option value="=">=</option>
 							</select>
-							<input type="number" step="0.01" id="sum-price-input" name="sum_price" placeholder="Цена (сума)" required />
-						</div>
-						<div class="form-group">
-							<select id="operator-promotion-select" class="form-control operator-promotion-select" name="operator_promotion">
+							<input type="number" step="0.01" id="sum-price-input" class="price-input" name="sum_price" placeholder="Цена" required />
+						</span>
+						<span class="badge bg-info">
+							<select id="operator-promotion-select" class="operator-promotion-select" name="operator_promotion">
 								<option value="+">+</option>
 								<option value="-">-</option>
 								<option value="+%">+%</option>
 								<option value="-%">-%</option>
 								<option value="=">=</option>
 							</select>
-							<input type="number" step="0.01" id="sum-promotion-input" name="sum_promotion" placeholder="Промоция (сума)" required />
-							<button type="button" id="apply-mass-insert" class="btn btn-warning">Приложи</button>
-						</div>
+							<input type="number" step="0.01" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
+						</span>
+						<span class="badge bg-info text-dark">
+							<input required type="text" class="datepicker-input frame-start-date d-inline" placeholder="От дата" />
+							<input required type="text" class="datepicker-input frame-start-date d-inline" placeholder="До дата" />
+						</span>
+						<span class="badge bg-info text-dark">
+							<input type="checkbox" id="frame-end-date" name="frame_end_date" />Закръгли
+						</span>
+						<span class="badge bg-info text-dark">
+							<input type="checkbox" id="frame-end-date" name="frame_end_date" />Цена към промо
+						</span>
+						<span class="badge bg-info text-dark">
+							<input type="checkbox" id="frame-end-date" name="frame_end_date" />Редактирай цените
+						</span>
+						<button type="button" id="check-mass-insert" class="btn btn-warning">Провери</button>
+						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none">Потвърди</button>
 					</form>
 				<?php endif; ?>
 
@@ -111,8 +126,9 @@ function frames_list_page()
 								<th><span class="badge bg-secondary">Промоция</span></th>
 								<?php if ($selected_frame_id) : ?>
 									<th><span class="badge bg-secondary">Каса</span></th>
-									<th><span class="badge bg-secondary">Каса: Описание</span></th>
-									<th><span class="badge bg-secondary">Каса: Цена /Промо</span></th>
+									<th><span class="badge bg-secondary">Описание каса</span></th>
+									<th><span class="badge bg-secondary">Цена каса</span></th>
+									<th><span class="badge bg-secondary">Промо каса</span></th>
 								<?php endif; ?>
 								<th><span class="badge bg-secondary">Действия</span></th>
 							</tr>
@@ -139,11 +155,7 @@ function frames_list_page()
 								$frame_products = $wpdb->get_col($wpdb->prepare(
 									"SELECT product_id 
 									FROM {$wpdb->prefix}doors_frames 
-									WHERE frame_image = (
-										SELECT frame_image 
-										FROM {$wpdb->prefix}doors_frames 
-										WHERE id = %d
-									)",
+									WHERE frame_id = %d",
 									$selected_frame_id
 								));
 								if ($frame_products) {
@@ -157,22 +169,22 @@ function frames_list_page()
 
 							if ($query->have_posts()) {
 								while ($query->have_posts()) {
-
-									if ($selected_frame_id) {
-										$frame_data = $wpdb->get_row($wpdb->prepare(
-											"SELECT frame_description, frame_image, frame_price, frame_promo_price
-										FROM {$wpdb->prefix}doors_frames 
-										WHERE product_id = %d AND id = '%d'
-										ORDER BY frame_end_date DESC LIMIT 1",
-											$query->post->ID,
-											$selected_frame_id
-										));
-									}
-
 									$query->the_post();
 									$product = wc_get_product(get_the_ID());
 									$regular_price = $product->get_regular_price();
 									$sale_price = $product->get_sale_price();
+
+									if ($selected_frame_id) {
+										$frame_data = $wpdb->get_row($wpdb->prepare(
+											"SELECT frame_description, frame_image, frame_price, frame_promo_price
+											FROM {$wpdb->prefix}doors_frames 
+											WHERE product_id = %d AND frame_id = '%d'
+											ORDER BY frame_end_date DESC LIMIT 1",
+											get_the_ID(),
+											$selected_frame_id
+										));
+									}
+
 									echo '<tr>';
 									echo '<td>' . get_the_ID() . '</td>';
 									echo '<td>' . get_the_title() . '</td>';
@@ -181,7 +193,8 @@ function frames_list_page()
 									if ($selected_frame_id) {
 										echo '<td><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
 										echo '<td>' . $frame_data->frame_description . '</td>';
-										echo '<td>' . $frame_data->frame_price . ' / ' . $frame_data->frame_promo_price . '</td>';
+										echo '<td class="frame-table-price">' . $frame_data->frame_price . '</td>';
+										echo '<td class="frame-table-promo">' . $frame_data->frame_promo_price . '</td>';
 									}
 									echo '<td><button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button></td>';
 									echo '</tr>';
@@ -248,7 +261,8 @@ function update_frame_prices()
 {
 	global $wpdb;
 
-	if (isset($_POST['frame_id']) && isset($_POST['frame_price']) && isset($_POST['frame_promo_price'])) {
+	if (isset($_POST['id']) && isset($_POST['frame_price']) && isset($_POST['frame_promo_price'])) {
+		$id = intval($_POST['id']);
 		$frame_id = intval($_POST['frame_id']);
 		$frame_price = floatval($_POST['frame_price']);
 		$frame_promo_price = floatval($_POST['frame_promo_price']);
@@ -262,6 +276,7 @@ function update_frame_prices()
 		$result = $wpdb->update(
 			$table_name,
 			array(
+				'frame_id' => $frame_id,
 				'frame_price' => $frame_price,
 				'frame_promo_price' => $frame_promo_price,
 				'frame_image' => $frame_image,
@@ -269,8 +284,8 @@ function update_frame_prices()
 				'frame_start_date' => $frame_start_date,
 				'frame_end_date' => $frame_end_date
 			),
-			array('id' => $frame_id),
-			array('%f', '%f', '%s', '%s', '%s', '%s'),
+			array('id' => $id),
+			array('%d', '%f', '%f', '%s', '%s', '%s', '%s'),
 			array('%d')
 		);
 
@@ -291,6 +306,7 @@ function add_frame_prices()
 
 	if (isset($_POST['product_id']) && isset($_POST['new_frame_price']) && isset($_POST['new_frame_promo_price'])) {
 		$product_id = intval($_POST['product_id']);
+		$frame_id = intval($_POST['frame_id']);
 		$new_frame_price = floatval($_POST['new_frame_price']);
 		$new_frame_promo_price = floatval($_POST['new_frame_promo_price']);
 		$new_frame_image = sanitize_text_field($_POST['new_frame_image']);
@@ -304,6 +320,7 @@ function add_frame_prices()
 			$table_name,
 			array(
 				'product_id' => $product_id,
+				'frame_id' => $frame_id,
 				'frame_price' => $new_frame_price,
 				'frame_promo_price' => $new_frame_promo_price,
 				'frame_image' => $new_frame_image,
@@ -311,7 +328,7 @@ function add_frame_prices()
 				'frame_start_date' => $new_frame_start_date,
 				'frame_end_date' => $new_frame_end_date
 			),
-			array('%d', '%f', '%f', '%s', '%s', '%s', '%s'),
+			array('%d', '%d', '%f', '%f', '%s', '%s', '%s', '%s'),
 		);
 
 		if ($result !== false) {
@@ -335,7 +352,7 @@ function fetch_frame_prices()
 		$product_title = get_the_title($product_id);
 
 		$table_name = $wpdb->prefix . 'doors_frames';
-		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d ORDER by frame_end_date DESC", $product_id));
+		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d ORDER by frame_end_date DESC, frame_id ASC", $product_id));
 
 		$html_new_table = <<<HTML
 			<div class="m-1">
@@ -357,6 +374,7 @@ function fetch_frame_prices()
 					<table class="table table-striped">
 						<thead>
 							<tr>
+								<th>Цена №</th>
 								<th>Каса</th>
 								<th>Описание</th>
 								<th>Цена</th>
@@ -378,6 +396,7 @@ function fetch_frame_prices()
 				}
 				$html .= <<<HTML
 					<tr class="frame-id" $expired data-id="$result->id">
+						<td><input type="number" step="1" class="form-control price-input frame-id" value="$result->frame_id"></td>
 						<td class="frame-image-container">
 							<img src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
 							<input type="text" class="form-control frame-image" value="$result->frame_image">
