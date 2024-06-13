@@ -2,7 +2,8 @@
 	max-height: 50px;
 }
 
-.frame-image, .new-frame-image {
+.frame-image,
+.new-frame-image {
 	width: 100%;
 }
 
@@ -13,7 +14,7 @@
 	justify-content: center;
 }
 
-.price-input {
+.price-input, .price-inputs {
 	width: 90px;
 }
 
@@ -21,11 +22,18 @@
 	width: 120px;
 }
 
-.operator-price-select, .operator-promotion-select {
+.operator-price-select,
+.operator-promotion-select {
 	width: auto;
 	display: inline;
+	vertical-align: unset !important;
 }
 
-.table th, td {
+.table th,
+td {
 	text-align: center;
+}
+
+.checkbox-badge {
+	line-height: unset;
 }

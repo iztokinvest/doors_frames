@@ -98,18 +98,18 @@ function frames_list_page()
 							</select>
 							<input type="number" step="0.01" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
 						</span>
-						<span class="badge bg-info text-dark">
-							<input required type="text" class="datepicker-input frame-start-date d-inline" placeholder="От дата" />
-							<input required type="text" class="datepicker-input frame-start-date d-inline" placeholder="До дата" />
+						<span id="mass-dates" class="badge bg-info text-dark">
+							<input required type="text" id="mass-start-date" class="datepicker-input frame-start-date d-inline" placeholder="От дата" />
+							<input required type="text" id="mass-end-date" class="datepicker-input frame-start-date d-inline" placeholder="До дата" />
 						</span>
-						<span class="badge bg-info text-dark">
+						<span class="badge bg-info text-dark checkbox-badge">
+							<input type="checkbox" id="mass-edit-prices" />Редактирай цените
+						</span>
+						<span class="badge bg-info text-dark checkbox-badge">
 							<input type="checkbox" id="frame-end-date" name="frame_end_date" />Закръгли
 						</span>
-						<span class="badge bg-info text-dark">
+						<span class="badge bg-info text-dark checkbox-badge">
 							<input type="checkbox" id="frame-end-date" name="frame_end_date" />Цена към промо
-						</span>
-						<span class="badge bg-info text-dark">
-							<input type="checkbox" id="frame-end-date" name="frame_end_date" />Редактирай цените
 						</span>
 						<button type="button" id="check-mass-insert" class="btn btn-warning">Провери</button>
 						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none">Потвърди</button>
@@ -188,8 +188,8 @@ function frames_list_page()
 									echo '<tr>';
 									echo '<td>' . get_the_ID() . '</td>';
 									echo '<td>' . get_the_title() . '</td>';
-									echo '<td><input type="number" step="0.01" class="price-input" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
-									echo '<td><input type="number" step="0.01" class="price-input" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
+									echo '<td><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
+									echo '<td><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
 									if ($selected_frame_id) {
 										echo '<td><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
 										echo '<td>' . $frame_data->frame_description . '</td>';

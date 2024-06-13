@@ -46,6 +46,10 @@ function changePriceVisual() {
 	const checkButton = document.getElementById("check-mass-insert");
 	const confirmButton = document.getElementById("apply-mass-insert");
 
+	if (!checkButton || !confirmButton) {
+		return;
+	}
+
 	checkButton.addEventListener("click", () => {
 		const operatorPrice = document.getElementById("operator-price-select").value;
 		const operatorPromo = document.getElementById("operator-promotion-select").value;
@@ -101,7 +105,7 @@ function changePriceVisual() {
 changePriceVisual();
 
 jQuery(document).ready(function ($) {
-	$(".price-input").on("change", function () {
+	$(".price-inputs").on("change", function () {
 		const productId = $(this).data("id");
 		const newPrice = $(this).val();
 		const priceType = $(this).data("type");
@@ -262,7 +266,7 @@ jQuery(document).ready(function ($) {
 		if (isNaN(sum_promotion)) {
 			sum_promotion = 0;
 		}
-		
+
 		const product_ids = [];
 		$("table tbody tr").each(function () {
 			var product_id = $(this).find(".price-input").data("id");
@@ -292,4 +296,15 @@ jQuery(document).ready(function ($) {
 			},
 		});
 	});
+
+	function showHideMassDates() {
+		if ($("#mass-edit-prices").prop("checked")) {
+			$("#mass-dates").hide();
+			$("#mass-start-date, #mass-end-date").val("");
+		} else {
+			$("#mass-dates").show();
+		}
+	}
+	$("#mass-edit-prices").on("change", showHideMassDates);
+	showHideMassDates();
 });
