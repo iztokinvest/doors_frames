@@ -45,18 +45,42 @@ initializeDatepickers();
 function changePriceVisual() {
 	const checkButton = document.getElementById("check-mass-insert");
 	const confirmButton = document.getElementById("apply-mass-insert");
+	const massSpan = document.getElementById("mass-insert-span");
 
 	if (!checkButton || !confirmButton) {
 		return;
 	}
 
+	massSpan.addEventListener("click", hideConfirmButton);
+
 	checkButton.addEventListener("click", () => {
+		let errorCount = 0;
 		const operatorPrice = document.getElementById("operator-price-select").value;
 		const operatorPromo = document.getElementById("operator-promotion-select").value;
 		const priceInput = document.getElementById("sum-price-input");
 		const promoInput = document.getElementById("sum-promotion-input");
 		const tablePrices = document.getElementsByClassName("frame-table-price");
 		const tablePromos = document.getElementsByClassName("frame-table-promo");
+		const startDate = document.getElementById("mass-start-date");
+		const endDate = document.getElementById("mass-end-date");
+		const pricesEdit = document.getElementById("mass-edit-prices");
+		const pricesRound = document.getElementById("mass-round-prices");
+		const pricesToPromo = document.getElementById("mass-prices-to-promo");
+
+		if ((!startDate.value || !endDate.value) && !pricesEdit.checked) {
+			frame_notifier.warning(`Трябва да бъдат избрани дати или да е маркирана отметката "Редактирай цените".`);
+			errorCount++;
+		}
+
+		if (priceInput.value === "" && promoInput.value === "") {
+			frame_notifier.warning(`Трябва да има въведена цена или промоция".`);
+			errorCount++;
+		}
+
+		if (errorCount > 0) {
+			hideConfirmButton();
+			return;
+		}
 
 		for (const tablePrice of tablePrices) {
 			calculateSum(tablePrice, operatorPrice, priceInput.value);
@@ -69,9 +93,9 @@ function changePriceVisual() {
 		confirmButton.style.display = "inline";
 	});
 
-	confirmButton.addEventListener("click", () => {
+	function hideConfirmButton() {
 		confirmButton.style.display = "none";
-	});
+	}
 
 	function calculateSum(column, operator, sum) {
 		const oldSum = parseInt(column.innerHTML);
@@ -259,6 +283,11 @@ jQuery(document).ready(function ($) {
 		let sum_price = parseFloat($("#sum-price-input").val());
 		const operator_promotion = $("#operator-promotion-select").val();
 		let sum_promotion = parseFloat($("#sum-promotion-input").val());
+		const startDate = $("#mass-start-date").val();
+		const endDate = $("#mass-end-date").val();
+		const pricesEdit = $("#mass-edit-prices").prop("checked");
+		const pricesRound = $("#mass-round-prices").prop("checked");
+		const pricesToPromo = $("#mass-prices-to-promo").prop("checked");
 
 		if (isNaN(sum_price)) {
 			sum_price = 0;
@@ -269,7 +298,7 @@ jQuery(document).ready(function ($) {
 
 		const product_ids = [];
 		$("table tbody tr").each(function () {
-			var product_id = $(this).find(".price-input").data("id");
+			var product_id = $(this).find(".price-inputs").data("id");
 			product_ids.push(product_id);
 		});
 
@@ -283,6 +312,11 @@ jQuery(document).ready(function ($) {
 				sum_price: sum_price,
 				operator_promotion: operator_promotion,
 				sum_promotion: sum_promotion,
+				startDate: startDate,
+				endDate: endDate,
+				pricesEdit: pricesEdit,
+				pricesRound: pricesRound,
+				pricesToPromo: pricesToPromo,
 			},
 			success: function (response) {
 				if (response.success) {

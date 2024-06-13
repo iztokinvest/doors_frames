@@ -78,38 +78,40 @@ function frames_list_page()
 					<!-- Mass Insert Form -->
 					<hr>
 					<form id="mass-insert-form" class="mt-2">
-						<span class="badge bg-info">
-							<select id="operator-price-select" class="operator-price-select" name="operator_price">
-								<option value="+">+</option>
-								<option value="-">-</option>
-								<option value="+%">+%</option>
-								<option value="-%">-%</option>
-								<option value="=">=</option>
-							</select>
-							<input type="number" step="0.01" id="sum-price-input" class="price-input" name="sum_price" placeholder="Цена" required />
-						</span>
-						<span class="badge bg-info">
-							<select id="operator-promotion-select" class="operator-promotion-select" name="operator_promotion">
-								<option value="+">+</option>
-								<option value="-">-</option>
-								<option value="+%">+%</option>
-								<option value="-%">-%</option>
-								<option value="=">=</option>
-							</select>
-							<input type="number" step="0.01" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
-						</span>
-						<span id="mass-dates" class="badge bg-info text-dark">
-							<input required type="text" id="mass-start-date" class="datepicker-input frame-start-date d-inline" placeholder="От дата" />
-							<input required type="text" id="mass-end-date" class="datepicker-input frame-start-date d-inline" placeholder="До дата" />
-						</span>
-						<span class="badge bg-info text-dark checkbox-badge">
-							<input type="checkbox" id="mass-edit-prices" />Редактирай цените
-						</span>
-						<span class="badge bg-info text-dark checkbox-badge">
-							<input type="checkbox" id="frame-end-date" name="frame_end_date" />Закръгли
-						</span>
-						<span class="badge bg-info text-dark checkbox-badge">
-							<input type="checkbox" id="frame-end-date" name="frame_end_date" />Цена към промо
+						<span id="mass-insert-span">
+							<span class="badge bg-info">
+								<select id="operator-price-select" class="operator-price-select" name="operator_price">
+									<option value="+">+</option>
+									<option value="-">-</option>
+									<option value="+%">+%</option>
+									<option value="-%">-%</option>
+									<option value="=">=</option>
+								</select>
+								<input type="number" step="0.01" id="sum-price-input" class="price-input" name="sum_price" placeholder="Цена" required />
+							</span>
+							<span class="badge bg-info">
+								<select id="operator-promotion-select" class="operator-promotion-select" name="operator_promotion">
+									<option value="+">+</option>
+									<option value="-">-</option>
+									<option value="+%">+%</option>
+									<option value="-%">-%</option>
+									<option value="=">=</option>
+								</select>
+								<input type="number" step="0.01" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
+							</span>
+							<span id="mass-dates" class="badge bg-info text-dark">
+								<input required type="text" id="mass-start-date" class="datepicker-input frame-start-date d-inline" placeholder="От дата" />
+								<input required type="text" id="mass-end-date" class="datepicker-input frame-start-date d-inline" placeholder="До дата" />
+							</span>
+							<span class="badge bg-info text-dark checkbox-badge">
+								<input type="checkbox" id="mass-edit-prices" />Редактирай цените
+							</span>
+							<span class="badge bg-info text-dark checkbox-badge">
+								<input type="checkbox" id="mass-round-prices" />Закръгли
+							</span>
+							<span class="badge bg-info text-dark checkbox-badge">
+								<input type="checkbox" id="mass-prices-to-promo" />Цена към промо
+							</span>
 						</span>
 						<button type="button" id="check-mass-insert" class="btn btn-warning">Провери</button>
 						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none">Потвърди</button>
@@ -438,6 +440,11 @@ function mass_insert_frames()
 		$sum_price = floatval($_POST['sum_price']);
 		$operator_promotion = sanitize_text_field($_POST['operator_promotion']);
 		$sum_promotion = floatval($_POST['sum_promotion']);
+		// $start_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['start_date'])), 'Y-m-d');
+		// $end_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['end_date'])), 'Y-m-d');
+		// $prices_edit = $_POST['pricesEdit'];
+		// $prices_round = $_POST['pricesRound'];
+		// $prices_to_promo = $_POST['pricesToPromo'];
 
 		$table_name = $wpdb->prefix . 'doors_frames';
 
