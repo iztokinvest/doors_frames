@@ -1,9 +1,12 @@
 const datepickers = document.querySelectorAll(".datepicker-input");
-const frame_notifier = new AWN({
-	durations: {
-		global: 5000,
-		position: "bottom-right",
-	},
+datepickers.forEach((element) => {
+	const datepicker = new Datepicker(element, {
+		format: "dd/mm/yyyy",
+		daysOfWeekHighlighted: [6, 0],
+		autohide: true,
+		weekStart: 1,
+		language: "bg",
+	});
 });
 
 (function () {
@@ -28,6 +31,13 @@ const frame_notifier = new AWN({
 		monthsShort: ["Ян", "Фев", "Мар", "Апр", "Май", "Юни", "Юли", "Авг", "Сеп", "Окт", "Ное", "Дек"],
 	};
 })();
+
+const frame_notifier = new AWN({
+	durations: {
+		global: 5000,
+		position: "bottom-right",
+	},
+});
 
 function initializeDatepickers() {
 	jQuery(".datepicker-input").each(function () {
@@ -83,11 +93,21 @@ function changePriceVisual() {
 		}
 
 		for (const tablePrice of tablePrices) {
-			calculateSum(tablePrice, operatorPrice, priceInput.value);
+			const rowPriceEndDate = tablePrice.getAttribute("data-end-date");
+			let reset = false;
+			if (pricesEdit.checked && new Date(rowPriceEndDate) < new Date()) {
+				reset = true;
+			}
+			calculateSum(tablePrice, operatorPrice, priceInput.value, pricesRound.checked, reset);
 		}
 
 		for (const tablePromo of tablePromos) {
-			calculateSum(tablePromo, operatorPromo, promoInput.value);
+			const rowPromoEndDate = tablePromo.getAttribute("data-end-date");
+			let reset = false;
+			if (pricesEdit.checked && new Date(rowPromoEndDate) < new Date()) {
+				reset = true;
+			}
+			calculateSum(tablePromo, operatorPromo, promoInput.value, pricesRound.checked, reset);
 		}
 
 		confirmButton.style.display = "inline";
@@ -97,7 +117,7 @@ function changePriceVisual() {
 		confirmButton.style.display = "none";
 	}
 
-	function calculateSum(column, operator, sum) {
+	function calculateSum(column, operator, sum, round, reset) {
 		const oldSum = parseInt(column.innerHTML);
 		const newSum = parseInt(sum);
 		let result = 0;
@@ -122,6 +142,19 @@ function changePriceVisual() {
 				default:
 					break;
 			}
+
+			if (round) {
+				result = result % 1 >= 0.5 ? Math.ceil(result) : Math.floor(result);
+			}
+
+			if (reset) {
+				setTimeout(() => {
+					confirmButton.style.display = "none";
+				}, 100);
+				column.innerHTML = oldSum;
+				return;
+			}
+
 			column.innerHTML = `${oldSum} / <span class="text-success">${result}</span>`;
 		}
 	}
@@ -279,13 +312,13 @@ jQuery(document).ready(function ($) {
 	});
 
 	$("#apply-mass-insert").on("click", function () {
+		const frameId = $("#frame-select").val();
 		const operator_price = $("#operator-price-select").val();
 		let sum_price = parseFloat($("#sum-price-input").val());
 		const operator_promotion = $("#operator-promotion-select").val();
 		let sum_promotion = parseFloat($("#sum-promotion-input").val());
 		const startDate = $("#mass-start-date").val();
 		const endDate = $("#mass-end-date").val();
-		const pricesEdit = $("#mass-edit-prices").prop("checked");
 		const pricesRound = $("#mass-round-prices").prop("checked");
 		const pricesToPromo = $("#mass-prices-to-promo").prop("checked");
 
@@ -307,16 +340,16 @@ jQuery(document).ready(function ($) {
 			method: "POST",
 			data: {
 				action: "mass_insert_frames",
+				frame_id: frameId,
 				product_ids: product_ids,
 				operator_price: operator_price,
 				sum_price: sum_price,
 				operator_promotion: operator_promotion,
 				sum_promotion: sum_promotion,
-				startDate: startDate,
-				endDate: endDate,
-				pricesEdit: pricesEdit,
-				pricesRound: pricesRound,
-				pricesToPromo: pricesToPromo,
+				start_date: startDate,
+				end_date: endDate,
+				prices_round: pricesRound,
+				prices_to_promo: pricesToPromo,
 			},
 			success: function (response) {
 				if (response.success) {
