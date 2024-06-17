@@ -196,7 +196,7 @@ function frames_list_page()
 										echo '<td><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
 										echo '<td>' . $frame_data->frame_description . '</td>';
 										echo '<td class="frame-table-price" data-end-date="' . $frame_data->frame_end_date . '">' . $frame_data->frame_price . '</td>';
-										echo '<td class="frame-table-promo" data-end-date="' . $frame_data->frame_end_date . '">' . $frame_data->frame_promo_price . '</td>';
+										echo '<td class="frame-table-promo" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '">' . $frame_data->frame_promo_price . '</td>';
 									}
 									echo '<td><button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button></td>';
 									echo '</tr>';
@@ -531,19 +531,12 @@ function calculate_new_value($current_value, $operator, $sum, $round, $to_promo)
 			break;
 	}
 
-	if ($round) {
-		$tolerance = 0.00001;
-		if ($total % 1 >= 0.5 - $tolerance) {
-			$result = ceil($total);
-		} else {
-			$result = floor($total);
-		}
-	} else {
-		$result = $total;
+	if ($round === true) {
+		return round($total);
 	}
 
-	var_dump($result);
+	return $total;
 
-	return $result;	
+	
 }
 ?>

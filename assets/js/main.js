@@ -75,7 +75,6 @@ function changePriceVisual() {
 		const endDate = document.getElementById("mass-end-date");
 		const pricesEdit = document.getElementById("mass-edit-prices");
 		const pricesRound = document.getElementById("mass-round-prices");
-		const pricesToPromo = document.getElementById("mass-prices-to-promo");
 
 		if ((!startDate.value || !endDate.value) && !pricesEdit.checked) {
 			frame_notifier.warning(`Трябва да бъдат избрани дати или да е маркирана отметката "Редактирай цените".`);
@@ -118,7 +117,13 @@ function changePriceVisual() {
 	}
 
 	function calculateSum(column, operator, sum, round, reset) {
-		const oldSum = parseInt(column.innerHTML);
+		let oldSum = 0;
+		if (document.getElementById("mass-prices-to-promo").checked && column.className === "frame-table-promo") {
+			oldSum = parseInt(column.getAttribute("data-price"));
+		} else {
+			oldSum = parseInt(column.innerHTML);
+		}
+
 		const newSum = parseInt(sum);
 		let result = 0;
 
@@ -144,12 +149,7 @@ function changePriceVisual() {
 			}
 
 			if (round) {
-				const tolerance = 0.00001;
-				if (result % 1 >= 0.5 - tolerance) {
-					result = Math.ceil(result);
-				} else {
-					result = Math.floor(result);
-				}
+				result = result % 1 >= 0.5 ? Math.ceil(result) : Math.floor(result);
 			}
 
 			if (reset) {
