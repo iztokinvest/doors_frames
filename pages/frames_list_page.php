@@ -455,11 +455,12 @@ function mass_insert_frames()
 		foreach ($product_ids as $product_id) {
 			$current_values = $wpdb->get_results($wpdb->prepare(
 				"SELECT * FROM {$table_name} WHERE product_id = %d AND frame_id = %d ORDER BY frame_end_date DESC LIMIT 1",
-				$product_id, $frame_id
+				$product_id,
+				$frame_id
 			));
 
-			$new_price = calculate_new_value($current_values[0]->frame_price, $operator_price, $sum_price);
-			$new_promo_price = calculate_new_value($current_values[0]->frame_promo_price, $operator_promotion, $sum_promotion);
+			$new_price = calculate_new_value($current_values[0]->frame_price, $operator_price, $sum_price, $prices_round, $prices_to_promo);
+			$new_promo_price = calculate_new_value($current_values[0]->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo);
 
 			if ($edit_query) {
 				$update_query = $wpdb->prepare(
@@ -503,21 +504,46 @@ function mass_insert_frames()
 	}
 }
 
-function calculate_new_value($current_value, $operator, $sum)
+function calculate_new_value($current_value, $operator, $sum, $round, $to_promo)
 {
+	if ($round === 'true') {
+		$round = true;
+	}
+
 	switch ($operator) {
 		case '+':
-			return $current_value + $sum;
+			$total = $current_value + $sum;
+			break;
 		case '-':
-			return $current_value - $sum;
+			$total =  $current_value - $sum;
+			break;
 		case '+%':
-			return $current_value + ($current_value * $sum / 100);
+			$total =  $current_value + ($current_value * $sum / 100);
+			break;
 		case '-%':
-			return $current_value - ($current_value * $sum / 100);
+			$total =  $current_value - ($current_value * $sum / 100);
+			break;
 		case '=':
-			return $sum;
+			$total =  $sum;
+			break;
 		default:
-			return $current_value;
+			$total =  $current_value;
+			break;
 	}
+
+	if ($round) {
+		$tolerance = 0.00001;
+		if ($total % 1 >= 0.5 - $tolerance) {
+			$result = ceil($total);
+		} else {
+			$result = floor($total);
+		}
+	} else {
+		$result = $total;
+	}
+
+	var_dump($result);
+
+	return $result;	
 }
 ?>

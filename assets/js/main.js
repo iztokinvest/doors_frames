@@ -144,13 +144,15 @@ function changePriceVisual() {
 			}
 
 			if (round) {
-				result = result % 1 >= 0.5 ? Math.ceil(result) : Math.floor(result);
+				const tolerance = 0.00001;
+				if (result % 1 >= 0.5 - tolerance) {
+					result = Math.ceil(result);
+				} else {
+					result = Math.floor(result);
+				}
 			}
 
 			if (reset) {
-				setTimeout(() => {
-					confirmButton.style.display = "none";
-				}, 100);
 				column.innerHTML = oldSum;
 				return;
 			}
