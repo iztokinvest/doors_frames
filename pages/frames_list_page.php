@@ -460,7 +460,7 @@ function mass_insert_frames()
 			));
 
 			$new_price = calculate_new_value($current_values[0]->frame_price, $operator_price, $sum_price, $prices_round, $prices_to_promo);
-			$new_promo_price = calculate_new_value($current_values[0]->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo);
+			$new_promo_price = calculate_new_value($current_values[0]->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $current_values[0]->frame_price);
 
 			if ($edit_query) {
 				$update_query = $wpdb->prepare(
@@ -504,10 +504,14 @@ function mass_insert_frames()
 	}
 }
 
-function calculate_new_value($current_value, $operator, $sum, $round, $to_promo)
+function calculate_new_value($current_value, $operator, $sum, $round, $to_promo, $to_promo_value = 0)
 {
 	if ($round === 'true') {
 		$round = true;
+	}
+
+	if ($to_promo === 'true') {
+		$current_value = $to_promo_value;
 	}
 
 	switch ($operator) {

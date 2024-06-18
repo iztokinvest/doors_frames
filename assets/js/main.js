@@ -118,6 +118,8 @@ function changePriceVisual() {
 
 	function calculateSum(column, operator, sum, round, reset) {
 		let oldSum = 0;
+		const oldColumnValue = parseInt(column.innerHTML);
+
 		if (document.getElementById("mass-prices-to-promo").checked && column.className === "frame-table-promo") {
 			oldSum = parseInt(column.getAttribute("data-price"));
 		} else {
@@ -153,11 +155,13 @@ function changePriceVisual() {
 			}
 
 			if (reset) {
-				column.innerHTML = oldSum;
+				column.innerHTML = oldColumnValue;
 				return;
 			}
 
-			column.innerHTML = `${oldSum} / <span class="text-success">${result}</span>`;
+			column.innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
+		} else {
+			column.innerHTML = oldColumnValue;
 		}
 	}
 }
@@ -305,6 +309,7 @@ jQuery(document).ready(function ($) {
 		$.when.apply($, requests).done(function () {
 			if (requestTrue.length > 0) {
 				frame_notifier.success("Промените са запазени.");
+				location.reload();
 			} else {
 				frame_notifier.alert("Промените не са запазени.");
 			}
@@ -356,6 +361,7 @@ jQuery(document).ready(function ($) {
 			success: function (response) {
 				if (response.success) {
 					frame_notifier.success(`Цените са променени.`);
+					location.reload();
 				} else {
 					frame_notifier.alert(`Цените не са променени.`);
 				}
