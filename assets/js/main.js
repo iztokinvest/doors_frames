@@ -1,14 +1,3 @@
-const datepickers = document.querySelectorAll(".datepicker-input");
-datepickers.forEach((element) => {
-	const datepicker = new Datepicker(element, {
-		format: "dd/mm/yyyy",
-		daysOfWeekHighlighted: [6, 0],
-		autohide: true,
-		weekStart: 1,
-		language: "bg",
-	});
-});
-
 (function () {
 	Datepicker.locales.bg = {
 		days: ["Неделя", "Понеделник", "Вторник", "Сряда", "Четвъртък", "Петък", "Събота"],
@@ -382,4 +371,17 @@ jQuery(document).ready(function ($) {
 	}
 	$("#mass-edit-prices").on("change", showHideMassDates);
 	showHideMassDates();
+
+	function changeFrameImages() {
+		$(document).on("change", ".frame-image", function () {
+			const $selectElement = $(this);
+			const selectedImage = $selectElement.val();
+			const imgId = $selectElement.data("image-id");
+			const $imgElement = $("#" + imgId);
+			const staticPath = $selectElement.data("static-path");
+
+			$imgElement.attr("src", staticPath + selectedImage);
+		});
+	}
+	changeFrameImages();
 });

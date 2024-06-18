@@ -37,3 +37,7 @@ td {
 .checkbox-badge {
 	line-height: unset;
 }
+
+.expired-date {
+	background-color: #ff000040 !important;
+}

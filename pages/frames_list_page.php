@@ -104,7 +104,7 @@ function frames_list_page()
 								<input required type="text" id="mass-end-date" class="datepicker-input frame-start-date d-inline" placeholder="До дата" />
 							</span>
 							<span class="badge bg-info text-dark checkbox-badge">
-								<input type="checkbox" id="mass-edit-prices" />Редактирай цените
+								<input type="checkbox" id="mass-edit-prices" />Редактирай активните каси
 							</span>
 							<span class="badge bg-info text-dark checkbox-badge">
 								<input type="checkbox" id="mass-round-prices" />Закръгли
@@ -187,16 +187,22 @@ function frames_list_page()
 										));
 									}
 
+									if (isset($frame_data->frame_end_date) && $frame_data->frame_end_date < date('Y-m-d')) {
+										$expired_frame = "expired-date";
+									} else {
+										$expired_frame = "";
+									}
+
 									echo '<tr>';
 									echo '<td>' . get_the_ID() . '</td>';
 									echo '<td>' . get_the_title() . '</td>';
 									echo '<td><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
 									echo '<td><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
 									if ($selected_frame_id) {
-										echo '<td><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
-										echo '<td>' . $frame_data->frame_description . '</td>';
-										echo '<td class="frame-table-price" data-end-date="' . $frame_data->frame_end_date . '">' . $frame_data->frame_price . '</td>';
-										echo '<td class="frame-table-promo" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '">' . $frame_data->frame_promo_price . '</td>';
+										echo '<td class="' . $expired_frame . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
+										echo '<td class="' . $expired_frame . '">' . $frame_data->frame_description . '</td>';
+										echo '<td class="frame-table-price ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '">' . $frame_data->frame_price . '</td>';
+										echo '<td class="frame-table-promo ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '">' . $frame_data->frame_promo_price . '</td>';
 									}
 									echo '<td><button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button></td>';
 									echo '</tr>';
@@ -353,6 +359,21 @@ function fetch_frame_prices()
 		$product_id = intval($_POST['product_id']);
 		$product_title = get_the_title($product_id);
 
+		$folderPath = "{$upload_dir['basedir']}/doors_frames";
+		$images = glob($folderPath . '/*.jpg');
+		$imageFiles = array_map('basename', $images);
+		natsort($imageFiles);
+
+		function imageOptions($imageFiles, $selected){
+			$image_options = '';
+			foreach ($imageFiles as $image) {
+				$image_options .= "<option value='$image' " . ($image == $selected ? 'selected' : '') . ">$image</option>";
+			}
+
+			return $image_options;
+		}
+		
+
 		$table_name = $wpdb->prefix . 'doors_frames';
 		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d ORDER by frame_end_date DESC, frame_id ASC", $product_id));
 
@@ -392,16 +413,21 @@ function fetch_frame_prices()
 				$start_date_value = date_format(date_create_from_format('Y-m-d', $result->frame_start_date), 'd/m/Y');
 				$end_date_value = date_format(date_create_from_format('Y-m-d', $result->frame_end_date), 'd/m/Y');
 				if ($result->frame_end_date < date('Y-m-d')) {
-					$expired = 'style="background: #ff000040"';
+					$expired = 'expired-date';
 				} else {
 					$expired = '';
 				}
+
+				$image_options = imageOptions($imageFiles, $result->frame_image);
+
 				$html .= <<<HTML
-					<tr class="frame-id" $expired data-id="$result->id">
+					<tr class="frame-id $expired" data-id="$result->id">
 						<td><input type="number" step="1" class="form-control price-input frame-id" value="$result->frame_id"></td>
 						<td class="frame-image-container">
-							<img src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
-							<input type="text" class="form-control frame-image" value="$result->frame_image">
+							<img id="frame-img-$result->id" src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
+							<select class="form-control frame-image" data-static-path="{$upload_dir['baseurl']}/doors_frames/" data-image-id="frame-img-$result->id">
+								$image_options
+							</select>
 						</td>
 						<td><textarea class="form-control frame-description" cols="30" rows="3">$result->frame_description</textarea></td>
 						<td><input type="number" step="0.01" class="form-control price-input frame-price" value="$result->frame_price"></td>
@@ -459,7 +485,7 @@ function mass_insert_frames()
 				$frame_id
 			));
 
-			$new_price = calculate_new_value($current_values[0]->frame_price, $operator_price, $sum_price, $prices_round, $prices_to_promo);
+			$new_price = calculate_new_value($current_values[0]->frame_price, $operator_price, $sum_price, $prices_round);
 			$new_promo_price = calculate_new_value($current_values[0]->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $current_values[0]->frame_price);
 
 			if ($edit_query) {
@@ -504,7 +530,7 @@ function mass_insert_frames()
 	}
 }
 
-function calculate_new_value($current_value, $operator, $sum, $round, $to_promo, $to_promo_value = 0)
+function calculate_new_value($current_value, $operator, $sum, $round, $to_promo = 'false', $to_promo_value = 0)
 {
 	if ($round === 'true') {
 		$round = true;
@@ -540,7 +566,5 @@ function calculate_new_value($current_value, $operator, $sum, $round, $to_promo,
 	}
 
 	return $total;
-
-	
 }
 ?>
