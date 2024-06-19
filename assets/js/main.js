@@ -41,6 +41,13 @@ function initializeDatepickers() {
 }
 initializeDatepickers();
 
+new SlimSelect({
+	select: "#frame-select",
+	settings: {
+		hideSelected: false,
+	},
+});
+
 function changePriceVisual() {
 	const checkButton = document.getElementById("check-mass-insert");
 	const confirmButton = document.getElementById("apply-mass-insert");
@@ -109,7 +116,7 @@ function changePriceVisual() {
 		let oldSum = 0;
 		const oldColumnValue = parseInt(column.innerHTML);
 
-		if (document.getElementById("mass-prices-to-promo").checked && column.className === "frame-table-promo") {
+		if (document.getElementById("mass-prices-to-promo").checked && column.classList.contains("frame-table-promo")) {
 			oldSum = parseInt(column.getAttribute("data-price"));
 		} else {
 			oldSum = parseInt(column.innerHTML);
@@ -211,10 +218,18 @@ jQuery(document).ready(function ($) {
 	});
 
 	$(document).on("click", "#add-new-frame", function () {
+		const newId = new Date().getTime();
 		$("#new-frame-table").show();
 		$("#new-frame-table tbody").append(`
 			<tr class="new-frame" data-id="${$(this).data("id")}">>
-				<td class="frame-image-container"><input type="text" class="form-control new-frame-image" placeholder="Изображение"></td>
+				<td><input type="number" step="1" class="form-control price-input frame-id" placeholder="№"></td>
+				<td class="frame-image-container">
+					<img id="frame-img-${newId}" class="frame-img">
+					<select class="form-control new-frame-image change-frame-image" data-image-id="frame-img-${newId}">
+						<option value="">Каса</option>
+						${$("#all-frame-images").data("frame-options")}
+					</select>
+				</td>
 				<td><textarea class="form-control new-frame-description" cols="30" rows="3" placeholder="Описание"></textarea></td>
 				<td><input type="number" step="0.01" class="form-control price-input new-frame-price" placeholder="Цена"></td>
 				<td><input type="number" step="0.01" class="form-control price-input new-frame-promo-price" placeholder="Промо"></td>
@@ -373,12 +388,12 @@ jQuery(document).ready(function ($) {
 	showHideMassDates();
 
 	function changeFrameImages() {
-		$(document).on("change", ".frame-image", function () {
+		$(document).on("change", ".change-frame-image", function () {
 			const $selectElement = $(this);
 			const selectedImage = $selectElement.val();
 			const imgId = $selectElement.data("image-id");
 			const $imgElement = $("#" + imgId);
-			const staticPath = $selectElement.data("static-path");
+			const staticPath = $("#product-title").data("static-images-path");
 
 			$imgElement.attr("src", staticPath + selectedImage);
 		});

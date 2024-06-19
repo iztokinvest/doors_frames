@@ -3,7 +3,7 @@
 Plugin Name: Doors Frames
 Plugin URI: https://github.com/iztokinvest/doors_frames
 Description: Цени на каси.
-Version: 0.9.0
+Version: 0.10.0
 Author: Martin Mladenov
 GitHub Plugin URI: https://github.com/iztokinvest/doors_frames
 GitHub Branch: main

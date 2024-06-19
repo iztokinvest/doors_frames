@@ -1,5 +1,5 @@
 .frame-img {
-	max-height: 50px;
+	max-height: 55px;
 }
 
 .frame-image,
@@ -40,4 +40,13 @@ td {
 
 .expired-date {
 	background-color: #ff000040 !important;
+}
+
+.slim-select {
+	width: auto;
+	display: inline-flex;
+}
+
+.table>tbody {
+	vertical-align: middle;
 }

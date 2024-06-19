@@ -13,7 +13,7 @@ function frames_list_page()
 	));
 
 	$selected_category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : '';
-	$selected_frame_id = isset($_GET['frame_id']) ? intval($_GET['frame_id']) : '';
+	$selected_frame_ids = isset($_GET['frame_id']) ? $_GET['frame_id'] : false;
 	$search_term = isset($_GET['search_term']) ? sanitize_text_field($_GET['search_term']) : '';
 
 	$frames = array();
@@ -56,11 +56,11 @@ function frames_list_page()
 						?>
 					</select>
 					<?php if ($frames) : ?>
-						<select id="frame-select" name="frame_id" onchange="this.form.submit()">
+						<select id="frame-select" class="slim-select" name="frame_id[]" multiple>
 							<option value=""></option>
 							<?php
 							foreach ($frames as $frame) {
-								$selected = ($frame->frame_id == $selected_frame_id) ? ' selected' : '';
+								$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
 								echo '<option value="' . $frame->frame_id . '"' . $selected . '>Цена ' . $frame->frame_id . '</option>';
 							}
 							?>
@@ -74,7 +74,7 @@ function frames_list_page()
 
 			<?php if ($selected_category_id || $search_term) : ?>
 
-				<?php if ($selected_frame_id) : ?>
+				<?php if ($selected_frame_ids) : ?>
 					<!-- Mass Insert Form -->
 					<hr>
 					<form id="mass-insert-form" class="mt-2">
@@ -104,7 +104,7 @@ function frames_list_page()
 								<input required type="text" id="mass-end-date" class="datepicker-input frame-start-date d-inline" placeholder="До дата" />
 							</span>
 							<span class="badge bg-info text-dark checkbox-badge">
-								<input type="checkbox" id="mass-edit-prices" />Редактирай активните каси
+								<input type="checkbox" id="mass-edit-prices" />Редактирай последните цени
 							</span>
 							<span class="badge bg-info text-dark checkbox-badge">
 								<input type="checkbox" id="mass-round-prices" />Закръгли
@@ -113,8 +113,8 @@ function frames_list_page()
 								<input type="checkbox" id="mass-prices-to-promo" />Цена към промо
 							</span>
 						</span>
-						<button type="button" id="check-mass-insert" class="btn btn-warning">Провери</button>
-						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none">Потвърди</button>
+						<button type="button" id="check-mass-insert" class="btn btn-warning">Промени</button>
+						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none">Запази</button>
 					</form>
 				<?php endif; ?>
 
@@ -126,11 +126,12 @@ function frames_list_page()
 								<th><span class="badge bg-secondary">Име</span></th>
 								<th><span class="badge bg-secondary">Цена</span></th>
 								<th><span class="badge bg-secondary">Промоция</span></th>
-								<?php if ($selected_frame_id) : ?>
+								<?php if ($selected_frame_ids) : ?>
 									<th><span class="badge bg-secondary">Каса</span></th>
 									<th><span class="badge bg-secondary">Описание каса</span></th>
 									<th><span class="badge bg-secondary">Цена каса</span></th>
 									<th><span class="badge bg-secondary">Промо каса</span></th>
+									<th><span class="badge bg-secondary">До дата</span></th>
 								<?php endif; ?>
 								<th><span class="badge bg-secondary">Действия</span></th>
 							</tr>
@@ -153,17 +154,17 @@ function frames_list_page()
 								);
 							}
 
-							if ($selected_frame_id) {
+							if ($selected_frame_ids) {
 								$frame_products = $wpdb->get_col($wpdb->prepare(
 									"SELECT product_id 
 									FROM {$wpdb->prefix}doors_frames 
-									WHERE frame_id = %d",
-									$selected_frame_id
+									WHERE frame_id IN (%s)",
+									implode(',', $selected_frame_ids)
 								));
 								if ($frame_products) {
 									$args['post__in'] = $frame_products;
 								} else {
-									$args['post__in'] = array(0); // No products found
+									$args['post__in'] = array(0);
 								}
 							}
 
@@ -176,36 +177,64 @@ function frames_list_page()
 									$regular_price = $product->get_regular_price();
 									$sale_price = $product->get_sale_price();
 
-									if ($selected_frame_id) {
-										$frame_data = $wpdb->get_row($wpdb->prepare(
-											"SELECT frame_description, frame_image, frame_price, frame_promo_price, frame_end_date
+									if ($selected_frame_ids) {
+										$frame_ids_placeholder = implode(',', array_fill(0, count($selected_frame_ids), '%d'));
+
+										$sql = $wpdb->prepare(
+											"SELECT frame_id, frame_description, frame_image, frame_price, frame_promo_price, frame_end_date
 											FROM {$wpdb->prefix}doors_frames 
-											WHERE product_id = %d AND frame_id = '%d'
-											ORDER BY frame_end_date DESC LIMIT 1",
-											get_the_ID(),
-											$selected_frame_id
-										));
+											WHERE product_id = %d AND frame_id IN ($frame_ids_placeholder) AND frame_end_date > NOW()
+											ORDER BY frame_id",
+											array_merge([get_the_ID()], $selected_frame_ids)
+										);
+
+										$frame_data_list = $wpdb->get_results($sql);
 									}
 
-									if (isset($frame_data->frame_end_date) && $frame_data->frame_end_date < date('Y-m-d')) {
-										$expired_frame = "expired-date";
+									if (isset($frame_data_list) && is_array($frame_data_list)) {
+										$rowspan = count($frame_data_list);
 									} else {
-										$expired_frame = "";
+										$rowspan = 1;
 									}
 
 									echo '<tr>';
-									echo '<td>' . get_the_ID() . '</td>';
-									echo '<td>' . get_the_title() . '</td>';
-									echo '<td><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
-									echo '<td><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
-									if ($selected_frame_id) {
-										echo '<td class="' . $expired_frame . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
-										echo '<td class="' . $expired_frame . '">' . $frame_data->frame_description . '</td>';
-										echo '<td class="frame-table-price ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '">' . $frame_data->frame_price . '</td>';
-										echo '<td class="frame-table-promo ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '">' . $frame_data->frame_promo_price . '</td>';
+									echo '<td rowspan="' . $rowspan . '">' . get_the_ID() . '</td>';
+									echo '<td rowspan="' . $rowspan . '">' . get_the_title() . '</td>';
+									echo '<td rowspan="' . $rowspan . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
+									echo '<td rowspan="' . $rowspan . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
+
+									$modal_button = '<button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
+
+									if (isset($frame_data_list) && is_array($frame_data_list)) {
+										$first_frame = true;
+										foreach ($frame_data_list as $frame_data) {
+											if (!$first_frame) {
+												echo '<tr>';
+											}
+
+											if (isset($frame_data->frame_end_date) && $frame_data->frame_end_date < date('Y-m-d')) {
+												$expired_frame = "expired-date";
+											} else {
+												$expired_frame = "";
+											}
+
+											$expired_date = date('d.m.Y', strtotime($frame_data->frame_end_date));
+											echo '<td class="' . $expired_frame . '"><span>' . $frame_data->frame_id . '</span> <img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
+											echo '<td class="' . $expired_frame . '">' . $frame_data->frame_description . '</td>';
+											echo '<td class="frame-table-price ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '">' . $frame_data->frame_price . '</td>';
+											echo '<td class="frame-table-promo ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '">' . $frame_data->frame_promo_price . '</td>';
+											echo '<td class="' . $expired_frame . '">' . $expired_date . '</td>';
+
+											if ($first_frame) {
+												echo '<td rowspan="' . $rowspan . '">' . $modal_button . '</td>';
+												$first_frame = false;
+											}
+
+											echo '</tr>';
+										}
+									} else {
+										echo '<td>' . $modal_button . '</td>';
 									}
-									echo '<td><button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button></td>';
-									echo '</tr>';
 								}
 								wp_reset_postdata();
 							} else {
@@ -364,7 +393,8 @@ function fetch_frame_prices()
 		$imageFiles = array_map('basename', $images);
 		natsort($imageFiles);
 
-		function imageOptions($imageFiles, $selected){
+		function imageOptions($imageFiles, $selected)
+		{
 			$image_options = '';
 			foreach ($imageFiles as $image) {
 				$image_options .= "<option value='$image' " . ($image == $selected ? 'selected' : '') . ">$image</option>";
@@ -372,13 +402,25 @@ function fetch_frame_prices()
 
 			return $image_options;
 		}
-		
+
+		function blankImageOptions($imageFiles)
+		{
+			$image_options = '';
+			foreach ($imageFiles as $image) {
+				$image_options .= "<option value='$image'>$image</option>";
+			}
+
+			return $image_options;
+		}
+		$blankImageOptions = blankImageOptions($imageFiles);
 
 		$table_name = $wpdb->prefix . 'doors_frames';
 		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d ORDER by frame_end_date DESC, frame_id ASC", $product_id));
 
+		$html_product_title = "<h5 id='product-title' class='text-center' data-static-images-path='{$upload_dir['baseurl']}/doors_frames/'><mark>$product_title</mark></h5>";
+
 		$html_new_table = <<<HTML
-			<div class="m-1">
+			<div id="all-frame-images" class="m-1" data-frame-options="$blankImageOptions">
 				<table class="table bg-info" id="new-frame-table" style="display: none;">
 					<thead>
 						<tbody></tbody>
@@ -393,7 +435,6 @@ function fetch_frame_prices()
 
 			$html = <<<HTML
 				<div class="m-1">
-					<h5>$product_title</h5>
 					<table class="table table-striped">
 						<thead>
 							<tr>
@@ -425,7 +466,7 @@ function fetch_frame_prices()
 						<td><input type="number" step="1" class="form-control price-input frame-id" value="$result->frame_id"></td>
 						<td class="frame-image-container">
 							<img id="frame-img-$result->id" src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
-							<select class="form-control frame-image" data-static-path="{$upload_dir['baseurl']}/doors_frames/" data-image-id="frame-img-$result->id">
+							<select class="form-control frame-image change-frame-image" data-image-id="frame-img-$result->id">
 								$image_options
 							</select>
 						</td>
@@ -446,9 +487,9 @@ function fetch_frame_prices()
 
 			$html .= $html_new_table;
 
-			wp_send_json_success($html);
+			wp_send_json_success($html_product_title . $html);
 		} else {
-			wp_send_json_success($html_new_table);
+			wp_send_json_success($html_product_title . $html_new_table);
 		}
 	} else {
 		wp_send_json_error();
@@ -480,7 +521,7 @@ function mass_insert_frames()
 
 		foreach ($product_ids as $product_id) {
 			$current_values = $wpdb->get_results($wpdb->prepare(
-				"SELECT * FROM {$table_name} WHERE product_id = %d AND frame_id = %d ORDER BY frame_end_date DESC LIMIT 1",
+				"SELECT *, MAX(frame_end_date) max_date FROM {$table_name} WHERE product_id = %d AND frame_id = %d ORDER BY frame_end_date DESC LIMIT 1",
 				$product_id,
 				$frame_id
 			));
@@ -497,16 +538,31 @@ function mass_insert_frames()
 					WHERE 
 						frame_id = %d
 						AND product_id = %d 
-						AND frame_end_date > %s",
+						AND frame_end_date = %s",
 					$new_price >= 0 ? $new_price : $current_values[0]->frame_price,
 					$new_promo_price >= 0 ? $new_promo_price : $current_values[0]->frame_promo_price,
 					$frame_id,
 					$product_id,
-					date('Y-m-d')
+					$current_values[0]->max_date
 				);
 
 				$wpdb->query($update_query);
 			} else {
+				$update_query = $wpdb->prepare(
+					"UPDATE $table_name 
+				SET 
+					frame_end_date = %s
+				WHERE 
+					frame_id = %d
+					AND product_id = %d 
+					AND frame_end_date > %s",
+					$start_date,
+					$frame_id,
+					$product_id,
+					date('Y-m-d')
+				);
+				$wpdb->query($update_query);
+
 				$wpdb->insert(
 					$table_name,
 					array(
