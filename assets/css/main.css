@@ -34,12 +34,20 @@ td {
 	text-align: center;
 }
 
+.table-bordered>:not(caption)>* {
+	border-color: #c7c7c7;
+}
+
 .checkbox-badge {
 	line-height: unset;
 }
 
 .expired-date {
 	background-color: #ff000040 !important;
+}
+
+.not-expired-date {
+	background-color: #fff !important;
 }
 
 .slim-select {
@@ -49,4 +57,10 @@ td {
 
 .table>tbody {
 	vertical-align: middle;
+}
+
+#mass-insert-form {
+	background-color: #0d6efd38;
+	padding: 5px;
+	border-radius: 10px;
 }

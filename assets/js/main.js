@@ -44,7 +44,10 @@ initializeDatepickers();
 new SlimSelect({
 	select: "#frame-select",
 	settings: {
-		hideSelected: false,
+		allowDeselect: true,
+		closeOnSelect: false,
+		selectAll: true,
+		placeholderText: "Цена №",
 	},
 });
 
@@ -115,6 +118,7 @@ function changePriceVisual() {
 	function calculateSum(column, operator, sum, round, reset) {
 		let oldSum = 0;
 		const oldColumnValue = parseInt(column.innerHTML);
+		const changePrice = column.getAttribute("data-change-price");
 
 		if (document.getElementById("mass-prices-to-promo").checked && column.classList.contains("frame-table-promo")) {
 			oldSum = parseInt(column.getAttribute("data-price"));
@@ -125,7 +129,7 @@ function changePriceVisual() {
 		const newSum = parseInt(sum);
 		let result = 0;
 
-		if (sum > 0) {
+		if (sum > 0 && changePrice === "true") {
 			switch (operator) {
 				case "+":
 					result = oldSum + newSum;
@@ -323,7 +327,7 @@ jQuery(document).ready(function ($) {
 	});
 
 	$("#apply-mass-insert").on("click", function () {
-		const frameId = $("#frame-select").val();
+		const frameIds = $("#frame-select").val();
 		const operator_price = $("#operator-price-select").val();
 		let sum_price = parseFloat($("#sum-price-input").val());
 		const operator_promotion = $("#operator-promotion-select").val();
@@ -351,7 +355,7 @@ jQuery(document).ready(function ($) {
 			method: "POST",
 			data: {
 				action: "mass_insert_frames",
-				frame_id: frameId,
+				frame_ids: frameIds,
 				product_ids: product_ids,
 				operator_price: operator_price,
 				sum_price: sum_price,
