@@ -74,6 +74,8 @@ function changePriceVisual() {
 		const endDate = document.getElementById("mass-end-date");
 		const pricesEdit = document.getElementById("mass-edit-prices");
 		const pricesRound = document.getElementById("mass-round-prices");
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
 
 		if ((!startDate.value || !endDate.value) && !pricesEdit.checked) {
 			frame_notifier.warning(`Трябва да бъдат избрани дати или да е маркирана отметката "Редактирай цените".`);
@@ -93,7 +95,7 @@ function changePriceVisual() {
 		for (const tablePrice of tablePrices) {
 			const rowPriceEndDate = tablePrice.getAttribute("data-end-date");
 			let reset = false;
-			if (pricesEdit.checked && new Date(rowPriceEndDate) < new Date()) {
+			if (pricesEdit.checked && new Date(rowPriceEndDate) < today) {
 				reset = true;
 			}
 			calculateSum(tablePrice, operatorPrice, priceInput.value, pricesRound.checked, reset);
@@ -102,7 +104,7 @@ function changePriceVisual() {
 		for (const tablePromo of tablePromos) {
 			const rowPromoEndDate = tablePromo.getAttribute("data-end-date");
 			let reset = false;
-			if (pricesEdit.checked && new Date(rowPromoEndDate) < new Date()) {
+			if (pricesEdit.checked && new Date(rowPromoEndDate) < today) {
 				reset = true;
 			}
 			calculateSum(tablePromo, operatorPromo, promoInput.value, pricesRound.checked, reset);
@@ -257,6 +259,7 @@ jQuery(document).ready(function ($) {
 			const description = $(this).find(".frame-description").val();
 			const startDate = $(this).find(".frame-start-date").val();
 			const endDate = $(this).find(".frame-end-date").val();
+			const delete_frame = $(this).find(".delete-frame").prop("checked");
 
 			const request = $.ajax({
 				url: ajaxurl,
@@ -271,6 +274,7 @@ jQuery(document).ready(function ($) {
 					frame_description: description,
 					frame_start_date: startDate,
 					frame_end_date: endDate,
+					delete_frame: delete_frame,
 				},
 			});
 

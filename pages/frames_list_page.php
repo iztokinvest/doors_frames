@@ -184,7 +184,7 @@ function frames_list_page()
 										$sql = $wpdb->prepare(
 											"SELECT frame_id, frame_description, frame_image, frame_price, frame_promo_price, frame_end_date
 											FROM {$wpdb->prefix}doors_frames 
-											WHERE product_id = %d AND frame_id IN ($frame_ids_placeholder) AND frame_end_date > NOW()
+											WHERE product_id = %d AND frame_id IN ($frame_ids_placeholder) AND frame_end_date >= CURDATE()
 											ORDER BY frame_end_date DESC, frame_id ASC",
 											array_merge([get_the_ID()], $selected_frame_ids)
 										);
@@ -316,6 +316,20 @@ function update_frame_prices()
 		$frame_description = sanitize_textarea_field($_POST['frame_description']);
 		$frame_start_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_start_date'])), 'Y-m-d');
 		$frame_end_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_end_date'])), 'Y-m-d');
+		$delete_frame = sanitize_text_field($_POST['delete_frame']);
+		
+		if ($delete_frame == 'true') {
+			$result = $wpdb->delete(
+				$wpdb->prefix . 'doors_frames',
+				array('id' => $id),
+				array('%d')
+			);
+			if ($result !== false) {
+				wp_send_json_success();
+			} else {
+				wp_send_json_error();
+			}
+		}
 
 		$table_name = $wpdb->prefix . 'doors_frames';
 
@@ -454,6 +468,7 @@ function fetch_frame_prices()
 								<th>Промоция</th>
 								<th>Начална дата</th>
 								<th>Крайна дата</th>
+								<th>Изтрий</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -484,6 +499,7 @@ function fetch_frame_prices()
 						<td><input type="number" step="0.01" class="form-control price-input frame-promo-price" value="$result->frame_promo_price"></td>
 						<td><input required type="text" class="form-control datepicker-input frame-start-date" value="$start_date_value" /></td>
 						<td><input required type="text" class="form-control datepicker-input frame-end-date" value="$end_date_value" /></td>
+						<td><input type="checkbox" class="form-control delete-frame"></td>
 					</tr>
 				HTML;
 			}
@@ -511,7 +527,8 @@ function mass_insert_frames()
 	global $wpdb;
 
 	if (isset($_POST['product_ids']) && isset($_POST['operator_price']) && isset($_POST['operator_promotion'])) {
-		$frame_ids = implode(',', $_POST['frame_ids']);
+		$frame_ids =
+			implode(',', array_fill(0, count($_POST['frame_ids']), '%d'));
 		$product_ids = array_map('intval', $_POST['product_ids']);
 		$operator_price = sanitize_text_field($_POST['operator_price']);
 		$sum_price = floatval($_POST['sum_price']);
@@ -529,20 +546,17 @@ function mass_insert_frames()
 		$table_name = $wpdb->prefix . 'doors_frames';
 
 		foreach ($product_ids as $product_id) {
-			$max_date = $wpdb->get_var($wpdb->prepare(
-				"SELECT MAX(frame_end_date) FROM {$table_name} WHERE product_id = %d AND frame_id IN ($frame_ids) AND frame_end_date > NOW()",
-				$product_id,
-				$frame_ids
-			));
+			$max_date_sql = $wpdb->prepare(
+				"SELECT MAX(frame_end_date) FROM {$table_name} WHERE product_id = %d AND frame_id IN ($frame_ids) AND frame_end_date >= CURDATE()",
+				array_merge([$product_id], $_POST['frame_ids'])
+			);
+			$max_date = $wpdb->get_var($max_date_sql);
 
-			$current_values = $wpdb->get_results($wpdb->prepare(
+			$current_values_sql = $wpdb->prepare(
 				"SELECT * FROM {$table_name} WHERE product_id = %d AND frame_id IN ($frame_ids) AND frame_end_date = %s",
-				$product_id,
-				$frame_ids,
-				$max_date
-			));
-
-			print_r($current_values);
+				array_merge([$product_id], $_POST['frame_ids'], [$max_date])
+			);
+			$current_values = $wpdb->get_results($current_values_sql);
 
 			foreach ($current_values as $current_value) {
 
@@ -556,12 +570,10 @@ function mass_insert_frames()
 						frame_price = %f,
 						frame_promo_price = %f 
 					WHERE 
-						frame_id = %d
-						AND product_id = %d",
+						id = %d",
 						$new_price >= 0 ? $new_price : $current_value->frame_price,
 						$new_promo_price >= 0 ? $new_promo_price : $current_value->frame_promo_price,
-						$current_value->frame_id,
-						$product_id
+						$current_value->id
 					);
 
 					$wpdb->query($update_query);
@@ -571,11 +583,9 @@ function mass_insert_frames()
 					SET 
 						frame_end_date = %s
 					WHERE 
-						frame_id = %d
-						AND product_id = %d",
+						id = %d",
 						$start_date,
-						$current_value->frame_id,
-						$product_id
+						$current_value->id
 					);
 					$wpdb->query($update_query);
 
