@@ -33,6 +33,21 @@ function frames_list_page()
 ?>
 	<div class="wrap">
 		<h1>Цени на каси</h1>
+		<?php if ($selected_category_id) {
+			$tabs_table = $wpdb->prefix . 'doors_frames_tabs';
+			$tab_data = $wpdb->get_row($wpdb->prepare(
+				"SELECT tab_title, table_text 
+				FROM $tabs_table 
+				WHERE category_id = %d",
+				$selected_category_id
+			));	
+		?>
+		<span id="message-box" class="float-end">
+			<input type="text" id="tab-title" data-category-id="<?php echo $selected_category_id; ?>" value="<?php echo ($tab_data ? $tab_data->tab_title : ''); ?>" placeholder="Текст на таба">
+			<input type="text" id="table-text" value="<?php echo ($tab_data ? $tab_data->table_text : ''); ?>" placeholder="Текст под таблицата">
+			<button id="tab-button">Запази</button>
+		</span>
+		<?php } ?>
 		<div>
 			<form method="get" action="">
 				<input type="hidden" name="page" value="frames-list-page">
@@ -277,6 +292,45 @@ function frames_list_page()
 <?php
 }
 
+add_action('wp_ajax_update_tab', 'update_tab');
+function update_tab()
+{
+	global $wpdb;
+	$tabs_table = $wpdb->prefix . 'doors_frames_tabs';
+
+	if (isset($_POST['tab_text'])) {
+		$category_id = intval($_POST['category_id']);
+		$tab_title = sanitize_text_field($_POST['tab_text']);
+		$table_text = sanitize_text_field($_POST['table_text']);
+
+		$existing_tab = $wpdb->get_row($wpdb->prepare("SELECT id FROM $tabs_table WHERE category_id = %d", $category_id));
+
+		if ($existing_tab) {
+			$wpdb->update(
+				$tabs_table,
+				[
+					'tab_title' => $tab_title,
+					'table_text' => $table_text,
+				],
+				['category_id' => $category_id]
+			);
+		} else {
+			$wpdb->insert(
+				$tabs_table,
+				[
+					'category_id' => $category_id,
+					'tab_title' => $tab_title,
+					'table_text' => $table_text,
+				]
+			);
+		}
+
+		wp_send_json_success();
+	} else {
+		wp_send_json_error();
+	}
+}
+
 add_action('wp_ajax_update_product_price', 'update_product_price');
 function update_product_price()
 {
@@ -317,7 +371,7 @@ function update_frame_prices()
 		$frame_start_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_start_date'])), 'Y-m-d');
 		$frame_end_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_end_date'])), 'Y-m-d');
 		$delete_frame = sanitize_text_field($_POST['delete_frame']);
-		
+
 		if ($delete_frame == 'true') {
 			$result = $wpdb->delete(
 				$wpdb->prefix . 'doors_frames',

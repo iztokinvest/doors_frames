@@ -170,6 +170,30 @@ function changePriceVisual() {
 changePriceVisual();
 
 jQuery(document).ready(function ($) {
+	$("#tab-button").on("click", function () {
+		const categoryId = $("#tab-title").data("category-id");
+		const tabText = $("#tab-title").val();
+		const tableText = $("#table-text").val();
+
+		$.ajax({
+			url: ajaxurl,
+			type: "POST",
+			data: {
+				action: "update_tab",
+				category_id: categoryId,
+				tab_text: tabText,
+				table_text: tableText,
+			},
+			success: function (response) {
+				if (response.success) {
+					frame_notifier.success(`Текстът е променен.`);
+				} else {
+					frame_notifier.alert(`Текстът не променен.`);
+				}
+			},
+		});
+	});
+
 	$(".price-inputs").on("change", function () {
 		const productId = $(this).data("id");
 		const newPrice = $(this).val();

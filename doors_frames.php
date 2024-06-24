@@ -3,7 +3,7 @@
 Plugin Name: Doors Frames
 Plugin URI: https://github.com/iztokinvest/doors_frames
 Description: Цени на каси.
-Version: 0.12.0
+Version: 0.13.0
 Author: Martin Mladenov
 GitHub Plugin URI: https://github.com/iztokinvest/doors_frames
 GitHub Branch: main
@@ -106,6 +106,7 @@ function create_tables()
 	global $wpdb;
 
 	$frames_table = $wpdb->prefix . 'doors_frames';
+	$tabs_table = $wpdb->prefix . 'doors_frames_tabs';
 
 	$charset_collate = $wpdb->get_charset_collate();
 
@@ -116,14 +117,23 @@ function create_tables()
 		frame_price float NOT NULL,
 		frame_promo_price float NOT NULL,
 		frame_description varchar(500) NOT NULL,
-		frame_image varchar(250) DEFAULT NOT NULL,
+		frame_image varchar(250) DEFAULT NULL,
 		frame_start_date datetime NOT NULL,
 		frame_end_date datetime NOT NULL,
 		PRIMARY KEY (id)
 	) $charset_collate;";
 
+	$sql_tabs = "CREATE TABLE IF NOT EXISTS $tabs_table (
+		id int(11) NOT NULL AUTO_INCREMENT,
+		category_id int(11) NOT NULL,
+		tab_title varchar(250) DEFAULT NULL,
+		table_text varchar(500) NOT NULL,
+		PRIMARY KEY (id)
+	) $charset_collate;";
+
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 	dbDelta($sql_frames);
+	dbDelta($sql_tabs);
 }
 register_activation_hook(__FILE__, 'create_tables');
 
@@ -131,4 +141,4 @@ include_once(plugin_dir_path(__FILE__) . 'includes/enqueue.php');
 include_once(plugin_dir_path(__FILE__) . 'includes/menu.php');
 
 include_once(plugin_dir_path(__FILE__) . 'pages/frames_list_page.php');
-include_once(plugin_dir_path(__FILE__) . 'pages/shortcodes.php');
+include_once(plugin_dir_path(__FILE__) . 'pages/frames_tab.php');
