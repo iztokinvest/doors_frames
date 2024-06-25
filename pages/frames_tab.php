@@ -35,8 +35,8 @@ function custom_product_tab($tabs)
 
 	if (!empty($product_frames) && $tab_data && !empty($tab_data->tab_title) && (current_user_can('administrator') || empty($frame_prices_exists))) {
 		$tabs['custom_tab'] = array(
-			'title'    => __($tab_data->tab_title, 'your-text-domain'),
-			'priority' => 50,
+			'title'    => __($tab_data->tab_title, 'woocommerce'),
+			'priority' => 31,
 			'callback' => 'custom_product_tab_content'
 		);
 	}
