@@ -51,10 +51,18 @@ new SlimSelect({
 	},
 });
 
-document.getElementById("edit-tab").addEventListener("click", () => {
-	document.getElementById("edit-tab").style.display = "none";
-	document.getElementById("tab-box").style.display = "flex";
-});
+function editTab() {
+	const editTabButton = document.getElementById("edit-tab");
+	const tabBox = document.getElementById("tab-box");
+
+	if (editTabButton) {
+		editTabButton.addEventListener("click", () => {
+			editTabButton.style.display = "none";
+			tabBox.style.display = "flex";
+		});
+	}
+}
+editTab();
 
 function changePriceVisual() {
 	const checkButton = document.getElementById("check-mass-insert");
