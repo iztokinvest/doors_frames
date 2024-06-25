@@ -32,7 +32,6 @@ function frames_list_page()
 
 ?>
 	<div class="wrap">
-		<h1>Цени на каси</h1>
 		<?php if ($selected_category_id) {
 			$tabs_table = $wpdb->prefix . 'doors_frames_tabs';
 			$tab_data = $wpdb->get_row($wpdb->prepare(
@@ -40,13 +39,24 @@ function frames_list_page()
 				FROM $tabs_table 
 				WHERE category_id = %d",
 				$selected_category_id
-			));	
+			));
 		?>
-		<span id="message-box" class="float-end">
-			<input type="text" id="tab-title" data-category-id="<?php echo $selected_category_id; ?>" value="<?php echo ($tab_data ? $tab_data->tab_title : ''); ?>" placeholder="Текст на таба">
-			<input type="text" id="table-text" value="<?php echo ($tab_data ? $tab_data->table_text : ''); ?>" placeholder="Текст под таблицата">
-			<button id="tab-button">Запази</button>
-		</span>
+			<span class="float-end">
+				<button type="button" id="edit-tab" class="btn btn-secondary" title="Име на таба според категорията и описание под таблицата.">
+					<?php echo ($tab_data ? 'Таб <span class="badge bg-warning text-dark">' . $tab_data->tab_title . '</span>' : 'Таб <span class="badge bg-danger">без име</span>'); ?>
+				</button>
+				<span id="tab-box" style="display:none; align-items: center;">
+					<form class="form-floating me-2">
+						<input type="text" class="form-control" id="tab-title" data-category-id="<?php echo $selected_category_id; ?>" value="<?php echo ($tab_data ? $tab_data->tab_title : ''); ?>" placeholder="Име на таба">
+						<label for="tab-title">Име на таба</label>
+					</form>
+					<form class="form-floating me-2">
+						<input type="text" class="form-control" id="table-text" value="<?php echo ($tab_data ? $tab_data->table_text : ''); ?>" placeholder="Текст под таблицата">
+						<label for="table-text">Текст под таблицата</label>
+					</form>
+					<button type="button" id="tab-button" class="btn btn-primary">Запази</button>
+				</span>
+			</span>
 		<?php } ?>
 		<div>
 			<form method="get" action="">
@@ -143,6 +153,7 @@ function frames_list_page()
 								<th><span class="badge bg-secondary">Цена</span></th>
 								<th><span class="badge bg-secondary">Промоция</span></th>
 								<?php if ($selected_frame_ids) : ?>
+									<th><span class="badge bg-secondary">Цена №</span></th>
 									<th><span class="badge bg-secondary">Каса</span></th>
 									<th><span class="badge bg-secondary">Описание каса</span></th>
 									<th><span class="badge bg-secondary">Цена каса</span></th>
@@ -215,7 +226,7 @@ function frames_list_page()
 
 									echo '<tr class="table-secondary">';
 									echo '<td rowspan="' . $rowspan . '">' . get_the_ID() . '</td>';
-									echo '<td rowspan="' . $rowspan . '">' . get_the_title() . '</td>';
+									echo '<td rowspan="' . $rowspan . '"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
 									echo '<td rowspan="' . $rowspan . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
 									echo '<td rowspan="' . $rowspan . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
 
@@ -241,7 +252,8 @@ function frames_list_page()
 											}
 
 											$expired_date = date('d.m.Y', strtotime($frame_data->frame_end_date));
-											echo '<td class="' . $expired_frame . '"><span>' . $frame_data->frame_id . '</span> <img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
+											echo '<td class="' . $expired_frame . '">' . $frame_data->frame_id . '</td>';
+											echo '<td class="' . $expired_frame . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
 											echo '<td class="' . $expired_frame . '">' . $frame_data->frame_description . '</td>';
 											echo '<td class="frame-table-price ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '" data-change-price="' . $change_price . '">' . $frame_data->frame_price . '</td>';
 											echo '<td class="frame-table-promo ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '" data-change-price="' . $change_price . '">' . $frame_data->frame_promo_price . '</td>';

@@ -51,6 +51,11 @@ new SlimSelect({
 	},
 });
 
+document.getElementById("edit-tab").addEventListener("click", () => {
+	document.getElementById("edit-tab").style.display = "none";
+	document.getElementById("tab-box").style.display = "flex";
+});
+
 function changePriceVisual() {
 	const checkButton = document.getElementById("check-mass-insert");
 	const confirmButton = document.getElementById("apply-mass-insert");
@@ -175,6 +180,11 @@ jQuery(document).ready(function ($) {
 		const tabText = $("#tab-title").val();
 		const tableText = $("#table-text").val();
 
+		if (tabText === "") {
+			frame_notifier.warning(`Трябва да въведете име на таба.`);
+			return;
+		}
+
 		$.ajax({
 			url: ajaxurl,
 			type: "POST",
@@ -186,7 +196,11 @@ jQuery(document).ready(function ($) {
 			},
 			success: function (response) {
 				if (response.success) {
+					const editTab = document.getElementById("edit-tab");
 					frame_notifier.success(`Текстът е променен.`);
+					editTab.querySelector("span").innerText = tabText;
+					editTab.style.display = "inline";
+					document.getElementById("tab-box").style.display = "none";
 				} else {
 					frame_notifier.alert(`Текстът не променен.`);
 				}

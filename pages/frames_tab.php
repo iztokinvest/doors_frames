@@ -26,11 +26,14 @@ function custom_product_tab($tabs)
 		"SELECT * 
 		 FROM $frames_table 
 		 WHERE product_id = %d
-		 AND frame_start_date < CURDATE() AND frame_end_date >= CURDATE()",
+		 AND frame_start_date <= CURDATE() AND frame_end_date >= CURDATE()",
 		$product_id
 	));
 
-	if (!empty($product_frames) && $tab_data && !empty($tab_data->tab_title)) {
+	//Detect old frame_prices table
+	$frame_prices_exists = $wpdb->get_var("SHOW TABLES LIKE 'frame_prices'");
+
+	if (!empty($product_frames) && $tab_data && !empty($tab_data->tab_title) && (current_user_can('administrator') || empty($frame_prices_exists))) {
 		$tabs['custom_tab'] = array(
 			'title'    => __($tab_data->tab_title, 'your-text-domain'),
 			'priority' => 50,
@@ -50,12 +53,12 @@ function custom_product_tab_content()
 		foreach ($product_frames as $frame) {
 			$image = $frame->frame_image;
 			$description = esc_html($frame->frame_description);
-			$price = floatval($frame->frame_price) > 0 ? esc_html($frame->frame_price) : '';
+			$price = floatval($frame->frame_price) > 0 ? esc_html($frame->frame_price) . ' лв.' : '';
 			$promo_price = '';
 
 			if (floatval($frame->frame_promo_price) > 0) {
-				$promo_price = esc_html($frame->frame_promo_price);
-				$price = "<del>" . esc_html($frame->frame_price) . "</del>";
+				$promo_price = esc_html($frame->frame_promo_price) . ' лв.';
+				$price = "<del>" . esc_html($frame->frame_price) . " лв.</del>";
 			}
 
 			$upload_dir = wp_upload_dir();
@@ -81,9 +84,9 @@ function custom_product_tab_content()
 			<table class="frame_table">
 				<thead class="frame_table_head">
 					<tr class="frame_table_head_row">
-						<th>Каса</th>
-						<th>Описание</th>
-						<th>Цена</th>
+						<th class="frame_table_head_image_cell">Каса</th>
+						<th class="frame_table_head_description_cell">Описание</th>
+						<th class="frame_table_head_price_cell">Цена</th>
 					</tr>
 				</thead>
 				<tbody class="frame_table_body">
