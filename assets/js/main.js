@@ -274,7 +274,12 @@ jQuery(document).ready(function ($) {
 		$("#new-frame-table").show();
 		$("#new-frame-table tbody").append(`
 			<tr class="new-frame" data-id="${$(this).data("id")}">>
-				<td><input type="number" step="1" class="form-control price-input frame-id" placeholder="№"></td>
+				<td>
+					<select class="form-control price-input frame-id">
+						<option value="">Основна цена</option>
+						${Array.from({ length: 15 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+					</select>
+				</td>
 				<td class="frame-image-container">
 					<img id="frame-img-${newId}" class="frame-img">
 					<select class="form-control new-frame-image change-frame-image" data-image-id="frame-img-${newId}">
