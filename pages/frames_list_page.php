@@ -510,7 +510,7 @@ function fetch_frame_prices()
 		$product_title = get_the_title($product_id);
 
 		$folderPath = "{$upload_dir['basedir']}/doors_frames";
-		$images = glob($folderPath . '/*.jpg');
+		$images = glob($folderPath . '/*.{jpg,png}', GLOB_BRACE);
 		$imageFiles = array_map('basename', $images);
 		natsort($imageFiles);
 

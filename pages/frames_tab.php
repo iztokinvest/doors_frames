@@ -8,20 +8,18 @@ function custom_product_tab($tabs)
 	global $wpdb, $product, $tab_data, $product_frames;
 
 	$product_id = $product->get_id();
-	$category_id = current(wp_get_post_terms($product_id, 'product_cat', ['fields' => 'ids']));
+	$category_ids = wp_get_post_terms($product_id, 'product_cat', ['fields' => 'ids']);
+	$category_ids_string = implode(',', array_map('intval', $category_ids));
 
 	$tabs_table = $wpdb->prefix . 'doors_frames_tabs';
 	$frames_table = $wpdb->prefix . 'doors_frames';
 
-	// Fetch the tab title and table text based on the product category ID
-	$tab_data = $wpdb->get_row($wpdb->prepare(
-		"SELECT tab_title, table_text 
-		 FROM $tabs_table 
-		 WHERE category_id = %d",
-		$category_id
-	));
+	$tab_data = $wpdb->get_results("
+        SELECT tab_title, table_text 
+        FROM $tabs_table 
+        WHERE category_id IN ($category_ids_string)
+    ");
 
-	// Fetch product frames
 	$product_frames = $wpdb->get_results($wpdb->prepare(
 		"SELECT * 
 		 FROM $frames_table 
@@ -31,12 +29,11 @@ function custom_product_tab($tabs)
 		$product_id
 	));
 
-	//Detect old frame_prices table
 	$frame_prices_exists = $wpdb->get_var("SHOW TABLES LIKE 'frame_prices'");
 
-	if (!empty($product_frames) && $tab_data && !empty($tab_data->tab_title) && (current_user_can('administrator') || empty($frame_prices_exists))) {
-		$tabs['custom_tab'] = array(
-			'title'    => __($tab_data->tab_title, 'woocommerce'),
+	if (!empty($product_frames) && $tab_data && !empty($tab_data[0]->tab_title) && (current_user_can('administrator') || empty($frame_prices_exists))) {
+		$tabs['frames'] = array(
+			'title'    => __($tab_data[0]->tab_title, 'woocommerce'),
 			'priority' => 31,
 			'callback' => 'custom_product_tab_content'
 		);
