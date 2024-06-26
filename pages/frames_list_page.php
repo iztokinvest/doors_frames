@@ -85,8 +85,10 @@ function frames_list_page()
 							<optgroup data-selectall="true" data-selectalltext="Всички цени">
 								<?php
 								foreach ($frames as $frame) {
-									$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
-									echo '<option value="' . $frame->frame_id . '"' . $selected . '>Цена ' . $frame->frame_id . '</option>';
+									if ($frame->frame_id > 0) {
+										$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
+										echo '<option value="' . $frame->frame_id . '"' . $selected . '>Цена ' . $frame->frame_id . '</option>';
+									}
 								}
 								?>
 							</optgroup>
@@ -373,20 +375,19 @@ function update_frame_prices()
 {
 	global $wpdb;
 
-	if (isset($_POST['id']) && isset($_POST['frame_price']) && isset($_POST['frame_promo_price'])) {
+	if (isset($_POST['id']) && isset($_POST['frame_id'])) {
+		$table_name = $wpdb->prefix . 'doors_frames';
+		
 		$id = intval($_POST['id']);
 		$frame_id = intval($_POST['frame_id']);
-		$frame_price = floatval($_POST['frame_price']);
-		$frame_promo_price = floatval($_POST['frame_promo_price']);
 		$frame_image = sanitize_text_field($_POST['frame_image']);
 		$frame_description = sanitize_textarea_field($_POST['frame_description']);
-		$frame_start_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_start_date'])), 'Y-m-d');
-		$frame_end_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_end_date'])), 'Y-m-d');
+
 		$delete_frame = sanitize_text_field($_POST['delete_frame']);
 
 		if ($delete_frame == 'true') {
 			$result = $wpdb->delete(
-				$wpdb->prefix . 'doors_frames',
+				$table_name,
 				array('id' => $id),
 				array('%d')
 			);
@@ -397,23 +398,40 @@ function update_frame_prices()
 			}
 		}
 
-		$table_name = $wpdb->prefix . 'doors_frames';
+		if ($frame_id > 0) {
+			$frame_price = floatval($_POST['frame_price']);
+			$frame_promo_price = floatval($_POST['frame_promo_price']);
+			$frame_start_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_start_date'])), 'Y-m-d');
+			$frame_end_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['frame_end_date'])), 'Y-m-d');
 
-		$result = $wpdb->update(
-			$table_name,
-			array(
-				'frame_id' => $frame_id,
-				'frame_price' => $frame_price,
-				'frame_promo_price' => $frame_promo_price,
-				'frame_image' => $frame_image,
-				'frame_description' => $frame_description,
-				'frame_start_date' => $frame_start_date,
-				'frame_end_date' => $frame_end_date
-			),
-			array('id' => $id),
-			array('%d', '%f', '%f', '%s', '%s', '%s', '%s'),
-			array('%d')
-		);
+			$result = $wpdb->update(
+				$table_name,
+				array(
+					'frame_id' => $frame_id,
+					'frame_price' => $frame_price,
+					'frame_promo_price' => $frame_promo_price,
+					'frame_image' => $frame_image,
+					'frame_description' => $frame_description,
+					'frame_start_date' => $frame_start_date,
+					'frame_end_date' => $frame_end_date
+				),
+				array('id' => $id),
+				array('%d', '%f', '%f', '%s', '%s', '%s', '%s'),
+				array('%d')
+			);
+		} else {
+			$result = $wpdb->update(
+				$table_name,
+				array(
+					'frame_id' => $frame_id,
+					'frame_image' => $frame_image,
+					'frame_description' => $frame_description
+				),
+				array('id' => $id),
+				array('%d', '%s', '%s'),
+				array('%d')
+			);
+		}
 
 		if ($result !== false) {
 			wp_send_json_success();
@@ -433,29 +451,43 @@ function add_frame_prices()
 	if (isset($_POST['product_id']) && isset($_POST['new_frame_price']) && isset($_POST['new_frame_promo_price'])) {
 		$product_id = intval($_POST['product_id']);
 		$frame_id = intval($_POST['frame_id']);
-		$new_frame_price = floatval($_POST['new_frame_price']);
-		$new_frame_promo_price = floatval($_POST['new_frame_promo_price']);
 		$new_frame_image = sanitize_text_field($_POST['new_frame_image']);
 		$new_frame_description = sanitize_textarea_field($_POST['new_frame_description']);
-		$new_frame_start_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['new_frame_start_date'])), 'Y-m-d');
-		$new_frame_end_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['new_frame_end_date'])), 'Y-m-d');
 
 		$table_name = $wpdb->prefix . 'doors_frames';
 
-		$result = $wpdb->insert(
-			$table_name,
-			array(
-				'product_id' => $product_id,
-				'frame_id' => $frame_id,
-				'frame_price' => $new_frame_price,
-				'frame_promo_price' => $new_frame_promo_price,
-				'frame_image' => $new_frame_image,
-				'frame_description' => $new_frame_description,
-				'frame_start_date' => $new_frame_start_date,
-				'frame_end_date' => $new_frame_end_date
-			),
-			array('%d', '%d', '%f', '%f', '%s', '%s', '%s', '%s'),
-		);
+		if ($frame_id > 0) {
+			$new_frame_price = floatval($_POST['new_frame_price']);
+			$new_frame_promo_price = floatval($_POST['new_frame_promo_price']);
+			$new_frame_start_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['new_frame_start_date'])), 'Y-m-d');
+			$new_frame_end_date = date_format(date_create_from_format('d/m/Y', sanitize_text_field($_POST['new_frame_end_date'])), 'Y-m-d');
+
+			$result = $wpdb->insert(
+				$table_name,
+				array(
+					'product_id' => $product_id,
+					'frame_id' => $frame_id,
+					'frame_price' => $new_frame_price,
+					'frame_promo_price' => $new_frame_promo_price,
+					'frame_image' => $new_frame_image,
+					'frame_description' => $new_frame_description,
+					'frame_start_date' => $new_frame_start_date,
+					'frame_end_date' => $new_frame_end_date
+				),
+				array('%d', '%d', '%f', '%f', '%s', '%s', '%s', '%s'),
+			);
+		} else {
+			$result = $wpdb->insert(
+				$table_name,
+				array(
+					'product_id' => $product_id,
+					'frame_id' => $frame_id,
+					'frame_image' => $new_frame_image,
+					'frame_description' => $new_frame_description
+				),
+				array('%d', '%d', '%s', '%s'),
+			);
+		}
 
 		if ($result !== false) {
 			wp_send_json_success();
@@ -504,7 +536,7 @@ function fetch_frame_prices()
 		$blankImageOptions = blankImageOptions($imageFiles);
 
 		$table_name = $wpdb->prefix . 'doors_frames';
-		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d ORDER by frame_end_date DESC, frame_id ASC", $product_id));
+		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d ORDER by frame_end_date IS NULL DESC, frame_end_date DESC, frame_id ASC", $product_id));
 
 		$html_product_title = "<h5 id='product-title' class='text-center' data-static-images-path='{$upload_dir['baseurl']}/doors_frames/'><mark>$product_title</mark></h5>";
 
@@ -540,10 +572,23 @@ function fetch_frame_prices()
 						<tbody>
 			HTML;
 
+			$show_prices = '';
 			foreach ($results as $result) {
-				$start_date_value = date_format(date_create_from_format('Y-m-d', $result->frame_start_date), 'd/m/Y');
-				$end_date_value = date_format(date_create_from_format('Y-m-d', $result->frame_end_date), 'd/m/Y');
-				if ($result->frame_end_date < date('Y-m-d')) {
+				if ($result->frame_start_date && $result->frame_end_date) {
+					$start_date_value = date_format(date_create_from_format('Y-m-d', $result->frame_start_date), 'd/m/Y');
+					$end_date_value = date_format(date_create_from_format('Y-m-d', $result->frame_end_date), 'd/m/Y');
+					$show_prices = <<<HTML
+						<td><input type="number" step="0.01" class="form-control price-input frame-price" value="$result->frame_price"></td>
+						<td><input type="number" step="0.01" class="form-control price-input frame-promo-price" value="$result->frame_promo_price"></td>
+						<td><input required type="text" class="form-control datepicker-input frame-start-date" value="$start_date_value" /></td>
+						<td><input required type="text" class="form-control datepicker-input frame-end-date" value="$end_date_value" /></td>
+					HTML;
+				} else {
+					$product = wc_get_product($result->product_id);
+					$show_prices = "<td>" . $product->get_regular_price() . "</td><td>" . $product->get_sale_price() . "</td><td></td><td></td>";
+				}
+
+				if ($result->frame_end_date && $result->frame_end_date < date('Y-m-d')) {
 					$expired = 'expired-date';
 				} else {
 					$expired = '';
@@ -551,9 +596,23 @@ function fetch_frame_prices()
 
 				$image_options = imageOptions($imageFiles, $result->frame_image);
 
+				$frame_id_options = '';
+				for ($i = -5; $i <= 15; $i++) {
+					if ($i > 0) {
+						$frame_id_options .= "<option value='$i' " . ($i == $result->frame_id ? 'selected' : '') . ">$i</option>";
+					}
+				}
+				if ($result->frame_id == -5) {
+					$frame_id_options = "<option value='-5' selected>Основна цена</option>";
+				}
+
 				$html .= <<<HTML
 					<tr class="frame-id $expired" data-id="$result->id">
-						<td><input type="number" step="1" class="form-control price-input frame-id" value="$result->frame_id"></td>
+						<td>
+							<select class="form-control price-input frame-id">
+								$frame_id_options
+							</select>
+						</td>
 						<td class="frame-image-container">
 							<img id="frame-img-$result->id" src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
 							<select class="form-control frame-image change-frame-image" data-image-id="frame-img-$result->id">
@@ -561,10 +620,7 @@ function fetch_frame_prices()
 							</select>
 						</td>
 						<td><textarea class="form-control frame-description" cols="30" rows="3">$result->frame_description</textarea></td>
-						<td><input type="number" step="0.01" class="form-control price-input frame-price" value="$result->frame_price"></td>
-						<td><input type="number" step="0.01" class="form-control price-input frame-promo-price" value="$result->frame_promo_price"></td>
-						<td><input required type="text" class="form-control datepicker-input frame-start-date" value="$start_date_value" /></td>
-						<td><input required type="text" class="form-control datepicker-input frame-end-date" value="$end_date_value" /></td>
+						$show_prices
 						<td><input type="checkbox" class="form-control delete-frame"></td>
 					</tr>
 				HTML;

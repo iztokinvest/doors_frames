@@ -26,7 +26,8 @@ function custom_product_tab($tabs)
 		"SELECT * 
 		 FROM $frames_table 
 		 WHERE product_id = %d
-		 AND frame_start_date <= CURDATE() AND frame_end_date >= CURDATE()",
+		 AND ((frame_start_date IS NULL AND frame_end_date IS NULL) OR (frame_start_date <= CURDATE() AND frame_end_date >= CURDATE()))
+		 ORDER by frame_end_date IS NULL DESC, frame_end_date DESC, frame_id ASC",
 		$product_id
 	));
 
@@ -46,19 +47,28 @@ function custom_product_tab($tabs)
 
 function custom_product_tab_content()
 {
-	global $product_frames, $tab_data;
+	global $product, $product_frames, $tab_data;
 
 	if (!empty($product_frames)) {
 		$frame_rows = '';
 		foreach ($product_frames as $frame) {
 			$image = $frame->frame_image;
 			$description = esc_html($frame->frame_description);
-			$price = floatval($frame->frame_price) > 0 ? esc_html($frame->frame_price) . ' лв.' : '';
+
+			if ($frame->frame_id == '-5') {
+				$frame_price = $product->get_regular_price();
+				$frame_promo_price = $product->get_sale_price();
+			} else {
+				$frame_price = $frame->frame_price;
+				$frame_promo_price = $frame->frame_promo_price;
+			}
+
+			$price = floatval($frame_price) > 0 ? esc_html($frame_price) . ' лв.' : '';
 			$promo_price = '';
 
-			if (floatval($frame->frame_promo_price) > 0) {
-				$promo_price = esc_html($frame->frame_promo_price) . ' лв.';
-				$price = "<del>" . esc_html($frame->frame_price) . " лв.</del>";
+			if (floatval($frame_promo_price) > 0) {
+				$promo_price = esc_html($frame_promo_price) . ' лв.';
+				$price = "<del>" . esc_html($frame_price) . " лв.</del>";
 			}
 
 			$upload_dir = wp_upload_dir();

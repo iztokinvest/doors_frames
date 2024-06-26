@@ -276,7 +276,8 @@ jQuery(document).ready(function ($) {
 			<tr class="new-frame" data-id="${$(this).data("id")}">>
 				<td>
 					<select class="form-control price-input frame-id">
-						<option value="">Основна цена</option>
+						<option value="">Цена №</option>
+						<option value="-5">Основна цена</option>
 						${Array.from({ length: 15 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
 					</select>
 				</td>
@@ -300,6 +301,7 @@ jQuery(document).ready(function ($) {
 	$("#save-modal-prices").on("click", function () {
 		let requestTrue = [];
 		let requests = [];
+		let error = false;
 
 		$(".frame-id").each(function () {
 			const id = $(this).data("id");
@@ -311,6 +313,37 @@ jQuery(document).ready(function ($) {
 			const startDate = $(this).find(".frame-start-date").val();
 			const endDate = $(this).find(".frame-end-date").val();
 			const delete_frame = $(this).find(".delete-frame").prop("checked");
+
+			if (frame_id === "") {
+				frame_notifier.alert("Трябва да изберете Цена №.");
+				error = true;
+			}
+			if (image === "") {
+				frame_notifier.alert("Трябва да изберете картинка на касата.");
+				error = true;
+			}
+			if (description === "") {
+				frame_notifier.alert("Трябва да въведете описание.");
+				error = true;
+			}
+			if (frame_id !== "-5") {
+				if (price === "") {
+					frame_notifier.alert("Трябва да въведете цена.");
+					error = true;
+				}
+				if (startDate === "") {
+					frame_notifier.alert("Трябва да въведете начална дата.");
+					error = true;
+				}
+				if (endDate === "") {
+					frame_notifier.alert("Трябва да въведете крайна дата.");
+					error = true;
+				}
+			}
+
+			if (error) {
+				return;
+			}
 
 			const request = $.ajax({
 				url: ajaxurl,
@@ -346,6 +379,37 @@ jQuery(document).ready(function ($) {
 			const new_startDate = $(this).find(".new-frame-start-date").val();
 			const new_endDate = $(this).find(".new-frame-end-date").val();
 
+			if (frame_id === "") {
+				frame_notifier.alert("Трябва да изберете Цена №.");
+				error = true;
+			}
+			if (new_image === "") {
+				frame_notifier.alert("Трябва да изберете картинка на касата.");
+				error = true;
+			}
+			if (new_description === "") {
+				frame_notifier.alert("Трябва да въведете описание.");
+				error = true;
+			}
+			if (frame_id !== "-5") {
+				if (new_price === "") {
+					frame_notifier.alert("Трябва да въведете цена.");
+					error = true;
+				}
+				if (new_startDate === "") {
+					frame_notifier.alert("Трябва да въведете начална дата.");
+					error = true;
+				}
+				if (new_endDate === "") {
+					frame_notifier.alert("Трябва да въведете крайна дата.");
+					error = true;
+				}
+			}
+
+			if (error) {
+				return;
+			}
+
 			const request = $.ajax({
 				url: ajaxurl,
 				type: "POST",
@@ -370,6 +434,9 @@ jQuery(document).ready(function ($) {
 		});
 
 		$.when.apply($, requests).done(function () {
+			if (error) {
+				return;
+			}
 			if (requestTrue.length > 0) {
 				frame_notifier.success("Промените са запазени.");
 				location.reload();
@@ -458,4 +525,21 @@ jQuery(document).ready(function ($) {
 		});
 	}
 	changeFrameImages();
+
+	function framePricesValidation() {
+		$(document).on("change", ".frame-id", function () {
+			const $trElement = $(this).closest("tr");
+
+			if ($(this).val() === "-5") {
+				$trElement
+					.find(".new-frame-price, .new-frame-promo-price, .new-frame-start-date, .new-frame-end-date")
+					.hide();
+			} else {
+				$trElement
+					.find(".new-frame-price, .new-frame-promo-price, .new-frame-start-date, .new-frame-end-date")
+					.show();
+			}
+		});
+	}
+	framePricesValidation();
 });
