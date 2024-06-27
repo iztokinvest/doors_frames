@@ -20,6 +20,12 @@ function custom_product_tab($tabs)
         WHERE category_id IN ($category_ids_string)
     ");
 
+	if ($tab_data && !empty($tab_data[0]->tab_title)) {
+		$tab_title = $tab_data[0]->tab_title;
+	} else {
+		$tab_title = 'Цени на каси';
+	}
+
 	$product_frames = $wpdb->get_results($wpdb->prepare(
 		"SELECT * 
 		 FROM $frames_table 
@@ -31,9 +37,9 @@ function custom_product_tab($tabs)
 
 	$frame_prices_exists = $wpdb->get_var("SHOW TABLES LIKE 'frame_prices'");
 
-	if (!empty($product_frames) && $tab_data && !empty($tab_data[0]->tab_title) && (current_user_can('administrator') || empty($frame_prices_exists))) {
+	if (!empty($product_frames) && (current_user_can('administrator') || empty($frame_prices_exists))) {
 		$tabs['frames'] = array(
-			'title'    => __($tab_data[0]->tab_title, 'woocommerce'),
+			'title'    => __($tab_title, 'woocommerce'),
 			'priority' => 31,
 			'callback' => 'custom_product_tab_content'
 		);
@@ -42,9 +48,25 @@ function custom_product_tab($tabs)
 	return $tabs;
 }
 
+function price($sum) {
+    return number_format($sum, 2, '.', ' ');
+}
+
 function custom_product_tab_content()
 {
 	global $product, $product_frames, $tab_data;
+	$priceExists = false;
+	$price = '';
+	$promo_price = '';
+	$price_th = '';
+	$price_td = '';
+
+	foreach ($product_frames as $item) {
+		if (!is_null($item->frame_price) && (float)$item->frame_price > 0) {
+			$priceExists = true;
+			break;
+		}
+	}
 
 	if (!empty($product_frames)) {
 		$frame_rows = '';
@@ -60,46 +82,46 @@ function custom_product_tab_content()
 				$frame_promo_price = $frame->frame_promo_price;
 			}
 
-			$price = floatval($frame_price) > 0 ? esc_html($frame_price) . ' лв.' : '';
-			$promo_price = '';
+			if ($priceExists) {
+				$price = floatval($frame_price) > 0 ? price($frame_price) . 'лв.' : '';
+				$promo_price = '';
 
-			if (floatval($frame_promo_price) > 0) {
-				$promo_price = esc_html($frame_promo_price) . ' лв.';
-				$price = "<del>" . esc_html($frame_price) . " лв.</del>";
+				if (floatval($frame_promo_price) > 0) {
+					$promo_price = price($frame_promo_price) . 'лв.';
+					$price = "<del>" . price($frame_price) . "лв.</del>";
+				}
+
+				$price_th = '<th>Цена</th>';
+				$price_td = "<td data-th='Цена' class='price-css'>$promo_price $price</td>";
 			}
 
 			$upload_dir = wp_upload_dir();
 			$folderPath = esc_url("{$upload_dir['baseurl']}/doors_frames");
 
 			$frame_rows .= <<<HTML
-				<tr class="frame_table_row">
-					<td>
-						<div class="frame_image_div"><img class="frame_image" src='$folderPath/$image' alt='$description'></div>
+				<tr>
+					<td data-th="Каса">
+						<img src='$folderPath/$image' alt='$description'>
 					</td>
-					<td>
-						<div class="frame_description">$description</div>
+					<td data-th="Описание">
+						$description
 					</td>
-					<td>
-						<div class="frame_promo_price">$promo_price</div>
-						<div class="frame_price">$price</div>
-					</td>
+					$price_td
 				</tr>
 			HTML;
 		}
 
 		echo <<<HTML
-			<table class="frame_table">
-				<thead class="frame_table_head">
-					<tr class="frame_table_head_row">
-						<th class="frame_table_head_image_cell">Каса</th>
-						<th class="frame_table_head_description_cell">Описание</th>
-						<th class="frame_table_head_price_cell">Цена</th>
-					</tr>
-				</thead>
-				<tbody class="frame_table_body">
-					$frame_rows
-				</tbody>
+		<div class="container-kasi">
+			<table class="kasi-table">
+				<tr>
+					<th>Каса</th>
+					<th>Описание</th>
+					$price_th
+				</tr>
+				$frame_rows
 			</table>
+			</div>
 		HTML;
 
 		if ($tab_data && !empty($tab_data->table_text)) {

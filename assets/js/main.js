@@ -205,8 +205,11 @@ jQuery(document).ready(function ($) {
 			success: function (response) {
 				if (response.success) {
 					const editTab = document.getElementById("edit-tab");
+					const spanTab = editTab.querySelector("span");
 					frame_notifier.success(`Текстът е променен.`);
-					editTab.querySelector("span").innerText = tabText;
+					spanTab.innerText = tabText;
+					spanTab.classList.remove("bg-danger");
+					spanTab.classList.add("bg-warning", "text-dark");
 					editTab.style.display = "inline";
 					document.getElementById("tab-box").style.display = "none";
 				} else {

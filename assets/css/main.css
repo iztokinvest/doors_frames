@@ -64,3 +64,7 @@ td {
 	padding: 5px;
 	border-radius: 10px;
 }
+
+.product-row {
+	border-top: 2px solid var(--bs-gray) !important;
+}

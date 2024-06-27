@@ -227,10 +227,10 @@ function frames_list_page()
 									}
 
 									echo '<tr class="table-secondary">';
-									echo '<td rowspan="' . $rowspan . '">' . get_the_ID() . '</td>';
-									echo '<td rowspan="' . $rowspan . '"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
-									echo '<td rowspan="' . $rowspan . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
-									echo '<td rowspan="' . $rowspan . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
+									echo '<td rowspan="' . $rowspan . '" class="product-row">' . get_the_ID() . '</td>';
+									echo '<td rowspan="' . $rowspan . '" class="product-row"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
+									echo '<td rowspan="' . $rowspan . '" class="product-row"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
+									echo '<td rowspan="' . $rowspan . '" class="product-row"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
 
 									$modal_button = '<button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
 
@@ -253,16 +253,22 @@ function frames_list_page()
 												$change_price = 'false';
 											}
 
+											if ($first_frame) {
+												$product_row_class = 'product-row';
+											} else {
+												$product_row_class = '';
+											}
+
 											$expired_date = date('d.m.Y', strtotime($frame_data->frame_end_date));
-											echo '<td class="' . $expired_frame . '">' . $frame_data->frame_id . '</td>';
-											echo '<td class="' . $expired_frame . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
-											echo '<td class="' . $expired_frame . '">' . $frame_data->frame_description . '</td>';
-											echo '<td class="frame-table-price ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '" data-change-price="' . $change_price . '">' . $frame_data->frame_price . '</td>';
-											echo '<td class="frame-table-promo ' . $expired_frame . '" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '" data-change-price="' . $change_price . '">' . $frame_data->frame_promo_price . '</td>';
-											echo '<td class="' . $expired_frame . '">' . $expired_date . '</td>';
+											echo '<td class="' . $expired_frame . ' ' . $product_row_class . '">' . $frame_data->frame_id . '</td>';
+											echo '<td class="' . $expired_frame . ' ' . $product_row_class . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
+											echo '<td class="' . $expired_frame . ' ' . $product_row_class . '">' . $frame_data->frame_description . '</td>';
+											echo '<td class="frame-table-price ' . $expired_frame . ' ' . $product_row_class . '" data-end-date="' . $frame_data->frame_end_date . '" data-change-price="' . $change_price . '">' . $frame_data->frame_price . '</td>';
+											echo '<td class="frame-table-promo ' . $expired_frame . ' ' . $product_row_class . '" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '" data-change-price="' . $change_price . '">' . $frame_data->frame_promo_price . '</td>';
+											echo '<td class="' . $expired_frame . ' ' . $product_row_class . '">' . $expired_date . '</td>';
 
 											if ($first_frame) {
-												echo '<td rowspan="' . $rowspan . '">' . $modal_button . '</td>';
+												echo '<td rowspan="' . $rowspan . '" class="product-row">' . $modal_button . '</td>';
 												$first_frame = false;
 											}
 
@@ -271,7 +277,7 @@ function frames_list_page()
 											$last_date = $frame_data->frame_end_date;
 										}
 									} else {
-										echo '<td>' . $modal_button . '</td>';
+										echo '<td class="product-row">' . $modal_button . '</td>';
 									}
 								}
 								wp_reset_postdata();
