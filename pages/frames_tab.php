@@ -75,8 +75,32 @@ function custom_product_tab_content()
 			$description = esc_html($frame->frame_description);
 
 			if ($frame->frame_id == '-5') {
-				$frame_price = $product->get_regular_price();
-				$frame_promo_price = $product->get_sale_price();
+				if ($product->is_type('variable')) {
+					// Get the variations
+					$available_variations = $product->get_available_variations();
+					$min_regular_price = null;
+					$min_sale_price = null;
+
+					foreach ($available_variations as $variation) {
+						$variation_product = wc_get_product($variation['variation_id']);
+
+						$regular_price = $variation_product->get_regular_price();
+						$sale_price = $variation_product->get_sale_price();
+
+						if ($min_regular_price === null || $regular_price < $min_regular_price) {
+							$min_regular_price = $regular_price;
+						}
+						if ($sale_price && ($min_sale_price === null || $sale_price < $min_sale_price)) {
+							$min_sale_price = $sale_price;
+						}
+					}
+
+					$frame_price = $min_regular_price;
+					$frame_promo_price = $min_sale_price;
+				} else {
+					$frame_price = $product->get_regular_price();
+					$frame_promo_price = $product->get_sale_price();
+				}
 			} else {
 				$frame_price = $frame->frame_price;
 				$frame_promo_price = $frame->frame_promo_price;
