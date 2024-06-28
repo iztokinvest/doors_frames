@@ -76,7 +76,6 @@ function custom_product_tab_content()
 
 			if ($frame->frame_id == '-5') {
 				if ($product->is_type('variable')) {
-					// Get the variations
 					$available_variations = $product->get_available_variations();
 					$min_regular_price = null;
 					$min_sale_price = null;

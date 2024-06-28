@@ -235,8 +235,32 @@ function frames_list_page()
 									echo '<tr class="table-secondary">';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . get_the_ID() . '</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
-									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
-									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
+
+									if ($product->is_type('variable')) {
+										$available_variations = $product->get_available_variations();
+										$min_regular_price = null;
+										$min_sale_price = null;
+
+										foreach ($available_variations as $variation) {
+											$variation_product = wc_get_product($variation['variation_id']);
+
+											$regular_price = $variation_product->get_regular_price();
+											$sale_price = $variation_product->get_sale_price();
+
+											if ($min_regular_price === null || $regular_price < $min_regular_price) {
+												$min_regular_price = $regular_price;
+											}
+											if ($sale_price && ($min_sale_price === null || $sale_price < $min_sale_price)) {
+												$min_sale_price = $sale_price;
+											}
+										}
+
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_regular_price . '</td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_sale_price . '</td>';
+									} else {
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
+									}
 
 									$modal_button = '<button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
 
@@ -389,7 +413,7 @@ function update_frame_prices()
 
 	if (isset($_POST['id']) && isset($_POST['frame_id'])) {
 		$table_name = $wpdb->prefix . 'doors_frames';
-		
+
 		$id = intval($_POST['id']);
 		$frame_id = intval($_POST['frame_id']);
 		$frame_image = sanitize_text_field($_POST['frame_image']);
@@ -597,7 +621,32 @@ function fetch_frame_prices()
 					HTML;
 				} else {
 					$product = wc_get_product($result->product_id);
-					$show_prices = "<td>" . $product->get_regular_price() . "</td><td>" . $product->get_sale_price() . "</td><td></td><td></td>";
+					if ($product->is_type('variable')) {
+						$available_variations = $product->get_available_variations();
+						$min_regular_price = null;
+						$min_sale_price = null;
+
+						foreach ($available_variations as $variation) {
+							$variation_product = wc_get_product($variation['variation_id']);
+
+							$regular_price = $variation_product->get_regular_price();
+							$sale_price = $variation_product->get_sale_price();
+
+							if ($min_regular_price === null || $regular_price < $min_regular_price) {
+								$min_regular_price = $regular_price;
+							}
+							if ($sale_price && ($min_sale_price === null || $sale_price < $min_sale_price)) {
+								$min_sale_price = $sale_price;
+							}
+						}
+
+						$frame_price = $min_regular_price;
+						$frame_promo_price = $min_sale_price;
+					} else {
+						$frame_price = $product->get_regular_price();
+						$frame_promo_price = $product->get_sale_price();
+					}
+					$show_prices = "<td>" . $frame_price . "</td><td>" . $frame_promo_price . "</td><td></td><td></td>";
 				}
 
 				if ($result->frame_end_date && $result->frame_end_date < date('Y-m-d')) {
