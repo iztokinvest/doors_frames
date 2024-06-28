@@ -226,11 +226,17 @@ function frames_list_page()
 										$rowspan = 1;
 									}
 
+									if (isset($_GET['frame_id']) && count($_GET['frame_id']) > 1) {
+										$product_row_class = 'product-row';
+									} else {
+										$product_row_class = '';
+									}
+
 									echo '<tr class="table-secondary">';
-									echo '<td rowspan="' . $rowspan . '" class="product-row">' . get_the_ID() . '</td>';
-									echo '<td rowspan="' . $rowspan . '" class="product-row"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
-									echo '<td rowspan="' . $rowspan . '" class="product-row"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
-									echo '<td rowspan="' . $rowspan . '" class="product-row"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
+									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . get_the_ID() . '</td>';
+									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
+									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="regular" value="' . esc_attr($regular_price) . '"></td>';
+									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs" data-id="' . get_the_ID() . '" data-type="sale" value="' . esc_attr($sale_price) . '"></td>';
 
 									$modal_button = '<button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
 
@@ -253,7 +259,7 @@ function frames_list_page()
 												$change_price = 'false';
 											}
 
-											if ($first_frame) {
+											if ($first_frame && isset($_GET['frame_id']) && count($_GET['frame_id']) > 1) {
 												$product_row_class = 'product-row';
 											} else {
 												$product_row_class = '';
@@ -268,7 +274,7 @@ function frames_list_page()
 											echo '<td class="' . $expired_frame . ' ' . $product_row_class . '">' . $expired_date . '</td>';
 
 											if ($first_frame) {
-												echo '<td rowspan="' . $rowspan . '" class="product-row">' . $modal_button . '</td>';
+												echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $modal_button . '</td>';
 												$first_frame = false;
 											}
 
@@ -277,7 +283,7 @@ function frames_list_page()
 											$last_date = $frame_data->frame_end_date;
 										}
 									} else {
-										echo '<td class="product-row">' . $modal_button . '</td>';
+										echo '<td class="' . $product_row_class . '">' . $modal_button . '</td>';
 									}
 								}
 								wp_reset_postdata();

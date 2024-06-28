@@ -23,7 +23,7 @@ function custom_product_tab($tabs)
 	if ($tab_data && !empty($tab_data[0]->tab_title)) {
 		$tab_title = $tab_data[0]->tab_title;
 	} else {
-		$tab_title = 'Цени на каси';
+		$tab_title = 'Цени според касата';
 	}
 
 	$product_frames = $wpdb->get_results($wpdb->prepare(
