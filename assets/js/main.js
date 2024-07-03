@@ -68,6 +68,24 @@ function changePriceVisual() {
 	const checkButton = document.getElementById("check-mass-insert");
 	const confirmButton = document.getElementById("apply-mass-insert");
 	const massSpan = document.getElementById("mass-insert-span");
+	const checkProducts = document.getElementsByClassName("check-product");
+
+	for (const checkProduct of checkProducts) {
+		checkProduct.addEventListener("click", () => {
+			const productId = checkProduct.getAttribute("data-product-id");
+			const elements = document.querySelectorAll(`[data-product-id='${productId}']`);
+
+			elements.forEach((element) => {
+				if (checkProduct.checked) {
+					element.dataset.changePrice = "true";
+				} else {
+					element.dataset.changePrice = "false";
+				}
+			});
+
+			calculate();
+		});
+	}
 
 	if (!checkButton || !confirmButton) {
 		return;
@@ -75,7 +93,9 @@ function changePriceVisual() {
 
 	massSpan.addEventListener("click", hideConfirmButton);
 
-	checkButton.addEventListener("click", () => {
+	checkButton.addEventListener("click", calculate);
+
+	function calculate() {
 		let errorCount = 0;
 		const operatorPrice = document.getElementById("operator-price-select").value;
 		const operatorPromo = document.getElementById("operator-promotion-select").value;
@@ -124,7 +144,7 @@ function changePriceVisual() {
 		}
 
 		confirmButton.style.display = "inline";
-	});
+	}
 
 	function hideConfirmButton() {
 		confirmButton.style.display = "none";
@@ -461,6 +481,11 @@ jQuery(document).ready(function ($) {
 		const endDate = $("#mass-end-date").val();
 		const pricesRound = $("#mass-round-prices").prop("checked");
 		const pricesToPromo = $("#mass-prices-to-promo").prop("checked");
+		const product_ids = $(".check-product:checked")
+			.map(function () {
+				return $(this).data("product-id");
+			})
+			.get();
 
 		if (isNaN(sum_price)) {
 			sum_price = 0;
@@ -468,12 +493,6 @@ jQuery(document).ready(function ($) {
 		if (isNaN(sum_promotion)) {
 			sum_promotion = 0;
 		}
-
-		const product_ids = [];
-		$("table tbody tr").each(function () {
-			var product_id = $(this).find(".price-inputs").data("id");
-			product_ids.push(product_id);
-		});
 
 		$.ajax({
 			url: ajaxurl,

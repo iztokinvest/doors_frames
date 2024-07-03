@@ -233,7 +233,10 @@ function frames_list_page()
 									}
 
 									echo '<tr class="table-secondary">';
-									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . get_the_ID() . '</td>';
+									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">
+									<input type="checkbox" class="check-product" data-product-id="' . get_the_ID() . '" checked>
+									' . get_the_ID() . '
+									</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
 
 									if ($product->is_type('variable')) {
@@ -293,8 +296,8 @@ function frames_list_page()
 											echo '<td class="' . $expired_frame . ' ' . $product_row_class . '">' . $frame_data->frame_id . '</td>';
 											echo '<td class="' . $expired_frame . ' ' . $product_row_class . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
 											echo '<td class="' . $expired_frame . ' ' . $product_row_class . '">' . $frame_data->frame_description . '</td>';
-											echo '<td class="frame-table-price ' . $expired_frame . ' ' . $product_row_class . '" data-end-date="' . $frame_data->frame_end_date . '" data-change-price="' . $change_price . '">' . $frame_data->frame_price . '</td>';
-											echo '<td class="frame-table-promo ' . $expired_frame . ' ' . $product_row_class . '" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '" data-change-price="' . $change_price . '">' . $frame_data->frame_promo_price . '</td>';
+											echo '<td class="frame-table-price ' . $expired_frame . ' ' . $product_row_class . '" data-end-date="' . $frame_data->frame_end_date . '" data-change-price="' . $change_price . '" data-product-id="' . get_the_ID() . '">' . $frame_data->frame_price . '</td>';
+											echo '<td class="frame-table-promo ' . $expired_frame . ' ' . $product_row_class . '" data-end-date="' . $frame_data->frame_end_date . '" data-price = "' . $frame_data->frame_price . '" data-change-price="' . $change_price . '" data-product-id="' . get_the_ID() . '">' . $frame_data->frame_promo_price . '</td>';
 											echo '<td class="' . $expired_frame . ' ' . $product_row_class . '">' . $expired_date . '</td>';
 
 											if ($first_frame) {
@@ -742,7 +745,6 @@ function mass_insert_frames()
 			$current_values = $wpdb->get_results($current_values_sql);
 
 			foreach ($current_values as $current_value) {
-
 				$new_price = calculate_new_value($current_value->frame_price, $operator_price, $sum_price, $prices_round);
 				$new_promo_price = calculate_new_value($current_value->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $current_value->frame_price);
 
