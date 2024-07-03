@@ -75,15 +75,17 @@ function changePriceVisual() {
 			const productId = checkProduct.getAttribute("data-product-id");
 			const elements = document.querySelectorAll(`[data-product-id='${productId}']`);
 
-			elements.forEach((element) => {
-				if (checkProduct.checked) {
-					element.dataset.changePrice = "true";
-				} else {
-					element.dataset.changePrice = "false";
-				}
-			});
+			if (elements.length > 1) {
+				elements.forEach((element) => {
+					if (checkProduct.checked) {
+						element.dataset.changePrice = "true";
+					} else {
+						element.dataset.changePrice = "false";
+					}
+				});
 
-			calculate();
+				calculate();
+			}
 		});
 	}
 
