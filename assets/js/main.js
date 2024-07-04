@@ -103,14 +103,25 @@ function changePriceVisual() {
 		const operatorPromo = document.getElementById("operator-promotion-select").value;
 		const priceInput = document.getElementById("sum-price-input");
 		const promoInput = document.getElementById("sum-promotion-input");
+		const productPrices = document.getElementsByClassName("product-price-input");
+		const productPromos = document.getElementsByClassName("product-promo-input");
 		const tablePrices = document.getElementsByClassName("frame-table-price");
 		const tablePromos = document.getElementsByClassName("frame-table-promo");
-		const startDate = document.getElementById("mass-start-date");
-		const endDate = document.getElementById("mass-end-date");
+		const startDate = document.getElementById("mass-start-date") || {};
+		const endDate = document.getElementById("mass-end-date") || {};
 		const pricesEdit = document.getElementById("mass-edit-prices");
 		const pricesRound = document.getElementById("mass-round-prices");
+		const inputPriceResults = document.getElementsByClassName("input-price-result");
 		const today = new Date();
 		today.setHours(0, 0, 0, 0);
+
+		console.log(1);
+
+		if (inputPriceResults) {
+			for (const inputPriceResult of inputPriceResults) {
+				inputPriceResult.remove();
+			}
+		}
 
 		if ((!startDate.value || !endDate.value) && !pricesEdit.checked) {
 			frame_notifier.warning(`Трябва да бъдат избрани дати или да е маркирана отметката "Редактирай цените".`);
@@ -136,6 +147,10 @@ function changePriceVisual() {
 			calculateSum(tablePrice, operatorPrice, priceInput.value, pricesRound.checked, reset);
 		}
 
+		for (const productPrice of productPrices) {
+			calculateSum(productPrice, operatorPrice, priceInput.value, pricesRound.checked);
+		}
+
 		for (const tablePromo of tablePromos) {
 			const rowPromoEndDate = tablePromo.getAttribute("data-end-date");
 			let reset = false;
@@ -154,13 +169,28 @@ function changePriceVisual() {
 
 	function calculateSum(column, operator, sum, round, reset) {
 		let oldSum = 0;
-		const oldColumnValue = parseInt(column.innerHTML);
+		let oldColumnValue;
+		let changeFrame = true;
+		if (column.tagName.toLowerCase() === "input") {
+			changeFrame = false;
+		}
+
+		if (changeFrame) {
+			oldColumnValue = parseInt(column.innerHTML);
+		} else {
+			oldColumnValue = parseInt(column.value);
+		}
+
 		const changePrice = column.getAttribute("data-change-price");
 
 		if (document.getElementById("mass-prices-to-promo").checked && column.classList.contains("frame-table-promo")) {
 			oldSum = parseInt(column.getAttribute("data-price"));
 		} else {
-			oldSum = parseInt(column.innerHTML);
+			if (changeFrame) {
+				oldSum = parseInt(column.innerHTML);
+			} else {
+				oldSum = parseInt(column.value);
+			}
 		}
 
 		const newSum = parseInt(sum);
@@ -196,7 +226,12 @@ function changePriceVisual() {
 				return;
 			}
 
-			column.innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
+			if (changeFrame) {
+				column.innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
+			} else {
+				const newPriceSpan = `<span class='text-success input-price-result'>${result}</span>`;
+				column.insertAdjacentHTML("afterend", newPriceSpan);
+			}
 		} else {
 			column.innerHTML = oldColumnValue;
 		}
