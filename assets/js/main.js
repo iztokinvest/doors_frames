@@ -111,19 +111,15 @@ function changePriceVisual() {
 		const endDate = document.getElementById("mass-end-date") || {};
 		const pricesEdit = document.getElementById("mass-edit-prices");
 		const pricesRound = document.getElementById("mass-round-prices");
-		const inputPriceResults = document.getElementsByClassName("input-price-result");
 		const today = new Date();
 		today.setHours(0, 0, 0, 0);
+		let frames = false;
 
-		console.log(1);
-
-		if (inputPriceResults) {
-			for (const inputPriceResult of inputPriceResults) {
-				inputPriceResult.remove();
-			}
+		if (startDate && Object.keys(startDate).length !== 0) {
+			frames = true;
 		}
 
-		if ((!startDate.value || !endDate.value) && !pricesEdit.checked) {
+		if (frames && (!startDate.value || !endDate.value) && !pricesEdit.checked) {
 			frame_notifier.warning(`Трябва да бъдат избрани дати или да е маркирана отметката "Редактирай цените".`);
 			errorCount++;
 		}
@@ -147,10 +143,6 @@ function changePriceVisual() {
 			calculateSum(tablePrice, operatorPrice, priceInput.value, pricesRound.checked, reset);
 		}
 
-		for (const productPrice of productPrices) {
-			calculateSum(productPrice, operatorPrice, priceInput.value, pricesRound.checked);
-		}
-
 		for (const tablePromo of tablePromos) {
 			const rowPromoEndDate = tablePromo.getAttribute("data-end-date");
 			let reset = false;
@@ -160,7 +152,24 @@ function changePriceVisual() {
 			calculateSum(tablePromo, operatorPromo, promoInput.value, pricesRound.checked, reset);
 		}
 
+		for (const productPrice of productPrices) {
+			calculateSum(productPrice, operatorPrice, priceInput.value, pricesRound.checked);
+		}
+
+		for (const productPromo of productPromos) {
+			calculateSum(productPromo, operatorPromo, promoInput.value, pricesRound.checked);
+		}
+
 		confirmButton.style.display = "inline";
+
+		if (!frames) {
+			if (pricesEdit.checked) {
+				confirmButton.innerText = "Редактирай цените на продуктите";
+			} else {
+				confirmButton.innerText = "Запази цените на продуктите за по-късно";
+			}
+			
+		}
 	}
 
 	function hideConfirmButton() {
@@ -174,6 +183,9 @@ function changePriceVisual() {
 		if (column.tagName.toLowerCase() === "input") {
 			changeFrame = false;
 		}
+		const oldPriceSpan = document.getElementById(
+			`${column.getAttribute("data-type")}-price-result-${column.getAttribute("data-product-id")}`
+		);
 
 		if (changeFrame) {
 			oldColumnValue = parseInt(column.innerHTML);
@@ -183,7 +195,10 @@ function changePriceVisual() {
 
 		const changePrice = column.getAttribute("data-change-price");
 
-		if (document.getElementById("mass-prices-to-promo").checked && column.classList.contains("frame-table-promo")) {
+		if (
+			document.getElementById("mass-prices-to-promo").checked &&
+			(column.classList.contains("frame-table-promo") || column.classList.contains("product-promo-input"))
+		) {
 			oldSum = parseInt(column.getAttribute("data-price"));
 		} else {
 			if (changeFrame) {
@@ -222,17 +237,36 @@ function changePriceVisual() {
 			}
 
 			if (reset) {
-				column.innerHTML = oldColumnValue;
+				if (changeFrame) {
+					column.innerHTML = oldColumnValue;
+				} else {
+					spanResults = document.getElementsByClassName("price-result-span");
+
+					for (const spanResult of spanResults) {
+						spanResult.remove();
+					}
+				}
 				return;
 			}
 
 			if (changeFrame) {
 				column.innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
 			} else {
-				const newPriceSpan = `<span class='text-success input-price-result'>${result}</span>`;
-				column.insertAdjacentHTML("afterend", newPriceSpan);
+				const newPriceSpan = ` <span id='${column.getAttribute("data-type")}-price-result-${column.getAttribute(
+					"data-product-id"
+				)}' class='price-result-span text-success'>${result}</span>`;
+				if (oldPriceSpan) {
+					oldPriceSpan.remove();
+				}
+
+				if (result > 0) {
+					column.insertAdjacentHTML("afterend", newPriceSpan);
+				}
 			}
 		} else {
+			if (oldPriceSpan) {
+				oldPriceSpan.remove();
+			}
 			column.innerHTML = oldColumnValue;
 		}
 	}

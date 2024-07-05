@@ -105,7 +105,7 @@ function frames_list_page()
 				<?php
 				if ($selected_frame_ids) {
 					$mass_title = <<<HTML
-						<div><b>Масова промяна на цени на каси <span class="badge bg-warning text-dark" title="Ако в даден артикул има цени на каси с различни крайни дати, масовата промяна ще се изпълни само за най-новата дата.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови:&#013;   1. Ако е маркирана отметката 'Редактирай цените', тогава ще бъдат редактирани цените с най-новата крайна дата.&#013;   2. Ако са въведени дати в полетата 'От дата' и 'До дата', тогава ще бъдат създадени нови цени на каси с избраните дати, а старите ще бъдат с валидност до начална дата на новите цени.">?</span></b></div>
+						<div id="mass-frame-title"><b>Масова промяна на цени на каси <span class="badge bg-warning text-dark" title="Ако в даден артикул има цени на каси с различни крайни дати, масовата промяна ще се изпълни само за най-новата дата.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови:&#013;   1. Ако е маркирана отметката 'Редактирай цените', тогава ще бъдат редактирани цените с най-новата крайна дата.&#013;   2. Ако са въведени дати в полетата 'От дата' и 'До дата', тогава ще бъдат създадени нови цени на каси с избраните дати, а старите ще бъдат с валидност до начална дата на новите цени.">?</span></b></div>
 					HTML;
 					$mass_dates = <<<HTML
 						<span id="mass-dates" class="badge bg-info text-dark">
@@ -115,7 +115,7 @@ function frames_list_page()
 					HTML;
 				} else {
 					$mass_title = <<<HTML
-						<div><b>Масова промяна на цени на продукти <span class="badge bg-warning text-dark" title="Ако в даден артикул има цени на каси с различни крайни дати, масовата промяна ще се изпълни само за най-новата дата.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови:&#013;   1. Ако е маркирана отметката 'Редактирай цените', тогава ще бъдат редактирани цените с най-новата крайна дата.&#013;   2. Ако са въведени дати в полетата 'От дата' и 'До дата', тогава ще бъдат създадени нови цени на каси с избраните дати, а старите ще бъдат с валидност до начална дата на новите цени.">?</span></b></div>
+						<div id="mass-product-title"><b>Масова промяна на цени на продукти <span class="badge bg-warning text-dark" title="Ако в даден артикул има цени на каси с различни крайни дати, масовата промяна ще се изпълни само за най-новата дата.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови:&#013;   1. Ако е маркирана отметката 'Редактирай цените', тогава ще бъдат редактирани цените с най-новата крайна дата.&#013;   2. Ако са въведени дати в полетата 'От дата' и 'До дата', тогава ще бъдат създадени нови цени на каси с избраните дати, а старите ще бъдат с валидност до начална дата на новите цени.">?</span></b></div>
 					HTML;
 					$mass_dates = '';
 				}
@@ -156,7 +156,7 @@ function frames_list_page()
 							</span>
 						</span>
 						<button type="button" id="check-mass-insert" class="btn btn-warning">Промени</button>
-						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none">Запази</button>
+						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none">Запази цените на касите</button>
 					</form>
 				HTML;
 				?>
@@ -249,8 +249,7 @@ function frames_list_page()
 
 									echo '<tr class="table-secondary">';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">
-									<input type="checkbox" class="check-product" data-product-id="' . get_the_ID() . '" checked>
-									' . get_the_ID() . '
+									' . (!$product->is_type('variable') || $selected_frame_ids ? '<input type="checkbox" class="check-product" data-product-id="' . get_the_ID() . '" checked>' : '') .  get_the_ID() . '
 									</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
 
@@ -276,8 +275,8 @@ function frames_list_page()
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_regular_price . '</td>';
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_sale_price . '</td>';
 									} else {
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs product-price-input" data-id="' . get_the_ID() . '" data-type="regular" '.(!$selected_frame_ids ? 'data-change-price = "true"' : '').' value="' . esc_attr($regular_price) . '"></td>';
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs product-promo-input" data-id="' . get_the_ID() . '" data-type="sale" '.(!$selected_frame_ids ? 'data-change-price = "true"' : '').'value="' . esc_attr($sale_price) . '"></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" '.(!$selected_frame_ids ? 'data-change-price = "true"' : '').' value="' . esc_attr($regular_price) . '"></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" '.(!$selected_frame_ids ? 'data-change-price = "true"' : '').' data-price="' . esc_attr($regular_price) . '" value="' . esc_attr($sale_price) . '"></td>';
 									}
 
 									$modal_button = '<button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
