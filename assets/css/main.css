@@ -42,11 +42,11 @@ td {
 	line-height: unset;
 }
 
-.expired-date {
+.inactive-frame {
 	background-color: #ff000040 !important;
 }
 
-.not-expired-date {
+.active-frame {
 	background-color: #fff !important;
 }
 

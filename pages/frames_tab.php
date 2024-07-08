@@ -29,9 +29,8 @@ function custom_product_tab($tabs)
 	$product_frames = $wpdb->get_results($wpdb->prepare(
 		"SELECT * 
 		 FROM $frames_table 
-		 WHERE product_id = %d
-		 AND ((frame_start_date IS NULL AND frame_end_date IS NULL) OR (frame_start_date <= CURDATE() AND frame_end_date >= CURDATE()))
-		 ORDER by frame_end_date IS NULL DESC, frame_end_date DESC, frame_id ASC",
+		 WHERE product_id = %d AND active = 1
+		 ORDER by frame_id ASC",
 		$product_id
 	));
 

@@ -107,22 +107,8 @@ function changePriceVisual() {
 		const productPromos = document.getElementsByClassName("product-promo-input");
 		const tablePrices = document.getElementsByClassName("frame-table-price");
 		const tablePromos = document.getElementsByClassName("frame-table-promo");
-		const startDate = document.getElementById("mass-start-date") || {};
-		const endDate = document.getElementById("mass-end-date") || {};
 		const pricesEdit = document.getElementById("mass-edit-prices");
 		const pricesRound = document.getElementById("mass-round-prices");
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		let frames = false;
-
-		if (startDate && Object.keys(startDate).length !== 0) {
-			frames = true;
-		}
-
-		if (frames && (!startDate.value || !endDate.value) && !pricesEdit.checked) {
-			frame_notifier.warning(`Трябва да бъдат избрани дати или да е маркирана отметката "Редактирай цените".`);
-			errorCount++;
-		}
 
 		if (priceInput.value === "" && promoInput.value === "") {
 			frame_notifier.warning(`Трябва да има въведена цена или промоция".`);
@@ -135,21 +121,11 @@ function changePriceVisual() {
 		}
 
 		for (const tablePrice of tablePrices) {
-			const rowPriceEndDate = tablePrice.getAttribute("data-end-date");
-			let reset = false;
-			if (pricesEdit.checked && new Date(rowPriceEndDate) < today) {
-				reset = true;
-			}
-			calculateSum(tablePrice, operatorPrice, priceInput.value, pricesRound.checked, reset);
+			calculateSum(tablePrice, operatorPrice, priceInput.value, pricesRound.checked);
 		}
 
 		for (const tablePromo of tablePromos) {
-			const rowPromoEndDate = tablePromo.getAttribute("data-end-date");
-			let reset = false;
-			if (pricesEdit.checked && new Date(rowPromoEndDate) < today) {
-				reset = true;
-			}
-			calculateSum(tablePromo, operatorPromo, promoInput.value, pricesRound.checked, reset);
+			calculateSum(tablePromo, operatorPromo, promoInput.value, pricesRound.checked);
 		}
 
 		for (const productPrice of productPrices) {
@@ -161,22 +137,13 @@ function changePriceVisual() {
 		}
 
 		confirmButton.style.display = "inline";
-
-		if (!frames) {
-			if (pricesEdit.checked) {
-				confirmButton.innerText = "Редактирай цените на продуктите";
-			} else {
-				confirmButton.innerText = "Запази цените на продуктите за по-късно";
-			}
-			
-		}
 	}
 
 	function hideConfirmButton() {
 		confirmButton.style.display = "none";
 	}
 
-	function calculateSum(column, operator, sum, round, reset) {
+	function calculateSum(column, operator, sum, round) {
 		let oldSum = 0;
 		let oldColumnValue;
 		let changeFrame = true;
@@ -188,9 +155,9 @@ function changePriceVisual() {
 		);
 
 		if (changeFrame) {
-			oldColumnValue = parseInt(column.innerHTML);
+			oldColumnValue = parseFloat(column.innerHTML);
 		} else {
-			oldColumnValue = parseInt(column.value);
+			oldColumnValue = parseFloat(column.value);
 		}
 
 		const changePrice = column.getAttribute("data-change-price");
@@ -199,16 +166,16 @@ function changePriceVisual() {
 			document.getElementById("mass-prices-to-promo").checked &&
 			(column.classList.contains("frame-table-promo") || column.classList.contains("product-promo-input"))
 		) {
-			oldSum = parseInt(column.getAttribute("data-price"));
+			oldSum = parseFloat(column.getAttribute("data-price"));
 		} else {
 			if (changeFrame) {
-				oldSum = parseInt(column.innerHTML);
+				oldSum = parseFloat(column.innerHTML);
 			} else {
-				oldSum = parseInt(column.value);
+				oldSum = parseFloat(column.value);
 			}
 		}
 
-		const newSum = parseInt(sum);
+		const newSum = parseFloat(sum);
 		let result = 0;
 
 		if (sum > 0 && changePrice === "true") {
@@ -234,19 +201,6 @@ function changePriceVisual() {
 
 			if (round) {
 				result = result % 1 >= 0.5 ? Math.ceil(result) : Math.floor(result);
-			}
-
-			if (reset) {
-				if (changeFrame) {
-					column.innerHTML = oldColumnValue;
-				} else {
-					spanResults = document.getElementsByClassName("price-result-span");
-
-					for (const spanResult of spanResults) {
-						spanResult.remove();
-					}
-				}
-				return;
 			}
 
 			if (changeFrame) {
@@ -311,7 +265,7 @@ jQuery(document).ready(function ($) {
 	});
 
 	$(".price-inputs").on("change", function () {
-		const productId = $(this).data("id");
+		const productId = $(this).data("product-id");
 		const newPrice = $(this).val();
 		const priceType = $(this).data("type");
 
@@ -385,8 +339,6 @@ jQuery(document).ready(function ($) {
 				<td><textarea class="form-control new-frame-description" cols="30" rows="3" placeholder="Описание"></textarea></td>
 				<td><input type="number" step="0.01" class="form-control price-input new-frame-price" placeholder="Цена"></td>
 				<td><input type="number" step="0.01" class="form-control price-input new-frame-promo-price" placeholder="Промо"></td>
-				<td><input required type="text" class="form-control datepicker-input new-frame-start-date" placeholder="Начална дата" /></td>
-				<td><input required type="text" class="form-control datepicker-input new-frame-end-date" placeholder="Крайна дата" /></td>
 			</tr>
     `);
 		initializeDatepickers();
@@ -404,8 +356,6 @@ jQuery(document).ready(function ($) {
 			const promo_price = $(this).find(".frame-promo-price").val();
 			const image = $(this).find(".frame-image").val();
 			const description = $(this).find(".frame-description").val();
-			const startDate = $(this).find(".frame-start-date").val();
-			const endDate = $(this).find(".frame-end-date").val();
 			const delete_frame = $(this).find(".delete-frame").prop("checked");
 
 			if (frame_id === "") {
@@ -425,14 +375,6 @@ jQuery(document).ready(function ($) {
 					frame_notifier.alert("Трябва да въведете цена.");
 					error = true;
 				}
-				if (startDate === "") {
-					frame_notifier.alert("Трябва да въведете начална дата.");
-					error = true;
-				}
-				if (endDate === "") {
-					frame_notifier.alert("Трябва да въведете крайна дата.");
-					error = true;
-				}
 			}
 
 			if (error) {
@@ -450,8 +392,6 @@ jQuery(document).ready(function ($) {
 					frame_promo_price: promo_price,
 					frame_image: image,
 					frame_description: description,
-					frame_start_date: startDate,
-					frame_end_date: endDate,
 					delete_frame: delete_frame,
 				},
 			});
@@ -470,8 +410,6 @@ jQuery(document).ready(function ($) {
 			const new_promo_price = $(this).find(".new-frame-promo-price").val();
 			const new_image = $(this).find(".new-frame-image").val();
 			const new_description = $(this).find(".new-frame-description").val();
-			const new_startDate = $(this).find(".new-frame-start-date").val();
-			const new_endDate = $(this).find(".new-frame-end-date").val();
 
 			if (frame_id === "") {
 				frame_notifier.alert("Трябва да изберете Цена №.");
@@ -488,14 +426,6 @@ jQuery(document).ready(function ($) {
 			if (frame_id !== "-5") {
 				if (new_price === "") {
 					frame_notifier.alert("Трябва да въведете цена.");
-					error = true;
-				}
-				if (new_startDate === "") {
-					frame_notifier.alert("Трябва да въведете начална дата.");
-					error = true;
-				}
-				if (new_endDate === "") {
-					frame_notifier.alert("Трябва да въведете крайна дата.");
 					error = true;
 				}
 			}
@@ -515,8 +445,6 @@ jQuery(document).ready(function ($) {
 					new_frame_promo_price: new_promo_price,
 					new_frame_image: new_image,
 					new_frame_description: new_description,
-					new_frame_start_date: new_startDate,
-					new_frame_end_date: new_endDate,
 				},
 			});
 
@@ -548,10 +476,10 @@ jQuery(document).ready(function ($) {
 		let sum_price = parseFloat($("#sum-price-input").val());
 		const operator_promotion = $("#operator-promotion-select").val();
 		let sum_promotion = parseFloat($("#sum-promotion-input").val());
-		const startDate = $("#mass-start-date").val();
-		const endDate = $("#mass-end-date").val();
+		const frameEdit = $("#mass-edit-prices").prop("checked");
 		const pricesRound = $("#mass-round-prices").prop("checked");
 		const pricesToPromo = $("#mass-prices-to-promo").prop("checked");
+		const activeSelect = $("#active-select").val();
 		const product_ids = $(".check-product:checked")
 			.map(function () {
 				return $(this).data("product-id");
@@ -576,10 +504,10 @@ jQuery(document).ready(function ($) {
 				sum_price: sum_price,
 				operator_promotion: operator_promotion,
 				sum_promotion: sum_promotion,
-				start_date: startDate,
-				end_date: endDate,
+				frame_edit: frameEdit,
 				prices_round: pricesRound,
 				prices_to_promo: pricesToPromo,
+				active: activeSelect,
 			},
 			success: function (response) {
 				if (response.success) {
@@ -594,17 +522,6 @@ jQuery(document).ready(function ($) {
 			},
 		});
 	});
-
-	function showHideMassDates() {
-		if ($("#mass-edit-prices").prop("checked")) {
-			$("#mass-dates").hide();
-			$("#mass-start-date, #mass-end-date").val("");
-		} else {
-			$("#mass-dates").show();
-		}
-	}
-	$("#mass-edit-prices").on("change", showHideMassDates);
-	showHideMassDates();
 
 	function changeFrameImages() {
 		$(document).on("change", ".change-frame-image", function () {
@@ -625,11 +542,11 @@ jQuery(document).ready(function ($) {
 
 			if ($(this).val() === "-5") {
 				$trElement
-					.find(".new-frame-price, .new-frame-promo-price, .new-frame-start-date, .new-frame-end-date")
+					.find(".new-frame-price, .new-frame-promo-price")
 					.hide();
 			} else {
 				$trElement
-					.find(".new-frame-price, .new-frame-promo-price, .new-frame-start-date, .new-frame-end-date")
+					.find(".new-frame-price, .new-frame-promo-price")
 					.show();
 			}
 		});
