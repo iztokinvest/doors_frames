@@ -47,7 +47,7 @@ new SlimSelect({
 		allowDeselect: true,
 		closeOnSelect: false,
 		selectAll: true,
-		placeholderText: "Цена №",
+		placeholderText: "избери",
 	},
 });
 
@@ -136,6 +136,12 @@ function changePriceVisual() {
 			calculateSum(productPromo, operatorPromo, promoInput.value, pricesRound.checked);
 		}
 
+		if (pricesEdit.checked) {
+			confirmButton.innerText = "Замени текущите цени";
+		} else {
+			confirmButton.innerText = "Запази цените за по-късно";
+		}
+
 		confirmButton.style.display = "inline";
 	}
 
@@ -178,7 +184,7 @@ function changePriceVisual() {
 		const newSum = parseFloat(sum);
 		let result = 0;
 
-		if (sum > 0 && changePrice === "true") {
+		if (sum >= 0 && changePrice === "true") {
 			switch (operator) {
 				case "+":
 					result = oldSum + newSum;
@@ -203,7 +209,7 @@ function changePriceVisual() {
 				result = result % 1 >= 0.5 ? Math.ceil(result) : Math.floor(result);
 			}
 
-			if (changeFrame) {
+			if (changeFrame && result >= 0) {
 				column.innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
 			} else {
 				const newPriceSpan = ` <span id='${column.getAttribute("data-type")}-price-result-${column.getAttribute(
@@ -213,7 +219,7 @@ function changePriceVisual() {
 					oldPriceSpan.remove();
 				}
 
-				if (result > 0) {
+				if (result >= 0) {
 					column.insertAdjacentHTML("afterend", newPriceSpan);
 				}
 			}
@@ -264,10 +270,63 @@ jQuery(document).ready(function ($) {
 		});
 	});
 
+	function getEditPricesType() {
+		const storedEditPricesType = sessionStorage.getItem("editPricesType");
+		$("#edit-prices-type").val(storedEditPricesType);
+
+		if (storedEditPricesType !== "") {
+			$(".price-inputs").removeAttr("readonly");
+		} else {
+			$(".price-inputs").attr("readonly", "readonly");
+		}
+	}
+	getEditPricesType();
+
+	$("#edit-prices-type").on("change", function () {
+		const editPricesType = $(this).val();
+		sessionStorage.setItem("editPricesType", editPricesType);
+
+		if ($(this).val() !== "") {
+			$(".price-inputs").removeAttr("readonly");
+		} else {
+			$(".price-inputs").attr("readonly", "readonly");
+		}
+	});
+
 	$(".price-inputs").on("change", function () {
-		const productId = $(this).data("product-id");
-		const newPrice = $(this).val();
-		const priceType = $(this).data("type");
+		const element = $(this);
+		const productId = element.data("product-id");
+		const oldPrice = element.data("value");
+		const newPrice = element.val();
+		const priceType = element.data("type");
+		const editPricesType = sessionStorage.getItem("editPricesType");
+
+		if (editPricesType === "now" && priceType === "sale" && newPrice > element.data("price")) {
+			frame_notifier.warning("Промоционалната цена не може да бъде по-висока от основната.");
+			return;
+		}
+
+		if (
+			editPricesType === "later" &&
+			priceType === "sale" &&
+			newPrice >= parseFloat($("#price-badge-" + productId).text()) &&
+			priceType != 0
+		) {
+			frame_notifier.warning("Промоционалната цена трябва да бъде по-малка от основната.");
+			return;
+		}
+
+		let badgeId = priceType === "regular" ? "price-badge-" : "price-promo-badge-";
+		let badgeClass = "badge bg-warning text-dark";
+		let badgeSelector = "#" + badgeId + productId;
+		let badge = $(badgeSelector);
+
+		if (badge.length === 0) {
+			let badgeContainer = $('<div class="badge-container"></div>');
+			badge = $('<span id="' + badgeId + productId + '" class="' + badgeClass + '"></span>');
+			badgeContainer.append(badge);
+			element.before(badgeContainer);
+		}
 
 		$.ajax({
 			url: ajaxurl,
@@ -277,9 +336,14 @@ jQuery(document).ready(function ($) {
 				product_id: productId,
 				new_price: newPrice,
 				price_type: priceType,
+				edit_prices_type: editPricesType,
 			},
 			success: function (response) {
 				if (response.success) {
+					if (editPricesType === "later") {
+						badge.text(newPrice);
+						element.val(oldPrice);
+					}
 					frame_notifier.success(`Цената е променена.`);
 				} else {
 					frame_notifier.alert(`Цената не е променена.`);
@@ -324,7 +388,7 @@ jQuery(document).ready(function ($) {
 			<tr class="new-frame" data-id="${$(this).data("id")}">>
 				<td>
 					<select class="form-control price-input frame-id">
-						<option value="">Цена №</option>
+						<option value=""></option>
 						<option value="-5">Основна цена</option>
 						${Array.from({ length: 15 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
 					</select>
@@ -476,7 +540,7 @@ jQuery(document).ready(function ($) {
 		let sum_price = parseFloat($("#sum-price-input").val());
 		const operator_promotion = $("#operator-promotion-select").val();
 		let sum_promotion = parseFloat($("#sum-promotion-input").val());
-		const frameEdit = $("#mass-edit-prices").prop("checked");
+		const priceEdit = $("#mass-edit-prices").prop("checked");
 		const pricesRound = $("#mass-round-prices").prop("checked");
 		const pricesToPromo = $("#mass-prices-to-promo").prop("checked");
 		const activeSelect = $("#active-select").val();
@@ -504,7 +568,7 @@ jQuery(document).ready(function ($) {
 				sum_price: sum_price,
 				operator_promotion: operator_promotion,
 				sum_promotion: sum_promotion,
-				frame_edit: frameEdit,
+				price_edit: priceEdit,
 				prices_round: pricesRound,
 				prices_to_promo: pricesToPromo,
 				active: activeSelect,
@@ -541,13 +605,9 @@ jQuery(document).ready(function ($) {
 			const $trElement = $(this).closest("tr");
 
 			if ($(this).val() === "-5") {
-				$trElement
-					.find(".new-frame-price, .new-frame-promo-price")
-					.hide();
+				$trElement.find(".new-frame-price, .new-frame-promo-price").hide();
 			} else {
-				$trElement
-					.find(".new-frame-price, .new-frame-promo-price")
-					.show();
+				$trElement.find(".new-frame-price, .new-frame-promo-price").show();
 			}
 		});
 	}

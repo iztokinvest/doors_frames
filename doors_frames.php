@@ -3,7 +3,7 @@
 Plugin Name: Doors Frames
 Plugin URI: https://github.com/iztokinvest/doors_frames
 Description: Цени на каси.
-Version: 1.4.0
+Version: 1.5.0
 Author: Martin Mladenov
 GitHub Plugin URI: https://github.com/iztokinvest/doors_frames
 GitHub Branch: main
@@ -106,6 +106,7 @@ function create_tables()
 	global $wpdb;
 
 	$frames_table = $wpdb->prefix . 'doors_frames';
+	$products_table = $wpdb->prefix . 'doors_frames_products';
 	$tabs_table = $wpdb->prefix . 'doors_frames_tabs';
 
 	$charset_collate = $wpdb->get_charset_collate();
@@ -122,6 +123,15 @@ function create_tables()
 		PRIMARY KEY (id)
 	) $charset_collate;";
 
+	$sql_products = "CREATE TABLE IF NOT EXISTS $products_table (
+		id int(11) NOT NULL AUTO_INCREMENT,
+		product_id int(11) NOT NULL,
+		product_price float NOT NULL,
+		product_promo_price float NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY (product_id)
+	) $charset_collate;";
+
 	$sql_tabs = "CREATE TABLE IF NOT EXISTS $tabs_table (
 		id int(11) NOT NULL AUTO_INCREMENT,
 		category_id int(11) NOT NULL,
@@ -132,6 +142,7 @@ function create_tables()
 
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 	dbDelta($sql_frames);
+	dbDelta($sql_products);
 	dbDelta($sql_tabs);
 }
 register_activation_hook(__FILE__, 'create_tables');

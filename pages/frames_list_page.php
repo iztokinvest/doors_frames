@@ -80,27 +80,29 @@ function frames_list_page()
 						}
 						?>
 					</select>
-					<select id="active-select" name="active" onchange="this.form.submit()">
-						<option value="1" <?php echo ((isset($_GET['active']) && $_GET['active'] == 1) || !isset($_GET['active'])) ? ' selected' : ''; ?>>Активни</option>
-						<option value="0" <?php echo (isset($_GET['active']) && $_GET['active'] == 0) ? ' selected' : ''; ?>>Неактивни</option>
-						<option value="2" <?php echo (isset($_GET['active']) && $_GET['active'] == 2) ? ' selected' : ''; ?>>Всички</option>
-					</select>
 					<?php if ($frames) : ?>
+						Цени на каси №:
 						<select id="frame-select" class="slim-select" name="frame_id[]" multiple>
 							<optgroup data-selectall="true" data-selectalltext="Всички цени">
 								<?php
 								foreach ($frames as $frame) {
 									if ($frame->frame_id > 0) {
 										$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
-										echo '<option value="' . $frame->frame_id . '"' . $selected . '>Цена ' . $frame->frame_id . '</option>';
+										echo '<option value="' . $frame->frame_id . '"' . $selected . '>' . $frame->frame_id . '</option>';
 									}
 								}
 								?>
 							</optgroup>
 						</select>
 					<?php endif; ?>
+					<?php if ($selected_frame_ids) : ?>
+						<select id="active-select" name="active" onchange="this.form.submit()">
+							<option value="1" <?php echo ((isset($_GET['active']) && $_GET['active'] == 1) || !isset($_GET['active'])) ? ' selected' : ''; ?>>Активни каси</option>
+							<option value="0" <?php echo (isset($_GET['active']) && $_GET['active'] == 0) ? ' selected' : ''; ?>>Неактивни каси</option>
+							<option value="2" <?php echo (isset($_GET['active']) && $_GET['active'] == 2) ? ' selected' : ''; ?>>Всички каси</option>
+						</select>
+					<?php endif; ?>
 					<input type="text" id="search-input" name="search_term" placeholder="Търсене на продукт" value="<?php echo esc_attr($search_term); ?>" />
-
 					<button type="submit" class="btn btn-primary">Търсене</button>
 				</div>
 			</form>
@@ -110,11 +112,11 @@ function frames_list_page()
 				<?php
 				if ($selected_frame_ids) {
 					$mass_title = <<<HTML
-						<div id="mass-frame-title"><b>Масова промяна на цени на каси <span class="badge bg-warning text-dark" title="Ако в даден артикул има цени на каси с различни крайни дати, масовата промяна ще се изпълни само за най-новата дата.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови:&#013;   1. Ако е маркирана отметката 'Редактирай цените', тогава ще бъдат редактирани цените с най-новата крайна дата.&#013;   2. Ако са въведени дати в полетата 'От дата' и 'До дата', тогава ще бъдат създадени нови цени на каси с избраните дати, а старите ще бъдат с валидност до начална дата на новите цени.">?</span></b></div>
+						<div id="mass-frame-title"><b>Масова промяна на цени на каси <span class="badge bg-warning text-dark" title="От тук се променят масово цените на избраните каси.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови за по-късно:&#013;   1. Ако е маркирана отметката 'Промени текущите цени', тогава директно ще бъдат заменени цените на касите в момента.&#013;   2. Ако отметката не е маркирана, тогава цените ще бъдат запаметени като неактивни и ще могат да се активират по-късно.&#013;&#013;Ще бъдат променени само продуктите, които са визуализирани в момента и са маркирани с отметка. По подразбиране всички са маркирани, но при нужна отметката може да се премахне от определени продукти.&#013;&#013;Ще бъдат променени само цените на избраните номера на каси. Ако например от горното меню 'Цени на каси №' са избрани само 1 и 2, тогава промяната ще важи само за тях и останалите каси няма да бъдат засегнати.">?</span></b></div>
 					HTML;
 				} else {
 					$mass_title = <<<HTML
-						<div id="mass-product-title"><b>Масова промяна на цени на продукти <span class="badge bg-warning text-dark" title="Ако в даден артикул има цени на каси с различни крайни дати, масовата промяна ще се изпълни само за най-новата дата.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови:&#013;   1. Ако е маркирана отметката 'Редактирай цените', тогава ще бъдат редактирани цените с най-новата крайна дата.&#013;   2. Ако са въведени дати в полетата 'От дата' и 'До дата', тогава ще бъдат създадени нови цени на каси с избраните дати, а старите ще бъдат с валидност до начална дата на новите цени.">?</span></b></div>
+						<div id="mass-product-title"><b>Масова промяна на цени на продукти <span class="badge bg-warning text-dark" title="От тук се променят масово цените на избраните продукти.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови за по-късно:&#013;   1. Ако е маркирана отметката 'Промени текущите цени', тогава директно ще бъдат заменени цените на продуктите в момента.&#013;   2. Ако отметката не е маркирана, тогава цените ще бъдат запазени и ще могат да се активират по-късно.&#013;&#013;Ще бъдат променени само продуктите, които са визуализирани в момента и са маркирани с отметка. По подразбиране всички са маркирани, но при нужна отметката може да се премахне от определени продукти.">?</span></b></div>
 					HTML;
 				}
 
@@ -143,7 +145,7 @@ function frames_list_page()
 								<input type="number" step="0.01" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
 							</span>
 							<span class="badge bg-info text-dark checkbox-badge">
-								<input type="checkbox" id="mass-edit-prices" />Редактирай цените
+								<input type="checkbox" id="mass-edit-prices" />Промени текущите цени
 							</span>
 							<span class="badge bg-info text-dark checkbox-badge">
 								<input type="checkbox" id="mass-round-prices" />Закръгли
@@ -153,7 +155,7 @@ function frames_list_page()
 							</span>
 						</span>
 						<button type="button" id="check-mass-insert" class="btn btn-warning">Промени</button>
-						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none">Запази цените</button>
+						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none"></button>
 					</form>
 				HTML;
 				?>
@@ -225,7 +227,7 @@ function frames_list_page()
 											FROM {$wpdb->prefix}doors_frames 
 											WHERE product_id = %d AND frame_id IN ($frame_ids_placeholder) AND active LIKE %s
 											ORDER BY frame_id ASC",
-											array_merge([get_the_ID()], $selected_frame_ids, [active_status($_GET['active'])])
+											array_merge([get_the_ID()], $selected_frame_ids, [active_status($_GET['active'] ?? '1')])
 										);
 
 										$frame_data_list = $wpdb->get_results($sql);
@@ -271,8 +273,17 @@ function frames_list_page()
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_regular_price . '</td>';
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_sale_price . '</td>';
 									} else {
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' value="' . esc_attr($regular_price) . '"></td>';
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><input type="number" step="0.01" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" value="' . esc_attr($sale_price) . '"></td>';
+										$products_table_name = $wpdb->prefix . 'doors_frames_products';
+										$saved_prices = $wpdb->get_row($wpdb->prepare(
+											"SELECT product_price, product_promo_price FROM $products_table_name WHERE product_id = %d",
+											get_the_ID()
+										));
+
+										$saved_regular_price = $saved_prices && $saved_prices->product_price > 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_price</span></div>" : '';
+										$saved_sale_price = $saved_prices && $saved_prices->product_promo_price > 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_promo_price</span></div>" : '';
+
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" step="0.01" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" step="0.01" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" readonly></td>';
 									}
 
 									$modal_button = '<button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
@@ -320,6 +331,11 @@ function frames_list_page()
 							?>
 						</tbody>
 					</table>
+					<select id="edit-prices-type">
+						<option value="">Забранена промяна на цените</option>
+						<option value="later">Запазване на цените за по-късно</option>
+						<option value="now">Незабавна промяна на цените</option>
+					</select>
 				</div>
 			<?php endif; ?>
 		</div>
@@ -400,15 +416,46 @@ function update_product_price()
 		$product_id = intval($_POST['product_id']);
 		$new_price = floatval($_POST['new_price']);
 		$price_type = sanitize_text_field($_POST['price_type']);
+		$edit_prices_type = sanitize_text_field($_POST['edit_prices_type']);
 
 		$product = wc_get_product($product_id);
 		if ($product) {
-			if ($price_type == 'regular') {
-				$product->set_regular_price($new_price);
-			} elseif ($price_type == 'sale') {
-				$product->set_sale_price($new_price);
+			if ($edit_prices_type == 'now') {
+				if ($price_type == 'regular') {
+					$product->set_regular_price($new_price);
+				} elseif ($price_type == 'sale') {
+					$product->set_sale_price($new_price);
+				}
+				$product->save();
 			}
-			$product->save();
+
+			if ($edit_prices_type == 'later') {
+				global $wpdb;
+				$products_table_name = $wpdb->prefix . 'doors_frames_products';
+
+				if ($price_type == 'regular') {
+					$sql = $wpdb->prepare(
+						"INSERT INTO $products_table_name (product_id, product_price) 
+						VALUES (%d, %f) 
+						ON DUPLICATE KEY UPDATE 
+						product_price = VALUES(product_price)",
+						$product_id,
+						$new_price
+					);
+				} elseif ($price_type == 'sale') {
+					$sql = $wpdb->prepare(
+						"INSERT INTO $products_table_name (product_id, product_promo_price) 
+						VALUES (%d, %f) 
+						ON DUPLICATE KEY UPDATE 
+						product_promo_price = VALUES(product_promo_price)",
+						$product_id,
+						$new_price
+					);
+				}
+
+				$wpdb->query($sql);
+			}
+
 			wp_send_json_success();
 		} else {
 			wp_send_json_error();
@@ -713,10 +760,12 @@ function mass_insert_frames()
 		$sum_price = floatval($_POST['sum_price']);
 		$operator_promotion = sanitize_text_field($_POST['operator_promotion']);
 		$sum_promotion = floatval($_POST['sum_promotion']);
+		$price_edit = $_POST['price_edit'];
 		$prices_round = $_POST['prices_round'];
 		$prices_to_promo = $_POST['prices_to_promo'];
 
-		$table_name = $wpdb->prefix . 'doors_frames';
+		$frames_table_name = $wpdb->prefix . 'doors_frames';
+		$products_table_name = $wpdb->prefix . 'doors_frames_products';
 
 		if ($_POST['frame_ids']) {
 			$frame_ids =
@@ -724,7 +773,7 @@ function mass_insert_frames()
 
 			foreach ($product_ids as $product_id) {
 				$current_values_sql = $wpdb->prepare(
-					"SELECT * FROM {$table_name} WHERE product_id = %d AND frame_id IN ($frame_ids)",
+					"SELECT * FROM {$frames_table_name} WHERE product_id = %d AND frame_id IN ($frame_ids)",
 					array_merge([$product_id], $_POST['frame_ids'])
 				);
 				$current_values = $wpdb->get_results($current_values_sql);
@@ -733,14 +782,14 @@ function mass_insert_frames()
 					$new_price = calculate_new_value($current_value->frame_price, $operator_price, $sum_price, $prices_round);
 					$new_promo_price = calculate_new_value($current_value->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $current_value->frame_price);
 
-					if ($_POST['frame_edit'] == 'true') {
+					if ($price_edit == 'true') {
 						$update_query = $wpdb->prepare(
-							"UPDATE $table_name 
-					SET 
-						frame_price = %f,
-						frame_promo_price = %f 
-					WHERE 
-						id = %d AND active LIKE %s",
+							"UPDATE $frames_table_name 
+							SET 
+								frame_price = %f,
+								frame_promo_price = %f 
+							WHERE 
+								id = %d AND active LIKE %s",
 							$new_price >= 0 ? $new_price : $current_value->frame_price,
 							$new_promo_price >= 0 ? $new_promo_price : $current_value->frame_promo_price,
 							$current_value->id,
@@ -750,7 +799,7 @@ function mass_insert_frames()
 						$wpdb->query($update_query);
 					} else {
 						$wpdb->insert(
-							$table_name,
+							$frames_table_name,
 							array(
 								'product_id' => $product_id,
 								'frame_id' => $current_value->frame_id,
@@ -766,19 +815,33 @@ function mass_insert_frames()
 				}
 			}
 		} else {
+
 			foreach ($product_ids as $product_id) {
 				$product = wc_get_product($product_id);
-				$regular_price = $product->get_regular_price();
-				$sale_price = $product->get_sale_price();
+				$regular_price = floatval($product->get_regular_price());
+				$sale_price = floatval($product->get_sale_price());
 
 				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round);
 				$new_promo_price = calculate_new_value($sale_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $regular_price);
 
-				var_dump($new_price, $new_promo_price);
+				if ($price_edit == 'true') {
+					$product->set_regular_price($new_price);
+					$product->set_sale_price($new_promo_price);
+					$product->save();
+				} else {
+					$sql = $wpdb->prepare(
+						"INSERT INTO $products_table_name (product_id, product_price, product_promo_price) 
+						VALUES (%d, %f, %f) 
+						ON DUPLICATE KEY UPDATE 
+						product_price = VALUES(product_price), 
+						product_promo_price = VALUES(product_promo_price)",
+						$product_id,
+						$new_price,
+						$new_promo_price
+					);
 
-				$product->set_regular_price($new_price);
-				$product->set_sale_price($new_promo_price);
-				$product->save();
+					$wpdb->query($sql);
+				}
 			}
 		}
 
