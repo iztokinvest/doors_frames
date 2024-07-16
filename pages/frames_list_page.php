@@ -279,8 +279,8 @@ function frames_list_page()
 											get_the_ID()
 										));
 
-										$saved_regular_price = $saved_prices && $saved_prices->product_price > 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_price</span></div>" : '';
-										$saved_sale_price = $saved_prices && $saved_prices->product_promo_price > 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_promo_price</span></div>" : '';
+										$saved_regular_price = $saved_prices && $saved_prices->product_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_price</span></div>" : '';
+										$saved_sale_price = $saved_prices && $saved_prices->product_promo_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_promo_price</span></div>" : '';
 
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" step="0.01" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" step="0.01" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" readonly></td>';
@@ -898,20 +898,27 @@ function activate_prices()
 
 	$products_table_name = $wpdb->prefix . 'doors_frames_products';
 
-	$products = $wpdb->get_results("SELECT product_id, product_price, product_promo_price FROM $products_table_name");
+	$saved_products = $wpdb->get_results("SELECT product_id, product_price, product_promo_price FROM $products_table_name");
 
-	foreach ($products as $product) {
-		$product_id = $product->product_id;
-		$regular_price = $product->product_price;
-		$promo_price = $product->product_promo_price;
+	foreach ($saved_products as $saved_product) {
+		$product_id = $saved_product->product_id;
+		$regular_price = !is_null($saved_product->product_price) ? (float)$saved_product->product_price : null;
+		$promo_price = !is_null($saved_product->product_promo_price) ? (float)$saved_product->product_promo_price : null;
+		$product = wc_get_product($product_id);
 
-		update_post_meta($product_id, '_regular_price', $regular_price);
-
-		if (!is_null($promo_price)) {
-			update_post_meta($product_id, '_sale_price', $promo_price);
+		if (!is_null($regular_price)) {
+			$product->set_regular_price($regular_price);
 		}
 
-		update_post_meta($product_id, '_price', $promo_price ? $promo_price : $regular_price);
+		if (!is_null($promo_price)) {
+			if ($promo_price == 0) {
+				$product->set_sale_price('');
+			} else {
+				$product->set_sale_price($promo_price);
+			}
+		}
+
+		$product->save();
 	}
 
 	$wpdb->query("TRUNCATE TABLE $products_table_name");
