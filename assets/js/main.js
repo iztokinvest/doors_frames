@@ -612,4 +612,66 @@ jQuery(document).ready(function ($) {
 		});
 	}
 	framePricesValidation();
+
+	$("#btn-activate-prices").on("click", function (e) {
+		e.preventDefault();
+
+		frame_notifier.confirm(
+			`Сигурни ли сте, че искате да замените цените на всички продукти? Това действие е необратимо.`,
+			function () {
+				$.ajax({
+					url: ajaxurl,
+					method: "POST",
+					data: {
+						action: "activate_prices",
+					},
+					success: function (response) {
+						if (response.success) {
+							frame_notifier.success(`Цените са променени.`);
+							location.reload();
+						} else {
+							frame_notifier.alert(`Цените не са променени.`);
+						}
+					},
+					error: function () {
+						frame_notifier.alert(`Цените не са променени.`);
+					},
+				});
+			},
+			function () {
+				frame_notifier.info(`Действието е отменено.`);
+			}
+		);
+	});
+
+	$("#btn-activate-frame-prices").on("click", function (e) {
+		e.preventDefault();
+
+		frame_notifier.confirm(
+			`Сигурни ли сте, че искате да активирате всички неактивни каси? Това действие е необратимо.`,
+			function () {
+				$.ajax({
+					url: ajaxurl,
+					method: "POST",
+					data: {
+						action: "activate_frame_prices",
+					},
+					success: function (response) {
+						if (response.success) {
+							frame_notifier.success(`Цените са променени.`);
+							location.reload();
+						} else {
+							frame_notifier.alert(`Цените не са променени.`);
+						}
+					},
+					error: function () {
+						frame_notifier.alert(`Цените не са променени.`);
+					},
+				});
+			},
+			function () {
+				frame_notifier.info(`Действието е отменено.`);
+			}
+		);
+	});
 });

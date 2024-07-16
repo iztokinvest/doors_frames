@@ -332,10 +332,12 @@ function frames_list_page()
 						</tbody>
 					</table>
 					<select id="edit-prices-type">
-						<option value="">Забранена промяна на цените</option>
-						<option value="later">Запазване на цените за по-късно</option>
-						<option value="now">Незабавна промяна на цените</option>
+						<option value="">Забранена промяна на единичните цени</option>
+						<option value="later">Запазване на единичните цени за по-късно</option>
+						<option value="now">Незабавна промяна на единичните цени</option>
 					</select>
+					<button id="btn-activate-prices" class="btn btn-primary">Активирай всички запазени цени на продукти</button>
+					<button id="btn-activate-frame-prices" class="btn btn-primary">Активирай всички запазени цени на каси</button>
 				</div>
 			<?php endif; ?>
 		</div>
@@ -887,5 +889,64 @@ function calculate_new_value($current_value, $operator, $sum, $round, $to_promo 
 	}
 
 	return $total;
+}
+
+add_action('wp_ajax_activate_prices', 'activate_prices');
+function activate_prices()
+{
+	global $wpdb;
+
+	$products_table_name = $wpdb->prefix . 'doors_frames_products';
+
+	$products = $wpdb->get_results("SELECT product_id, product_price, product_promo_price FROM $products_table_name");
+
+	foreach ($products as $product) {
+		$product_id = $product->product_id;
+		$regular_price = $product->product_price;
+		$promo_price = $product->product_promo_price;
+
+		update_post_meta($product_id, '_regular_price', $regular_price);
+
+		if (!is_null($promo_price)) {
+			update_post_meta($product_id, '_sale_price', $promo_price);
+		}
+
+		update_post_meta($product_id, '_price', $promo_price ? $promo_price : $regular_price);
+	}
+
+	$wpdb->query("TRUNCATE TABLE $products_table_name");
+
+	wp_send_json_success();
+}
+
+add_action('wp_ajax_activate_frame_prices', 'activate_frame_prices');
+
+function activate_frame_prices()
+{
+	global $wpdb;
+
+	$frames_table_name = $wpdb->prefix . 'doors_frames';
+
+	$inactive_frames = $wpdb->get_results("SELECT id, product_id, frame_id FROM $frames_table_name WHERE active = 0");
+
+	foreach ($inactive_frames as $frame) {
+		$id = $frame->id;
+		$product_id = $frame->product_id;
+		$frame_id = $frame->frame_id;
+
+		$wpdb->query($wpdb->prepare(
+			"DELETE FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 1",
+			$product_id,
+			$frame_id
+		));
+
+		$wpdb->update(
+			$frames_table_name,
+			array('active' => 1),
+			array('id' => $id)
+		);
+	}
+
+	wp_send_json_success();
 }
 ?>
