@@ -274,10 +274,17 @@ jQuery(document).ready(function ($) {
 		const storedEditPricesType = sessionStorage.getItem("editPricesType");
 		$("#edit-prices-type").val(storedEditPricesType);
 
-		if (storedEditPricesType !== "") {
+		if (storedEditPricesType !== null && storedEditPricesType !== "") {
 			$(".price-inputs").removeAttr("readonly");
+
+			if (storedEditPricesType === "now") {
+				$(".price-inputs").before("<span class='icon'>⚡ </span>");
+			} else {
+				$(".price-inputs").before("<span class='icon'>💾 </span>");
+			}
 		} else {
 			$(".price-inputs").attr("readonly", "readonly");
+			$(".price-inputs").before("<span class='icon'>🚫 </span>");
 		}
 	}
 	getEditPricesType();
@@ -286,10 +293,20 @@ jQuery(document).ready(function ($) {
 		const editPricesType = $(this).val();
 		sessionStorage.setItem("editPricesType", editPricesType);
 
-		if ($(this).val() !== "") {
+		// Remove any existing icons
+		$(".price-inputs").prev(".icon").remove();
+
+		if (editPricesType !== "") {
 			$(".price-inputs").removeAttr("readonly");
+
+			if (editPricesType === "now") {
+				$(".price-inputs").before("<span class='icon'>⚡ </span>");
+			} else {
+				$(".price-inputs").before("<span class='icon'>💾 </span>");
+			}
 		} else {
 			$(".price-inputs").attr("readonly", "readonly");
+			$(".price-inputs").before("<span class='icon'>🚫 </span>");
 		}
 	});
 

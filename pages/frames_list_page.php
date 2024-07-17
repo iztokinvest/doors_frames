@@ -332,12 +332,12 @@ function frames_list_page()
 						</tbody>
 					</table>
 					<select id="edit-prices-type">
-						<option value="">Забранена промяна на единичните цени</option>
-						<option value="later">Запазване на единичните цени за по-късно</option>
-						<option value="now">Незабавна промяна на единичните цени</option>
+						<option value="">🚫 Забранена промяна на единичните цени</option>
+						<option value="later">💾 Запазване на единичните цени за по-късно</option>
+						<option value="now">⚡ Незабавна промяна на единичните цени</option>
 					</select>
-					<button id="btn-activate-prices" class="btn btn-primary">Активирай всички запазени цени на продукти</button>
-					<button id="btn-activate-frame-prices" class="btn btn-primary">Активирай всички запазени цени на каси</button>
+					<button id="btn-activate-prices" class="btn btn-sm btn-info">Активирай всички запазени цени на продукти</button>
+					<button id="btn-activate-frame-prices" class="btn btn-sm btn-info">Активирай всички запазени цени на каси</button>
 				</div>
 			<?php endif; ?>
 		</div>
