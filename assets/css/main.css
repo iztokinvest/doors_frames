@@ -68,3 +68,7 @@ td {
 .product-row {
 	border-top: 2px solid var(--bs-gray) !important;
 }
+
+.pointer {
+	cursor: pointer;
+}

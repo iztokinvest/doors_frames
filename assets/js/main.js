@@ -278,13 +278,13 @@ jQuery(document).ready(function ($) {
 			$(".price-inputs").removeAttr("readonly");
 
 			if (storedEditPricesType === "now") {
-				$(".price-inputs").before("<span class='icon'>⚡ </span>");
-			} else {
-				$(".price-inputs").before("<span class='icon'>💾 </span>");
+				$(".price-inputs").after("<span class='icon pointer'> ⚡</span>");
+			} else { 
+				$(".price-inputs").after("<span class='icon pointer'> 💾</span>");
 			}
 		} else {
 			$(".price-inputs").attr("readonly", "readonly");
-			$(".price-inputs").before("<span class='icon'>🚫 </span>");
+			$(".price-inputs").after("<span class='icon'> 🚫</span>");
 		}
 	}
 	getEditPricesType();
@@ -294,24 +294,24 @@ jQuery(document).ready(function ($) {
 		sessionStorage.setItem("editPricesType", editPricesType);
 
 		// Remove any existing icons
-		$(".price-inputs").prev(".icon").remove();
+		$(".price-inputs").next(".icon").remove();
 
 		if (editPricesType !== "") {
 			$(".price-inputs").removeAttr("readonly");
 
 			if (editPricesType === "now") {
-				$(".price-inputs").before("<span class='icon'>⚡ </span>");
+				$(".price-inputs").after("<span class='icon pointer'> ⚡</span>");
 			} else {
-				$(".price-inputs").before("<span class='icon'>💾 </span>");
+				$(".price-inputs").after("<span class='icon pointer'> 💾</span>");
 			}
 		} else {
 			$(".price-inputs").attr("readonly", "readonly");
-			$(".price-inputs").before("<span class='icon'>🚫 </span>");
+			$(".price-inputs").after("<span class='icon'> 🚫</span>");
 		}
 	});
 
-	$(".price-inputs").on("change", function () {
-		const element = $(this);
+	$(".icon.pointer").on("click", function () {
+		const element = $(this).prev();
 		const productId = element.data("product-id");
 		const oldPrice = element.data("value");
 		const newPrice = element.val();
