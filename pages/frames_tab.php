@@ -146,8 +146,8 @@ function custom_product_tab_content()
 			</div>
 		HTML;
 
-		if ($tab_data && !empty($tab_data->table_text)) {
-			echo '<div class="frame_table_text">' . esc_html($tab_data->table_text) . '</div>';
+		if ($tab_data && !empty($tab_data[0]->table_text)) {
+			echo '<div class="frame_table_text">' . esc_html($tab_data[0]->table_text) . '</div>';
 		}
 	}
 }
