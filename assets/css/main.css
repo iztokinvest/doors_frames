@@ -29,8 +29,8 @@
 	vertical-align: unset !important;
 }
 
-#products-table .table th,
-td {
+#products-table .table td,
+#products-table .table th {
 	text-align: center;
 }
 
