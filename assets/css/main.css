@@ -29,7 +29,7 @@
 	vertical-align: unset !important;
 }
 
-.table th,
+#products-table .table th,
 td {
 	text-align: center;
 }
