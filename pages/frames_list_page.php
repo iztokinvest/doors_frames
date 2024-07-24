@@ -161,7 +161,7 @@ function frames_list_page()
 				HTML;
 
 				$order = isset($_SESSION['order_by_price']) ? $_SESSION['order_by_price'] : 'ASC';
-				$icon = $order === 'ASC' ? '⬇' : '⬆';
+				$icon = $order === 'ASC' ? '▲' : '▼';
 				?>
 				<div id="products-table" class="mt-4">
 					<table class="table table-bordered">
@@ -172,7 +172,7 @@ function frames_list_page()
 										ID
 									</span></th>
 								<th><span class="badge bg-secondary">Име</span></th>
-								<th><span class="badge bg-secondary">Цена</span> <span id="order-by-price-icon" class="pointer"><?php echo $icon; ?></span></th>
+								<th><span class="badge bg-secondary">Цена</span> <span id="order-by-price-icon" class="pointer text-primary"><?php echo $icon; ?></span></th>
 								<th><span class="badge bg-secondary">Промоция</span></th>
 								<?php if ($selected_frame_ids) : ?>
 									<th><span class="badge bg-secondary">Цена №</span></th>
@@ -768,7 +768,9 @@ add_action('wp_ajax_order_by_price', 'order_by_price');
 function order_by_price()
 {
 	if (isset($_POST['toggle_order_by_price'])) {
-		if (isset($_SESSION['order_by_price']) && $_SESSION['order_by_price'] === 'ASC') {
+		if (!isset($_SESSION['order_by_price'])) {
+			$_SESSION['order_by_price'] = 'DESC';
+		} elseif ($_SESSION['order_by_price'] === 'ASC') {
 			$_SESSION['order_by_price'] = 'DESC';
 		} else {
 			$_SESSION['order_by_price'] = 'ASC';
