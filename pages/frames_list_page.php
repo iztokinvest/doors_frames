@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 function frames_list_page()
 {
@@ -158,15 +159,20 @@ function frames_list_page()
 						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none"></button>
 					</form>
 				HTML;
-				?>
 
+				$order = isset($_SESSION['order_by_price']) ? $_SESSION['order_by_price'] : 'ASC';
+				$icon = $order === 'ASC' ? '⬇' : '⬆';
+				?>
 				<div id="products-table" class="mt-4">
 					<table class="table table-bordered">
 						<thead>
 							<tr class="table-light">
-								<th><span class="badge bg-secondary">ID</span></th>
+								<th><span class="badge bg-secondary">
+										<input type="checkbox" class="check-all-products" checked>
+										ID
+									</span></th>
 								<th><span class="badge bg-secondary">Име</span></th>
-								<th><span class="badge bg-secondary">Цена</span></th>
+								<th><span class="badge bg-secondary">Цена</span> <span id="order-by-price-icon" class="pointer"><?php echo $icon; ?></span></th>
 								<th><span class="badge bg-secondary">Промоция</span></th>
 								<?php if ($selected_frame_ids) : ?>
 									<th><span class="badge bg-secondary">Цена №</span></th>
@@ -181,9 +187,13 @@ function frames_list_page()
 						<tbody>
 							<?php
 							$args = array(
-								'post_type' => 'product',
+								'post_type'      => 'product',
 								'posts_per_page' => -1,
-								's' => $search_term
+								's'              => $search_term,
+								'post_status'    => 'publish',
+								'meta_key'       => '_regular_price',
+								'orderby'        => 'meta_value_num',
+								'order'          => $order,
 							);
 
 							if ($selected_category_id) {
@@ -199,8 +209,8 @@ function frames_list_page()
 							if ($selected_frame_ids) {
 								$frame_products = $wpdb->get_col($wpdb->prepare(
 									"SELECT product_id 
-									FROM {$wpdb->prefix}doors_frames 
-									WHERE frame_id IN (%s)",
+										FROM {$wpdb->prefix}doors_frames 
+										WHERE frame_id IN (%s)",
 									implode(',', $selected_frame_ids)
 								));
 								if ($frame_products) {
@@ -211,6 +221,9 @@ function frames_list_page()
 							}
 
 							$query = new WP_Query($args);
+
+							// Remove the filter after the query to prevent affecting other queries
+							remove_filter('posts_search', 'custom_search', 10, 2);
 
 							if ($query->have_posts()) {
 								while ($query->have_posts()) {
@@ -748,6 +761,19 @@ function fetch_frame_prices()
 		}
 	} else {
 		wp_send_json_error();
+	}
+}
+
+add_action('wp_ajax_order_by_price', 'order_by_price');
+function order_by_price()
+{
+	if (isset($_POST['toggle_order_by_price'])) {
+		if (isset($_SESSION['order_by_price']) && $_SESSION['order_by_price'] === 'ASC') {
+			$_SESSION['order_by_price'] = 'DESC';
+		} else {
+			$_SESSION['order_by_price'] = 'ASC';
+		}
+		wp_send_json_success();
 	}
 }
 

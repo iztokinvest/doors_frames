@@ -69,24 +69,50 @@ function changePriceVisual() {
 	const confirmButton = document.getElementById("apply-mass-insert");
 	const massSpan = document.getElementById("mass-insert-span");
 	const checkProducts = document.getElementsByClassName("check-product");
+	const checkAll = document.querySelector(".check-all-products");
+	let lastChecked = null;
 
 	for (const checkProduct of checkProducts) {
-		checkProduct.addEventListener("click", () => {
-			const productId = checkProduct.getAttribute("data-product-id");
-			const elements = document.querySelectorAll(`[data-product-id='${productId}']`);
+		checkProduct.addEventListener("click", function (event) {
+			if (lastChecked && event.shiftKey) {
+				let start = Array.from(checkProducts).indexOf(lastChecked);
+				let end = Array.from(checkProducts).indexOf(this);
 
-			if (elements.length > 1) {
-				elements.forEach((element) => {
-					if (checkProduct.checked) {
-						element.dataset.changePrice = "true";
-					} else {
-						element.dataset.changePrice = "false";
-					}
-				});
-
-				calculate();
+				let range = [start, end].sort((a, b) => a - b);
+				for (let i = range[0]; i <= range[1]; i++) {
+					checkProducts[i].checked = lastChecked.checked;
+					calculateAllPrices(checkProducts[i]);
+				}
+			} else {
+				calculateAllPrices(this);
 			}
+			lastChecked = this;
 		});
+	}
+
+	checkAll.addEventListener("click", function () {
+		Array.from(checkProducts).forEach(function (checkbox) {
+			checkbox.checked = checkAll.checked;
+
+			calculateAllPrices(checkbox);
+		});
+	});
+
+	function calculateAllPrices(checkbox) {
+		const productId = checkbox.getAttribute("data-product-id");
+		const elements = document.querySelectorAll(`[data-product-id='${productId}']`);
+
+		if (elements.length > 1) {
+			elements.forEach((element) => {
+				if (checkbox.checked) {
+					element.dataset.changePrice = "true";
+				} else {
+					element.dataset.changePrice = "false";
+				}
+			});
+
+			calculate();
+		}
 	}
 
 	if (!checkButton || !confirmButton) {
@@ -95,9 +121,11 @@ function changePriceVisual() {
 
 	massSpan.addEventListener("click", hideConfirmButton);
 
-	checkButton.addEventListener("click", calculate);
+	checkButton.addEventListener("click", () => {
+		calculate(true);
+	});
 
-	function calculate() {
+	function calculate(warningMessage = false) {
 		let errorCount = 0;
 		const operatorPrice = document.getElementById("operator-price-select").value;
 		const operatorPromo = document.getElementById("operator-promotion-select").value;
@@ -109,9 +137,15 @@ function changePriceVisual() {
 		const tablePromos = document.getElementsByClassName("frame-table-promo");
 		const pricesEdit = document.getElementById("mass-edit-prices");
 		const pricesRound = document.getElementById("mass-round-prices");
+		const checkProducts = document.getElementsByClassName("check-product");
+		const noneChecked = Array.from(checkProducts).every(function (checkbox) {
+			return !checkbox.checked;
+		});
 
 		if (priceInput.value === "" && promoInput.value === "") {
-			frame_notifier.warning(`Трябва да има въведена цена или промоция".`);
+			if (warningMessage) {
+				frame_notifier.warning(`Трябва да има въведена цена или промоция".`);
+			}
 			errorCount++;
 		}
 
@@ -142,7 +176,11 @@ function changePriceVisual() {
 			confirmButton.innerText = "Запази цените за по-късно";
 		}
 
-		confirmButton.style.display = "inline";
+		if (noneChecked) {
+			hideConfirmButton();
+		} else {
+			confirmButton.style.display = "inline";
+		}
 	}
 
 	function hideConfirmButton() {
@@ -279,7 +317,7 @@ jQuery(document).ready(function ($) {
 
 			if (storedEditPricesType === "now") {
 				$(".price-inputs").after("<span class='icon pointer'> ⚡</span>");
-			} else { 
+			} else {
 				$(".price-inputs").after("<span class='icon pointer'> 💾</span>");
 			}
 		} else {
@@ -310,7 +348,7 @@ jQuery(document).ready(function ($) {
 		}
 	});
 
-	$(".icon.pointer").on("click", function () {
+	$(document).on("click", ".icon.pointer", function () {
 		const element = $(this).prev();
 		const productId = element.data("product-id");
 		const oldPrice = element.data("value");
@@ -629,6 +667,25 @@ jQuery(document).ready(function ($) {
 		});
 	}
 	framePricesValidation();
+
+	$("#order-by-price-icon").click(function () {
+		$.ajax({
+			url: ajaxurl,
+			method: "POST",
+			data: {
+				action: "order_by_price",
+				toggle_order_by_price: true,
+			},
+			success: function (response) {
+				if (response.success) {
+					location.reload();
+				}
+			},
+			error: function () {
+				frame_notifier.alert(`Грешка.`);
+			},
+		});
+	});
 
 	$("#btn-activate-prices").on("click", function (e) {
 		e.preventDefault();
