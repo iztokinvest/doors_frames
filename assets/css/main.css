@@ -14,7 +14,8 @@
 	justify-content: center;
 }
 
-.price-input, .price-inputs {
+.price-input,
+.price-inputs {
 	width: 90px;
 }
 
@@ -71,4 +72,19 @@
 
 .pointer {
 	cursor: pointer;
+	padding: 0 3px 0 3px;
+}
+
+.pointer:hover {
+	background-color: #dc3545;
+	border-radius: 5px;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.pointer:active {
+	background-color: #000;
+}
+
+.price-result-span {
+	position: absolute;
 }

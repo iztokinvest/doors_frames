@@ -63,7 +63,7 @@ function frames_list_page()
 			<form method="get" action="">
 				<input type="hidden" name="page" value="frames-list-page">
 				<div class="form-group">
-					<select id="category-select" name="category_id" onchange="this.form.submit()">
+					<select id="category-select" name="category_id">
 						<option value=""></option>
 						<?php
 						foreach ($categories as $category) {
@@ -82,19 +82,21 @@ function frames_list_page()
 						?>
 					</select>
 					<?php if ($frames) : ?>
-						Цени на каси №:
-						<select id="frame-select" class="slim-select" name="frame_id[]" multiple>
-							<optgroup data-selectall="true" data-selectalltext="Всички цени">
-								<?php
-								foreach ($frames as $frame) {
-									if ($frame->frame_id > 0) {
-										$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
-										echo '<option value="' . $frame->frame_id . '"' . $selected . '>' . $frame->frame_id . '</option>';
+						<span id="frame-prices-select">
+							Цени на каси №:
+							<select id="frame-select" class="slim-select" name="frame_id[]" multiple>
+								<optgroup data-selectall="true" data-selectalltext="Всички цени">
+									<?php
+									foreach ($frames as $frame) {
+										if ($frame->frame_id > 0) {
+											$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
+											echo '<option value="' . $frame->frame_id . '"' . $selected . '>' . $frame->frame_id . '</option>';
+										}
 									}
-								}
-								?>
-							</optgroup>
-						</select>
+									?>
+								</optgroup>
+							</select>
+						</span>
 					<?php endif; ?>
 					<?php if ($selected_frame_ids) : ?>
 						<select id="active-select" name="active" onchange="this.form.submit()">
@@ -195,9 +197,22 @@ function frames_list_page()
 								'orderby'        => 'meta_value_num',
 								'order'          => $order,
 							);
+							$args2 = array(
+								'post_type'      => 'product',
+								'posts_per_page' => -1,
+								's'              => $search_term,
+								'post_status'    => 'publish'
+							);
 
 							if ($selected_category_id) {
 								$args['tax_query'] = array(
+									array(
+										'taxonomy' => 'product_cat',
+										'field' => 'term_id',
+										'terms' => $selected_category_id
+									)
+								);
+								$args2['tax_query'] = array(
 									array(
 										'taxonomy' => 'product_cat',
 										'field' => 'term_id',
@@ -215,12 +230,25 @@ function frames_list_page()
 								));
 								if ($frame_products) {
 									$args['post__in'] = $frame_products;
+									$args2['post__in'] = $frame_products;
 								} else {
 									$args['post__in'] = array(0);
+									$args2['post__in'] = array(0);
 								}
 							}
 
-							$query = new WP_Query($args);
+							$query1 = new WP_Query($args);
+							$query2 = new WP_Query($args2);
+
+							$merged_query = array_merge($query1->posts, $query2->posts);
+
+							$query = new WP_Query(array(
+								'post_type'      => 'product',
+								'posts_per_page' => -1,
+								'post__in'       => wp_list_pluck($merged_query, 'ID'),
+								'orderby'        => 'post__in',
+								'order'          => 'ASC'
+							));
 
 							// Remove the filter after the query to prevent affecting other queries
 							remove_filter('posts_search', 'custom_search', 10, 2);
@@ -437,9 +465,9 @@ function update_product_price()
 		if ($product) {
 			if ($edit_prices_type == 'now') {
 				if ($price_type == 'regular') {
-					$product->set_regular_price($new_price);
+					$product->set_regular_price($new_price != 0 ? $new_price : '');
 				} elseif ($price_type == 'sale') {
-					$product->set_sale_price($new_price);
+					$product->set_sale_price($new_price != 0 ? $new_price : '');
 				}
 				$product->save();
 			}
@@ -854,6 +882,13 @@ function mass_insert_frames()
 				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round);
 				$new_promo_price = calculate_new_value($sale_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $regular_price);
 
+				if ($new_price == 0) {
+					$new_price = "";
+				}
+				if ($new_promo_price == 0) {
+					$new_promo_price = "";
+				}
+
 				if ($price_edit == 'true') {
 					$product->set_regular_price($new_price);
 					$product->set_sale_price($new_promo_price);
@@ -935,7 +970,11 @@ function activate_prices()
 		$product = wc_get_product($product_id);
 
 		if (!is_null($regular_price)) {
-			$product->set_regular_price($regular_price);
+			if ($regular_price == 0) {
+				$product->set_regular_price('');
+			} else {
+				$product->set_regular_price($regular_price);
+			}
 		}
 
 		if (!is_null($promo_price)) {

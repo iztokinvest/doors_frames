@@ -64,6 +64,20 @@ function editTab() {
 }
 editTab();
 
+function selectCategory() {
+	const categorySelect = document.getElementById("category-select");
+	const framePricesSelect = document.getElementById("frame-prices-select");
+	const form = categorySelect.closest("form");
+
+	categorySelect.addEventListener("change", () => {
+		if (framePricesSelect) {
+			framePricesSelect.remove();
+		}
+		form.submit();
+	});
+}
+selectCategory();
+
 function changePriceVisual() {
 	const checkButton = document.getElementById("check-mass-insert");
 	const confirmButton = document.getElementById("apply-mass-insert");
@@ -191,6 +205,7 @@ function changePriceVisual() {
 		let oldSum = 0;
 		let oldColumnValue;
 		let changeFrame = true;
+		const iconSpan = column.parentNode.querySelector(".icon");
 		if (column.tagName.toLowerCase() === "input") {
 			changeFrame = false;
 		}
@@ -258,7 +273,7 @@ function changePriceVisual() {
 				}
 
 				if (result >= 0) {
-					column.insertAdjacentHTML("afterend", newPriceSpan);
+					iconSpan.insertAdjacentHTML("afterend", newPriceSpan);
 				}
 			}
 		} else {
@@ -316,13 +331,13 @@ jQuery(document).ready(function ($) {
 			$(".price-inputs").removeAttr("readonly");
 
 			if (storedEditPricesType === "now") {
-				$(".price-inputs").after("<span class='icon pointer'> ⚡</span>");
+				$(".price-inputs").after("<span class='icon pointer'>⚡</span>");
 			} else {
-				$(".price-inputs").after("<span class='icon pointer'> 💾</span>");
+				$(".price-inputs").after("<span class='icon pointer'>💾</span>");
 			}
 		} else {
 			$(".price-inputs").attr("readonly", "readonly");
-			$(".price-inputs").after("<span class='icon'> 🚫</span>");
+			$(".price-inputs").after("<span class='icon' style='padding: 0 3px 0 3px;'>🚫</span>");
 		}
 	}
 	getEditPricesType();
@@ -338,13 +353,13 @@ jQuery(document).ready(function ($) {
 			$(".price-inputs").removeAttr("readonly");
 
 			if (editPricesType === "now") {
-				$(".price-inputs").after("<span class='icon pointer'> ⚡</span>");
+				$(".price-inputs").after("<span class='icon pointer'>⚡</span>");
 			} else {
-				$(".price-inputs").after("<span class='icon pointer'> 💾</span>");
+				$(".price-inputs").after("<span class='icon pointer'>💾</span>");
 			}
 		} else {
 			$(".price-inputs").attr("readonly", "readonly");
-			$(".price-inputs").after("<span class='icon'> 🚫</span>");
+			$(".price-inputs").after("<span class='icon' style='padding: 0 3px 0 3px;'>🚫</span>");
 		}
 	});
 
@@ -356,8 +371,8 @@ jQuery(document).ready(function ($) {
 		const priceType = element.data("type");
 		const editPricesType = sessionStorage.getItem("editPricesType");
 
-		if (editPricesType === "now" && priceType === "sale" && newPrice > element.data("price")) {
-			frame_notifier.warning("Промоционалната цена не може да бъде по-висока от основната.");
+		if (editPricesType === "now" && priceType === "sale" && newPrice >= element.data("price")) {
+			frame_notifier.warning("Промоционалната цена трябва да бъде по-малка от основната.");
 			return;
 		}
 
