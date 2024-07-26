@@ -9,7 +9,7 @@ function frames_list_page()
 	// Get categories
 	$categories = get_terms(array(
 		'taxonomy' => 'product_cat',
-		'hide_empty' => false,
+		'hide_empty' => true,
 		'parent' => 0
 	));
 
@@ -68,7 +68,7 @@ function frames_list_page()
 						<?php
 						foreach ($categories as $category) {
 							$selected = ($category->term_id == $selected_category_id) ? ' selected' : '';
-							echo '<option style="font-weight:bold" value="' . $category->term_id . '"' . $selected . '>' . $category->name . '</option>';
+							echo '<option style="font-weight:bold" value="' . $category->term_id . '"' . $selected . '>' . $category->name . ' (' . $category->count . ')</option>';
 							$subcategories = get_terms(array(
 								'taxonomy' => 'product_cat',
 								'hide_empty' => false,
@@ -76,7 +76,7 @@ function frames_list_page()
 							));
 							foreach ($subcategories as $subcategory) {
 								$selected = ($subcategory->term_id == $selected_category_id) ? ' selected' : '';
-								echo '<option value="' . $subcategory->term_id . '"' . $selected . '>&nbsp;&nbsp;&nbsp;&nbsp;' . $subcategory->name . '</option>';
+								echo '<option value="' . $subcategory->term_id . '"' . $selected . '>&nbsp;&nbsp;&nbsp;&nbsp;' . $subcategory->name . ' (' . $subcategory->count . ')</option>';
 							}
 						}
 						?>
@@ -296,7 +296,7 @@ function frames_list_page()
 									}
 
 									if ($product_image_thumbnail) {
-										$product_image = "<a target='_blank' href='$product_image_full'><img src='$product_image_thumbnail' class='product-image-thumb'></a>";
+										$product_image = "<a target='_blank' href='$product_image_full'><img src='$product_image_thumbnail' class='product-image-thumb' loading='lazy'></a>";
 									} else {
 										$product_image = "";
 									}
