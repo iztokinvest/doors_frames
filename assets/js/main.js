@@ -67,14 +67,17 @@ editTab();
 function selectCategory() {
 	const categorySelect = document.getElementById("category-select");
 	const framePricesSelect = document.getElementById("frame-prices-select");
-	const form = categorySelect.closest("form");
 
-	categorySelect.addEventListener("change", () => {
-		if (framePricesSelect) {
-			framePricesSelect.remove();
-		}
-		form.submit();
-	});
+	if (categorySelect) {
+		const form = categorySelect.closest("form");
+
+		categorySelect.addEventListener("change", () => {
+			if (framePricesSelect) {
+				framePricesSelect.remove();
+			}
+			form.submit();
+		});
+	}
 }
 selectCategory();
 
@@ -104,13 +107,15 @@ function changePriceVisual() {
 		});
 	}
 
-	checkAll.addEventListener("click", function () {
-		Array.from(checkProducts).forEach(function (checkbox) {
-			checkbox.checked = checkAll.checked;
+	if (checkAll) {
+		checkAll.addEventListener("click", function () {
+			Array.from(checkProducts).forEach(function (checkbox) {
+				checkbox.checked = checkAll.checked;
 
-			calculateAllPrices(checkbox);
+				calculateAllPrices(checkbox);
+			});
 		});
-	});
+	}
 
 	function calculateAllPrices(checkbox) {
 		const productId = checkbox.getAttribute("data-product-id");

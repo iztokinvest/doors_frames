@@ -188,6 +188,7 @@ function frames_list_page()
 						</thead>
 						<tbody>
 							<?php
+							// Prepare the base arguments
 							$args = array(
 								'post_type'      => 'product',
 								'posts_per_page' => -1,
@@ -208,42 +209,50 @@ function frames_list_page()
 							if ($selected_frame_ids) {
 								$frame_products = $wpdb->get_col($wpdb->prepare(
 									"SELECT product_id 
-									FROM {$wpdb->prefix}doors_frames 
-									WHERE frame_id IN (%s)",
+         FROM {$wpdb->prefix}doors_frames 
+         WHERE frame_id IN (%s)",
 									implode(',', $selected_frame_ids)
 								));
 								$args['post__in'] = $frame_products ? $frame_products : array(0);
 							}
 
-							// Query for products with a price
-							$args_with_price = $args;
-							$args_with_price['meta_key'] = '_regular_price';
-							$args_with_price['orderby'] = 'meta_value_num';
-							$args_with_price['order'] = $order;
+							// Query all products
+							$all_products_query = new WP_Query($args);
 
-							$query_with_price = new WP_Query($args_with_price);
+							// Collect product IDs and prices
+							$product_prices = array();
+							if ($all_products_query->have_posts()) {
+								while ($all_products_query->have_posts()) {
+									$all_products_query->the_post();
+									$product_id = get_the_ID();
+									$product = wc_get_product($product_id);
 
-							// Query for products without a price
-							$args_without_price = $args;
-							$args_without_price['meta_query'] = array(
-								array(
-									'key'     => '_regular_price',
-									'compare' => 'NOT EXISTS',
-								),
-							);
+									if ($product->is_type('variable')) {
+										$variation_prices = $product->get_variation_prices();
+										$min_price = $variation_prices['price'][min(array_keys($variation_prices['price']))];
+									} else {
+										$min_price = $product->get_price();
+									}
 
-							$query_without_price = new WP_Query($args_without_price);
+									$product_prices[$product_id] = $min_price !== '' ? floatval($min_price) : PHP_INT_MAX;
+								}
+								wp_reset_postdata();
+							}
 
-							// Merge the results
-							$merged_query = array_merge($query_with_price->posts, $query_without_price->posts);
+							// Sort products by price
+							if ($order === 'ASC') {
+								asort($product_prices);
+							} else {
+								arsort($product_prices);
+							}
 
-							// Final query to maintain order
+							// Final query to get sorted products
 							$query = new WP_Query(array(
 								'post_type'      => 'product',
 								'posts_per_page' => -1,
-								'post__in'       => wp_list_pluck($merged_query, 'ID'),
+								'post__in'       => array_keys($product_prices),
 								'orderby'        => 'post__in',
-								'order'          => 'ASC',
+								'order'          => 'ASC', // Order by 'post__in' will maintain the order from array_keys
 							));
 
 							// Remove the filter after the query to prevent affecting other queries
