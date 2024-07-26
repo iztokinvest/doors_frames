@@ -88,3 +88,7 @@
 .price-result-span {
 	position: absolute;
 }
+
+.product-image-thumb{
+	max-height: 38px;
+}

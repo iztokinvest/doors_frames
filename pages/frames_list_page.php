@@ -173,6 +173,7 @@ function frames_list_page()
 										<input type="checkbox" class="check-all-products" checked>
 										ID
 									</span></th>
+								<th>🖼️</th>
 								<th><span class="badge bg-secondary">Име</span></th>
 								<th><span class="badge bg-secondary">Цена</span> <span id="order-by-price-icon" class="pointer text-primary"><?php echo $icon; ?></span></th>
 								<th><span class="badge bg-secondary">Промоция</span></th>
@@ -209,8 +210,8 @@ function frames_list_page()
 							if ($selected_frame_ids) {
 								$frame_products = $wpdb->get_col($wpdb->prepare(
 									"SELECT product_id 
-         FROM {$wpdb->prefix}doors_frames 
-         WHERE frame_id IN (%s)",
+									FROM {$wpdb->prefix}doors_frames 
+									WHERE frame_id IN (%s)",
 									implode(',', $selected_frame_ids)
 								));
 								$args['post__in'] = $frame_products ? $frame_products : array(0);
@@ -264,6 +265,9 @@ function frames_list_page()
 									$product = wc_get_product(get_the_ID());
 									$regular_price = $product->get_regular_price();
 									$sale_price = $product->get_sale_price();
+									$product_image_thumbnail = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
+									$product_image_full = get_the_post_thumbnail_url(get_the_ID(), 'full');
+
 
 									if ($selected_frame_ids) {
 										$frame_ids_placeholder = implode(',', array_fill(0, count($selected_frame_ids), '%d'));
@@ -291,10 +295,17 @@ function frames_list_page()
 										$product_row_class = '';
 									}
 
+									if ($product_image_thumbnail) {
+										$product_image = "<a target='_blank' href='$product_image_full'><img src='$product_image_thumbnail' class='product-image-thumb'></a>";
+									} else {
+										$product_image = "";
+									}
+
 									echo '<tr class="table-secondary">';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">
 									' . (!$product->is_type('variable') || $selected_frame_ids ? '<input type="checkbox" class="check-product" data-product-id="' . get_the_ID() . '" checked>' : '') .  get_the_ID() . '
 									</td>';
+									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $product_image . '</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
 
 									if ($product->is_type('variable')) {
