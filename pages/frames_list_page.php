@@ -71,7 +71,7 @@ function frames_list_page()
 							echo '<option style="font-weight:bold" value="' . $category->term_id . '"' . $selected . '>' . $category->name . ' (' . $category->count . ')</option>';
 							$subcategories = get_terms(array(
 								'taxonomy' => 'product_cat',
-								'hide_empty' => false,
+								'hide_empty' => true,
 								'parent' => $category->term_id
 							));
 							foreach ($subcategories as $subcategory) {
