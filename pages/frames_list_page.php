@@ -193,61 +193,57 @@ function frames_list_page()
 								'posts_per_page' => -1,
 								's'              => $search_term,
 								'post_status'    => 'publish',
-								'meta_key'       => '_regular_price',
-								'orderby'        => 'meta_value_num',
-								'order'          => $order,
-							);
-							$args2 = array(
-								'post_type'      => 'product',
-								'posts_per_page' => -1,
-								's'              => $search_term,
-								'post_status'    => 'publish'
 							);
 
 							if ($selected_category_id) {
 								$args['tax_query'] = array(
 									array(
 										'taxonomy' => 'product_cat',
-										'field' => 'term_id',
-										'terms' => $selected_category_id
-									)
-								);
-								$args2['tax_query'] = array(
-									array(
-										'taxonomy' => 'product_cat',
-										'field' => 'term_id',
-										'terms' => $selected_category_id
-									)
+										'field'    => 'term_id',
+										'terms'    => $selected_category_id,
+									),
 								);
 							}
 
 							if ($selected_frame_ids) {
 								$frame_products = $wpdb->get_col($wpdb->prepare(
 									"SELECT product_id 
-										FROM {$wpdb->prefix}doors_frames 
-										WHERE frame_id IN (%s)",
+									FROM {$wpdb->prefix}doors_frames 
+									WHERE frame_id IN (%s)",
 									implode(',', $selected_frame_ids)
 								));
-								if ($frame_products) {
-									$args['post__in'] = $frame_products;
-									$args2['post__in'] = $frame_products;
-								} else {
-									$args['post__in'] = array(0);
-									$args2['post__in'] = array(0);
-								}
+								$args['post__in'] = $frame_products ? $frame_products : array(0);
 							}
 
-							$query1 = new WP_Query($args);
-							$query2 = new WP_Query($args2);
+							// Query for products with a price
+							$args_with_price = $args;
+							$args_with_price['meta_key'] = '_regular_price';
+							$args_with_price['orderby'] = 'meta_value_num';
+							$args_with_price['order'] = $order;
 
-							$merged_query = array_merge($query1->posts, $query2->posts);
+							$query_with_price = new WP_Query($args_with_price);
 
+							// Query for products without a price
+							$args_without_price = $args;
+							$args_without_price['meta_query'] = array(
+								array(
+									'key'     => '_regular_price',
+									'compare' => 'NOT EXISTS',
+								),
+							);
+
+							$query_without_price = new WP_Query($args_without_price);
+
+							// Merge the results
+							$merged_query = array_merge($query_with_price->posts, $query_without_price->posts);
+
+							// Final query to maintain order
 							$query = new WP_Query(array(
 								'post_type'      => 'product',
 								'posts_per_page' => -1,
 								'post__in'       => wp_list_pluck($merged_query, 'ID'),
 								'orderby'        => 'post__in',
-								'order'          => 'ASC'
+								'order'          => 'ASC',
 							));
 
 							// Remove the filter after the query to prevent affecting other queries
