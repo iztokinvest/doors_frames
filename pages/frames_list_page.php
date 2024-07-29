@@ -220,46 +220,54 @@ function frames_list_page()
 							// Query all products
 							$all_products_query = new WP_Query($args);
 
-							// Collect product IDs and prices
-							$product_prices = array();
-							if ($all_products_query->have_posts()) {
-								while ($all_products_query->have_posts()) {
-									$all_products_query->the_post();
-									$product_id = get_the_ID();
-									$product = wc_get_product($product_id);
-
-									if ($product->is_type('variable')) {
-										$variation_prices = $product->get_variation_prices();
-										$min_price = $variation_prices['price'][min(array_keys($variation_prices['price']))];
-									} else {
-										$min_price = $product->get_price();
-									}
-
-									$product_prices[$product_id] = $min_price !== '' ? floatval($min_price) : PHP_INT_MAX;
-								}
-								wp_reset_postdata();
-							}
-
-							// Sort products by price
-							if ($order === 'ASC') {
-								asort($product_prices);
+							// If no products found, remove the search term and re-query
+							$finded_products = false;
+							if (!$all_products_query->have_posts()) {
+								unset($args['s']);
+								$all_products_query = new WP_Query($args);
+								$finded_products = true;
 							} else {
-								arsort($product_prices);
+
+								// Collect product IDs and prices
+								$product_prices = array();
+								if ($all_products_query->have_posts()) {
+									while ($all_products_query->have_posts()) {
+										$all_products_query->the_post();
+										$product_id = get_the_ID();
+										$product = wc_get_product($product_id);
+
+										if ($product->is_type('variable')) {
+											$variation_prices = $product->get_variation_prices();
+											$min_price = $variation_prices['price'][min(array_keys($variation_prices['price']))];
+										} else {
+											$min_price = $product->get_price();
+										}
+
+										$product_prices[$product_id] = $min_price !== '' ? floatval($min_price) : PHP_INT_MAX;
+									}
+									wp_reset_postdata();
+								}
+
+								// Sort products by price
+								if ($order === 'ASC') {
+									asort($product_prices);
+								} else {
+									arsort($product_prices);
+								}
+
+								// Final query to get sorted products
+								$query = new WP_Query(array(
+									'post_type'      => 'product',
+									'posts_per_page' => -1,
+									'post__in'       => array_keys($product_prices),
+									'orderby'        => 'post__in',
+									'order'          => 'ASC', // Order by 'post__in' will maintain the order from array_keys
+								));
+
+								// Remove the filter after the query to prevent affecting other queries
+								remove_filter('posts_search', 'custom_search', 10, 2);
 							}
-
-							// Final query to get sorted products
-							$query = new WP_Query(array(
-								'post_type'      => 'product',
-								'posts_per_page' => -1,
-								'post__in'       => array_keys($product_prices),
-								'orderby'        => 'post__in',
-								'order'          => 'ASC', // Order by 'post__in' will maintain the order from array_keys
-							));
-
-							// Remove the filter after the query to prevent affecting other queries
-							remove_filter('posts_search', 'custom_search', 10, 2);
-
-							if ($query->have_posts()) {
+							if (!$finded_products && $query->have_posts()) {
 								while ($query->have_posts()) {
 									$query->the_post();
 									$product = wc_get_product(get_the_ID());
