@@ -82,20 +82,22 @@ function frames_list_page()
 						?>
 					</select>
 					<?php if ($frames) : ?>
-						<span id="frame-prices-select">
-							Цени на каси №:
-							<select id="frame-select" class="slim-select" name="frame_id[]" multiple>
-								<optgroup data-selectall="true" data-selectalltext="Всички цени">
-									<?php
-									foreach ($frames as $frame) {
-										if ($frame->frame_id > 0) {
-											$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
-											echo '<option value="' . $frame->frame_id . '"' . $selected . '>' . $frame->frame_id . '</option>';
+						<span class="badge text-dark" style="background-color: #e2e3e5;">
+							<span id=" frame-prices-select">
+								Каси №
+								<select id="frame-select" class="slim-select" name="frame_id[]" style="min-width:120px" multiple>
+									<optgroup data-selectall="true" data-selectalltext="Всички цени">
+										<?php
+										foreach ($frames as $frame) {
+											if ($frame->frame_id > 0) {
+												$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
+												echo '<option value="' . $frame->frame_id . '"' . $selected . '>' . $frame->frame_id . '</option>';
+											}
 										}
-									}
-									?>
-								</optgroup>
-							</select>
+										?>
+									</optgroup>
+								</select>
+							</span>
 						</span>
 					<?php endif; ?>
 					<?php if ($selected_frame_ids) : ?>
