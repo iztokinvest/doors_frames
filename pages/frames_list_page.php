@@ -539,61 +539,84 @@ function update_frame_prices()
 {
 	global $wpdb;
 
-	if (isset($_POST['id']) && isset($_POST['frame_id'])) {
+	if (isset($_POST['frames'])) {
+		$frames = $_POST['frames'];
 		$table_name = $wpdb->prefix . 'doors_frames';
+		$errors = false;
 
-		$id = intval($_POST['id']);
-		$frame_id = intval($_POST['frame_id']);
-		$frame_image = sanitize_text_field($_POST['frame_image']);
-		$frame_description = sanitize_textarea_field($_POST['frame_description']);
+		foreach ($frames as $frame) {
+			$frame_id = intval($frame['frame_id']);
+			$frame_image = sanitize_text_field($frame['frame_image']);
+			$frame_description = sanitize_textarea_field($frame['frame_description']);
+			$is_new = filter_var($frame['is_new'], FILTER_VALIDATE_BOOLEAN);
 
-		$delete_frame = sanitize_text_field($_POST['delete_frame']);
+			if ($is_new) { // Insert new frame
+				$product_id = intval($frame['product_id']);
+				$frame_price = floatval($frame['frame_price']);
+				$frame_promo_price = floatval($frame['frame_promo_price']);
 
-		if ($delete_frame == 'true') {
-			$result = $wpdb->delete(
-				$table_name,
-				array('id' => $id),
-				array('%d')
-			);
-			if ($result !== false) {
-				wp_send_json_success();
+				$result = $wpdb->insert(
+					$table_name,
+					array(
+						'product_id' => $product_id,
+						'frame_id' => $frame_id,
+						'frame_price' => $frame_price,
+						'frame_promo_price' => $frame_promo_price,
+						'frame_image' => $frame_image,
+						'frame_description' => $frame_description,
+					),
+					array('%d', '%d', '%f', '%f', '%s', '%s')
+				);
 			} else {
-				wp_send_json_error();
+				$id = intval($frame['id']);
+				$delete_frame = sanitize_text_field($frame['delete_frame']);
+
+				if ($delete_frame === 'true') {
+					$result = $wpdb->delete($table_name, array('id' => $id), array('%d'));
+					if ($result === false) {
+						$errors = true;
+					}
+					continue;
+				}
+
+				if ($frame_id > 0) {
+					$frame_price = floatval($frame['frame_price']);
+					$frame_promo_price = floatval($frame['frame_promo_price']);
+
+					$result = $wpdb->update(
+						$table_name,
+						array(
+							'frame_id' => $frame_id,
+							'frame_price' => $frame_price,
+							'frame_promo_price' => $frame_promo_price,
+							'frame_image' => $frame_image,
+							'frame_description' => $frame_description,
+						),
+						array('id' => $id),
+						array('%d', '%f', '%f', '%s', '%s'),
+						array('%d')
+					);
+				} else {
+					$result = $wpdb->update(
+						$table_name,
+						array(
+							'frame_id' => $frame_id,
+							'frame_image' => $frame_image,
+							'frame_description' => $frame_description,
+						),
+						array('id' => $id),
+						array('%d', '%s', '%s'),
+						array('%d')
+					);
+				}
+			}
+
+			if ($result === false) {
+				$errors = true;
 			}
 		}
 
-		if ($frame_id > 0) {
-			$frame_price = floatval($_POST['frame_price']);
-			$frame_promo_price = floatval($_POST['frame_promo_price']);
-
-			$result = $wpdb->update(
-				$table_name,
-				array(
-					'frame_id' => $frame_id,
-					'frame_price' => $frame_price,
-					'frame_promo_price' => $frame_promo_price,
-					'frame_image' => $frame_image,
-					'frame_description' => $frame_description,
-				),
-				array('id' => $id),
-				array('%d', '%f', '%f', '%s', '%s'),
-				array('%d')
-			);
-		} else {
-			$result = $wpdb->update(
-				$table_name,
-				array(
-					'frame_id' => $frame_id,
-					'frame_image' => $frame_image,
-					'frame_description' => $frame_description
-				),
-				array('id' => $id),
-				array('%d', '%s', '%s'),
-				array('%d')
-			);
-		}
-
-		if ($result !== false) {
+		if (!$errors) {
 			wp_send_json_success();
 		} else {
 			wp_send_json_error();

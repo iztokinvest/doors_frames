@@ -485,130 +485,106 @@ jQuery(document).ready(function ($) {
 	});
 
 	$("#save-modal-prices").on("click", function () {
-		let requestTrue = [];
-		let requests = [];
+		let requestsData = [];
 		let error = false;
 
 		$(".frame-id").each(function () {
-			const id = $(this).data("id");
-			const frame_id = $(this).find(".frame-id").val();
-			const price = $(this).find(".frame-price").val();
-			const promo_price = $(this).find(".frame-promo-price").val();
-			const image = $(this).find(".frame-image").val();
-			const description = $(this).find(".frame-description").val();
-			const delete_frame = $(this).find(".delete-frame").prop("checked");
+			const data = {
+				id: $(this).data("id"),
+				frame_id: $(this).find(".frame-id").val(),
+				frame_price: $(this).find(".frame-price").val(),
+				frame_promo_price: $(this).find(".frame-promo-price").val(),
+				frame_image: $(this).find(".frame-image").val(),
+				frame_description: $(this).find(".frame-description").val(),
+				delete_frame: $(this).find(".delete-frame").prop("checked"),
+				is_new: false, // Indicate this is not a new frame
+			};
 
-			if (frame_id === "") {
+			if (data.frame_id === "") {
 				frame_notifier.alert("Трябва да изберете Цена №.");
 				error = true;
 			}
-			if (image === "") {
+			if (data.frame_image === "") {
 				frame_notifier.alert("Трябва да изберете картинка на касата.");
 				error = true;
 			}
-			if (description === "") {
+			if (data.frame_description === "") {
 				frame_notifier.alert("Трябва да въведете описание.");
 				error = true;
 			}
-			if (frame_id !== "-5") {
-				if (price === "") {
-					frame_notifier.alert("Трябва да въведете цена.");
-					error = true;
-				}
+			if (data.frame_id !== "-5" && data.frame_price === "") {
+				frame_notifier.alert("Трябва да въведете цена.");
+				error = true;
 			}
 
 			if (error) {
-				return;
+				return false;
 			}
 
-			const request = $.ajax({
-				url: ajaxurl,
-				type: "POST",
-				data: {
-					action: "update_frame_prices",
-					id: id,
-					frame_id: frame_id,
-					frame_price: price,
-					frame_promo_price: promo_price,
-					frame_image: image,
-					frame_description: description,
-					delete_frame: delete_frame,
-				},
-			});
-
-			request.done(function (response) {
-				requestTrue.push(true);
-			});
-
-			requests.push(request);
+			requestsData.push(data);
 		});
 
 		$(".new-frame").each(function () {
-			const product_id = $(this).data("id");
-			const frame_id = $(this).find(".frame-id").val();
-			const new_price = $(this).find(".new-frame-price").val();
-			const new_promo_price = $(this).find(".new-frame-promo-price").val();
-			const new_image = $(this).find(".new-frame-image").val();
-			const new_description = $(this).find(".new-frame-description").val();
+			const data = {
+				product_id: $(this).data("id"),
+				frame_id: $(this).find(".frame-id").val(),
+				frame_price: $(this).find(".new-frame-price").val(),
+				frame_promo_price: $(this).find(".new-frame-promo-price").val(),
+				frame_image: $(this).find(".new-frame-image").val(),
+				frame_description: $(this).find(".new-frame-description").val(),
+				is_new: true, // Indicate this is a new frame
+			};
 
-			if (frame_id === "") {
+			if (data.frame_id === "") {
 				frame_notifier.alert("Трябва да изберете Цена №.");
 				error = true;
 			}
-			if (new_image === "") {
+			if (data.frame_image === "") {
 				frame_notifier.alert("Трябва да изберете картинка на касата.");
 				error = true;
 			}
-			if (new_description === "") {
+			if (data.frame_description === "") {
 				frame_notifier.alert("Трябва да въведете описание.");
 				error = true;
 			}
-			if (frame_id !== "-5") {
-				if (new_price === "") {
-					frame_notifier.alert("Трябва да въведете цена.");
-					error = true;
-				}
+			if (data.frame_id !== "-5" && data.frame_price === "") {
+				frame_notifier.alert("Трябва да въведете цена.");
+				error = true;
 			}
 
 			if (error) {
-				return;
+				return false;
 			}
 
-			const request = $.ajax({
-				url: ajaxurl,
-				type: "POST",
-				data: {
-					action: "add_frame_prices",
-					product_id: product_id,
-					frame_id: frame_id,
-					new_frame_price: new_price,
-					new_frame_promo_price: new_promo_price,
-					new_frame_image: new_image,
-					new_frame_description: new_description,
-				},
-			});
-
-			request.done(function (response) {
-				requestTrue.push(true);
-			});
-
-			requests.push(request);
+			requestsData.push(data);
 		});
 
-		$.when.apply($, requests).done(function () {
-			if (error) {
-				return;
-			}
-			if (requestTrue.length > 0) {
-				frame_notifier.success("Промените са запазени.");
-				location.reload();
-			} else {
-				frame_notifier.alert("Промените не са запазени.");
-			}
+		if (error) {
+			return;
+		}
 
-			$("#frameModal").hide();
+		$.ajax({
+			url: ajaxurl,
+			type: "POST",
+			data: {
+				action: "update_frame_prices",
+				frames: requestsData,
+			},
+			success: function (response) {
+				if (response.success) {
+					frame_notifier.success("Промените са запазени.");
+					location.reload();
+				} else {
+					frame_notifier.alert("Промените не са запазени.");
+				}
+				$("#frameModal").hide();
+			},
+			error: function () {
+				frame_notifier.alert("Промените не са запазени.");
+			},
 		});
 	});
+
 
 	$("#apply-mass-insert").on("click", function () {
 		const frameIds = $("#frame-select").val();
