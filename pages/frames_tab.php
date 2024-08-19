@@ -133,6 +133,14 @@ function custom_product_tab_content()
 			HTML;
 		}
 
+		if ($tab_data && !empty($tab_data[0]->table_text)) {
+			$text = $tab_data[0]->table_text;
+			$rows_text = explode('|', $text);
+			$rows_html = '<div>' . implode('</div><div>', $rows_text) . '</div>';
+
+			$text_rows = '<div class="frame_table_text">' . $rows_html . '</div>';
+		}
+
 		echo <<<HTML
 		<div class="container-kasi">
 			<table class="kasi-table">
@@ -143,15 +151,8 @@ function custom_product_tab_content()
 				</tr>
 				$frame_rows
 			</table>
-			</div>
+			$text_rows
+		</div>
 		HTML;
-
-		if ($tab_data && !empty($tab_data[0]->table_text)) {
-			$text = $tab_data[0]->table_text;
-			$rows_text = explode('|', $text);
-			$rows_html = '<div>' . implode('</div><div>', $rows_text) . '</div>';
-
-			echo '<div class="frame_table_text">' . $rows_html . '</div>';
-		}
 	}
 }
