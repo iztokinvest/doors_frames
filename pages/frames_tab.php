@@ -147,7 +147,11 @@ function custom_product_tab_content()
 		HTML;
 
 		if ($tab_data && !empty($tab_data[0]->table_text)) {
-			echo '<div class="frame_table_text">' . esc_html($tab_data[0]->table_text) . '</div>';
+			$text = $tab_data[0]->table_text;
+			$rows_text = explode('|', $text);
+			$rows_html = '<div>' . implode('</div><div>', $rows_text) . '</div>';
+
+			echo '<div class="frame_table_text">' . $rows_html . '</div>';
 		}
 	}
 }
