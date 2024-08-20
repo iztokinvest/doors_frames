@@ -547,7 +547,7 @@ function update_frame_prices()
 		foreach ($frames as $frame) {
 			$frame_id = intval($frame['frame_id']);
 			$frame_image = sanitize_text_field($frame['frame_image']);
-			$frame_description = sanitize_textarea_field($frame['frame_description']);
+			$frame_description = $frame['frame_description'];
 			$is_new = filter_var($frame['is_new'], FILTER_VALIDATE_BOOLEAN);
 
 			if ($is_new) { // Insert new frame

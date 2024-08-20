@@ -71,7 +71,8 @@ function custom_product_tab_content()
 		$frame_rows = '';
 		foreach ($product_frames as $frame) {
 			$image = $frame->frame_image;
-			$description = esc_html($frame->frame_description);
+			$description = $frame->frame_description;
+			$alt = esc_html($frame->frame_description);
 
 			if ($frame->frame_id == '-5') {
 				if ($product->is_type('variable')) {
@@ -120,10 +121,11 @@ function custom_product_tab_content()
 			$upload_dir = wp_upload_dir();
 			$folderPath = esc_url("{$upload_dir['baseurl']}/doors_frames");
 
+			
 			$frame_rows .= <<<HTML
 				<tr>
 					<td data-th="Каса">
-						<img src='$folderPath/$image' alt='$description'>
+						<img src='$folderPath/$image' alt='$alt'>
 					</td>
 					<td data-th="Описание">
 						$description
