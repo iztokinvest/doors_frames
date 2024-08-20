@@ -487,6 +487,9 @@ jQuery(document).ready(function ($) {
 	$("#save-modal-prices").on("click", function () {
 		let requestsData = [];
 		let error = false;
+		const lastProductId = $("#modal-product-id").val();
+
+		console.log("lastId", lastProductId);
 
 		$(".frame-id").each(function () {
 			const data = {
@@ -573,6 +576,7 @@ jQuery(document).ready(function ($) {
 			success: function (response) {
 				if (response.success) {
 					frame_notifier.success("Промените са запазени.");
+					sessionStorage.setItem("last_product_id", lastProductId);
 					location.reload();
 				} else {
 					frame_notifier.alert("Промените не са запазени.");
@@ -584,7 +588,6 @@ jQuery(document).ready(function ($) {
 			},
 		});
 	});
-
 
 	$("#apply-mass-insert").on("click", function () {
 		const frameIds = $("#frame-select").val();
@@ -746,3 +749,14 @@ jQuery(document).ready(function ($) {
 		);
 	});
 });
+
+function changeFramesButtonColor() {
+	const lastProductId = sessionStorage.getItem("last_product_id");
+	const framesButton = document.querySelector(`.open-modal[data-id="${lastProductId}"]`);
+
+	if (framesButton) {
+		framesButton.classList.remove("btn-primary");
+		framesButton.classList.add("btn-success");
+	}
+}
+changeFramesButtonColor();

@@ -353,7 +353,7 @@ function frames_list_page()
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" step="0.01" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" readonly></td>';
 									}
 
-									$modal_button = '<button class="btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
+									$modal_button = '<button class="frames-button btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
 
 									if (isset($frame_data_list) && is_array($frame_data_list)) {
 										$first_frame = true;
@@ -717,7 +717,7 @@ function fetch_frame_prices()
 		$table_name = $wpdb->prefix . 'doors_frames';
 		$results = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE product_id = %d ORDER by active DESC, frame_id ASC", $product_id));
 
-		$html_product_title = "<h5 id='product-title' class='text-center' data-static-images-path='{$upload_dir['baseurl']}/doors_frames/'><mark>$product_title</mark></h5>";
+		$html_product_title = "<h5 id='product-title' class='text-center' data-static-images-path='{$upload_dir['baseurl']}/doors_frames/'><mark>$product_title</mark></h5><input type='hidden' id='modal-product-id' value='$product_id'>";
 
 		$html_new_table = <<<HTML
 			<div id="all-frame-images" class="m-1" data-frame-options="$blankImageOptions">

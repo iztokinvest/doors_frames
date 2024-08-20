@@ -72,7 +72,7 @@ function custom_product_tab_content()
 		foreach ($product_frames as $frame) {
 			$image = $frame->frame_image;
 			$description = $frame->frame_description;
-			$alt = esc_html($frame->frame_description);
+			$alt = strip_tags($frame->frame_description);
 
 			if ($frame->frame_id == '-5') {
 				if ($product->is_type('variable')) {
