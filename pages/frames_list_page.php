@@ -19,15 +19,21 @@ function frames_list_page()
 
 	$frames = array();
 	if ($selected_category_id) {
+
+		$category = get_term($selected_category_id, 'product_cat');
+
 		$frames = $wpdb->get_results($wpdb->prepare(
 			"SELECT df.id, df.frame_id 
-			FROM {$wpdb->prefix}doors_frames df 
-			JOIN {$wpdb->prefix}posts p ON df.product_id = p.ID 
-			JOIN {$wpdb->prefix}term_relationships tr ON p.ID = tr.object_id 
-			WHERE tr.term_taxonomy_id = %d
-			GROUP BY df.frame_id
-			ORDER BY df.frame_id ASC",
-			$selected_category_id
+            FROM {$wpdb->prefix}doors_frames df
+            JOIN {$wpdb->prefix}posts p ON df.product_id = p.ID 
+            JOIN {$wpdb->prefix}term_relationships tr ON p.ID = tr.object_id 
+            JOIN {$wpdb->prefix}term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id 
+            JOIN {$wpdb->prefix}terms t ON tt.term_id = t.term_id
+            WHERE tt.taxonomy = 'product_cat'
+            AND t.name = %s
+            GROUP BY df.frame_id
+            ORDER BY df.frame_id ASC",
+			$category->name
 		));
 	}
 
