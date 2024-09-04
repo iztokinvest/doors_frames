@@ -110,9 +110,14 @@ function changePriceVisual() {
 	if (checkAll) {
 		checkAll.addEventListener("click", function () {
 			Array.from(checkProducts).forEach(function (checkbox) {
-				checkbox.checked = checkAll.checked;
+				const tr = checkbox.closest("tr");
+				const computedStyle = window.getComputedStyle(tr);
 
-				calculateAllPrices(checkbox);
+				if (computedStyle.display !== "none") {
+					checkbox.checked = checkAll.checked;
+
+					calculateAllPrices(checkbox);
+				}
 			});
 		});
 	}
@@ -141,6 +146,15 @@ function changePriceVisual() {
 	massSpan.addEventListener("click", hideConfirmButton);
 
 	checkButton.addEventListener("click", () => {
+		const productsTitles = document.querySelectorAll(".product-title");
+
+		for (const productTitle of productsTitles) {
+			tr = productTitle.closest("tr");
+			tr.style.display = "table-row";
+		}
+
+		document.getElementById("search-input").value = "";
+		
 		calculate(true);
 	});
 
@@ -160,6 +174,7 @@ function changePriceVisual() {
 		const noneChecked = Array.from(checkProducts).every(function (checkbox) {
 			return !checkbox.checked;
 		});
+		const searchInput = document.getElementById("search-input");
 
 		if (priceInput.value === "" && promoInput.value === "") {
 			if (warningMessage) {
@@ -168,7 +183,7 @@ function changePriceVisual() {
 			errorCount++;
 		}
 
-		if (errorCount > 0) {
+		if (errorCount > 0 || searchInput.value !== "") {
 			hideConfirmButton();
 			return;
 		}
@@ -760,3 +775,27 @@ function changeFramesButtonColor() {
 	}
 }
 changeFramesButtonColor();
+
+function searchProducts() {
+	const searchInput = document.getElementById("search-input");
+	const productsTitles = document.querySelectorAll(".product-title");
+	const confirmButton = document.getElementById("apply-mass-insert");
+
+	searchInput.addEventListener("keyup", function (event) {
+		const searchValue = event.target.value.toLowerCase();
+
+		confirmButton.style.display = "none";
+		
+		productsTitles.forEach(function (productTitle) {
+			const titleText = productTitle.textContent.toLowerCase();
+			const tr = productTitle.closest("tr");
+
+			tr.style.display = "none";
+
+			if (titleText.includes(searchValue)) {
+				tr.style.display = "table-row";
+			}
+		});
+	});
+}
+searchProducts();

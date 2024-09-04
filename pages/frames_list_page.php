@@ -15,7 +15,6 @@ function frames_list_page()
 
 	$selected_category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : '';
 	$selected_frame_ids = isset($_GET['frame_id']) ? $_GET['frame_id'] : false;
-	$search_term = isset($_GET['search_term']) ? sanitize_text_field($_GET['search_term']) : '';
 
 	$frames = array();
 	if ($selected_category_id) {
@@ -49,6 +48,7 @@ function frames_list_page()
 			));
 		?>
 			<span class="float-end">
+				<input type="text" id="search-input" placeholder="Търсене на продукт">
 				<button type="button" id="edit-tab" class="btn btn-secondary" title="Име на таба според категорията и описание под таблицата.">
 					<?php echo ($tab_data ? 'Таб <span class="badge bg-warning text-dark">' . $tab_data->tab_title . '</span>' : 'Таб <span class="badge bg-danger">без име</span>'); ?>
 				</button>
@@ -113,12 +113,11 @@ function frames_list_page()
 							<option value="2" <?php echo (isset($_GET['active']) && $_GET['active'] == 2) ? ' selected' : ''; ?>>Всички каси</option>
 						</select>
 					<?php endif; ?>
-					<input type="text" id="search-input" name="search_term" placeholder="Търсене на продукт" value="<?php echo esc_attr($search_term); ?>" />
-					<button type="submit" class="btn btn-primary">Търсене</button>
+					<button type="submit" class="btn btn-primary">Покажи избраните каси</button>
 				</div>
 			</form>
 
-			<?php if ($selected_category_id || $search_term) : ?>
+			<?php if ($selected_category_id) : ?>
 
 				<?php
 				if ($selected_frame_ids) {
@@ -201,7 +200,6 @@ function frames_list_page()
 							$args = array(
 								'post_type'      => 'product',
 								'posts_per_page' => -1,
-								's'              => $search_term,
 								'post_status'    => 'publish',
 							);
 
@@ -322,7 +320,7 @@ function frames_list_page()
 									' . (!$product->is_type('variable') || $selected_frame_ids ? '<input type="checkbox" class="check-product" data-product-id="' . get_the_ID() . '" checked>' : '') .  get_the_ID() . '
 									</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $product_image . '</td>';
-									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
+									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a class="product-title" target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
 
 									if ($product->is_type('variable')) {
 										$available_variations = $product->get_available_variations();
