@@ -49,6 +49,11 @@ function frames_list_page()
 		?>
 			<span class="float-end">
 				<input type="text" id="search-input" placeholder="Търсене на продукт">
+				<select id="search-type">
+					<option value="include">цялото име</option>
+					<option value="starts">началото на името</option>
+					<option value="ends">края на името</option>
+				</select>
 				<button type="button" id="edit-tab" class="btn btn-secondary" title="Име на таба според категорията и описание под таблицата.">
 					<?php echo ($tab_data ? 'Таб <span class="badge bg-warning text-dark">' . $tab_data->tab_title . '</span>' : 'Таб <span class="badge bg-danger">без име</span>'); ?>
 				</button>

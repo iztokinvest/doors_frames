@@ -154,7 +154,7 @@ function changePriceVisual() {
 		}
 
 		document.getElementById("search-input").value = "";
-		
+
 		calculate(true);
 	});
 
@@ -780,22 +780,42 @@ function searchProducts() {
 	const searchInput = document.getElementById("search-input");
 	const productsTitles = document.querySelectorAll(".product-title");
 	const confirmButton = document.getElementById("apply-mass-insert");
+	const searchTypeSelect = document.getElementById("search-type");
 
-	searchInput.addEventListener("keyup", function (event) {
-		const searchValue = event.target.value.toLowerCase();
+	function performSearch() {
+		const searchValue = searchInput.value.toLowerCase();
+		const searchType = searchTypeSelect.value;
 
 		confirmButton.style.display = "none";
-		
+
 		productsTitles.forEach(function (productTitle) {
 			const titleText = productTitle.textContent.toLowerCase();
 			const tr = productTitle.closest("tr");
+			let result = false;
 
 			tr.style.display = "none";
 
-			if (titleText.includes(searchValue)) {
+			switch (searchType) {
+				case "include":
+					result = titleText.includes(searchValue);
+					break;
+				case "starts":
+					result = titleText.startsWith(searchValue);
+					break;
+				case "ends":
+					result = titleText.endsWith(searchValue);
+					break;
+			}
+
+			if (result) {
 				tr.style.display = "table-row";
 			}
 		});
-	});
+	}
+
+	searchInput.addEventListener("keyup", performSearch);
+
+	searchTypeSelect.addEventListener("change", performSearch);
 }
+
 searchProducts();
