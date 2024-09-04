@@ -285,7 +285,7 @@ function changePriceVisual() {
 			if (changeFrame && result >= 0) {
 				column.innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
 			} else {
-				const selectedFrames = document.getElementById("frame-select").value;
+				const selectedFrames = document.getElementById("frame-select");
 				const newPriceSpan = ` <span id='${column.getAttribute("data-type")}-price-result-${column.getAttribute(
 					"data-product-id"
 				)}' class='price-result-span text-success'>${result}</span>`;
@@ -293,7 +293,7 @@ function changePriceVisual() {
 					oldPriceSpan.remove();
 				}
 
-				if (result >= 0 && selectedFrames == "") {
+				if (result >= 0 && (!selectedFrames || selectedFrames.value == "")) {
 					iconSpan.insertAdjacentHTML("afterend", newPriceSpan);
 				}
 			}
