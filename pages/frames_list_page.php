@@ -697,8 +697,20 @@ function fetch_frame_prices()
 		$product_title = get_the_title($product_id);
 
 		$folderPath = "{$upload_dir['basedir']}/doors_frames";
-		$images = glob($folderPath . '/*.{jpg,png}', GLOB_BRACE);
-		$imageFiles = array_map('basename', $images);
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator($folderPath, RecursiveDirectoryIterator::SKIP_DOTS),
+			RecursiveIteratorIterator::SELF_FIRST
+		);
+
+		$imageFiles = [];
+		foreach ($iterator as $file) {
+			if ($file->isFile() && in_array($file->getExtension(), ['jpg', 'png'])) {
+				// Get the relative path from the base directory
+				$relativePath = $iterator->getSubPathname();
+				$imageFiles[] = $relativePath;
+			}
+		}
+
 		natsort($imageFiles);
 
 		function imageOptions($imageFiles, $selected)
