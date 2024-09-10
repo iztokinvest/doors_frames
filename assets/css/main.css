@@ -92,3 +92,17 @@
 .product-image-thumb{
 	max-height: 38px;
 }
+
+.ss-deselect {
+	display: none !important;
+}
+
+.ss-option:hover {
+	background-color: yellow !important;
+	color: unset !important;
+}
+
+.blurred-unclickable {
+	filter: blur(5px);
+	pointer-events: none;
+}

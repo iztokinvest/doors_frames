@@ -71,7 +71,7 @@ function frames_list_page()
 			</span>
 		<?php } ?>
 		<div>
-			<form method="get" action="">
+			<form method="get" id="chose-frames" action="">
 				<input type="hidden" name="page" value="frames-list-page">
 				<div class="form-group">
 					<select id="category-select" name="category_id">
@@ -102,7 +102,7 @@ function frames_list_page()
 										foreach ($frames as $frame) {
 											if ($frame->frame_id > 0) {
 												$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
-												echo '<option value="' . $frame->frame_id . '"' . $selected . '>' . $frame->frame_id . '</option>';
+												echo '<option value="' . $frame->frame_id . '"' . $selected . ' data-mandatory="true">' . $frame->frame_id . '</option>';
 											}
 										}
 										?>
@@ -118,7 +118,6 @@ function frames_list_page()
 							<option value="2" <?php echo (isset($_GET['active']) && $_GET['active'] == 2) ? ' selected' : ''; ?>>Всички каси</option>
 						</select>
 					<?php endif; ?>
-					<button type="submit" class="btn btn-primary">Покажи избраните каси</button>
 				</div>
 			</form>
 

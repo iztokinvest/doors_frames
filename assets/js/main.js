@@ -41,13 +41,21 @@ function initializeDatepickers() {
 }
 initializeDatepickers();
 
-new SlimSelect({
+const slim = new SlimSelect({
 	select: "#frame-select",
 	settings: {
 		allowDeselect: true,
 		closeOnSelect: false,
 		selectAll: true,
 		placeholderText: "избери",
+	},
+	events: {
+		beforeOpen: () => {
+			document.getElementById("products-table").classList.add("blurred-unclickable");
+		},
+		afterClose: () => {
+			document.getElementById("chose-frames").submit();
+		},
 	},
 });
 
@@ -817,5 +825,4 @@ function searchProducts() {
 
 	searchTypeSelect.addEventListener("change", performSearch);
 }
-
 searchProducts();
