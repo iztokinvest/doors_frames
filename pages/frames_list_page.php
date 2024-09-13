@@ -92,9 +92,6 @@ function frames_list_page()
 						}
 						?>
 					</select>
-					<select id="filters-select" class="slim-select" name="filters[]" style="min-width:120px" multiple>
-						<option value="drafts" data-mandatory="true" <?php echo (isset($_GET['filters']) && in_array('drafts', $_GET['filters'])) ? ' selected' : ''; ?>>Чернови</option>
-					</select>
 					<?php if ($frames) : ?>
 						<span class="badge text-dark" style="background-color: #e2e3e5;">
 							<span id=" frame-prices-select">
@@ -207,7 +204,7 @@ function frames_list_page()
 							$args = array(
 								'post_type'      => 'product',
 								'posts_per_page' => -1,
-								'post_status'    => isset($_GET['filters']) && in_array('drafts', $_GET['filters']) ? 'draft' : 'publish',
+								'post_status'    => 'publish',
 							);
 
 							if ($selected_category_id) {
