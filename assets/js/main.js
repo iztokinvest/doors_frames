@@ -41,7 +41,7 @@ function initializeDatepickers() {
 }
 initializeDatepickers();
 
-const slim = new SlimSelect({
+const slimFrameSelect = new SlimSelect({
 	select: "#frame-select",
 	settings: {
 		allowDeselect: true,
@@ -57,6 +57,21 @@ const slim = new SlimSelect({
 			document.getElementById("chose-frames").submit();
 		},
 	},
+});
+
+const slimFiltersSelect = new SlimSelect({
+	select: "#filters-select",
+	settings: {
+		allowDeselect: true,
+		closeOnSelect: true,
+		maxValuesShown: 1,
+		placeholderText: "Филтри",
+	},
+	events: {
+		afterClose: () => {
+			document.getElementById("chose-frames").submit();
+		}
+	}
 });
 
 function editTab() {
