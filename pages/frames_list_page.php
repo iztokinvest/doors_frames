@@ -9,7 +9,7 @@ function frames_list_page()
 	// Get categories
 	$categories = get_terms(array(
 		'taxonomy' => 'product_cat',
-		'hide_empty' => true,
+		'hide_empty' => isset($_GET['filters']) && in_array('drafts', $_GET['filters']) ? false : true,
 		'parent' => 0
 	));
 
@@ -82,7 +82,7 @@ function frames_list_page()
 							echo '<option style="font-weight:bold" value="' . $category->term_id . '"' . $selected . '>' . $category->name . ' (' . $category->count . ')</option>';
 							$subcategories = get_terms(array(
 								'taxonomy' => 'product_cat',
-								'hide_empty' => true,
+								'hide_empty' => isset($_GET['filters']) && in_array('drafts', $_GET['filters']) ? false : true,
 								'parent' => $category->term_id
 							));
 							foreach ($subcategories as $subcategory) {
@@ -91,6 +91,9 @@ function frames_list_page()
 							}
 						}
 						?>
+					</select>
+					<select id="filters-select" class="slim-select" name="filters[]" style="min-width:120px" multiple>
+						<option value="drafts" data-mandatory="true" <?php echo (isset($_GET['filters']) && in_array('drafts', $_GET['filters'])) ? ' selected' : ''; ?>>Чернови</option>
 					</select>
 					<?php if ($frames) : ?>
 						<span class="badge text-dark" style="background-color: #e2e3e5;">
@@ -204,7 +207,7 @@ function frames_list_page()
 							$args = array(
 								'post_type'      => 'product',
 								'posts_per_page' => -1,
-								'post_status'    => 'publish',
+								'post_status' => isset($_GET['filters']) && in_array('drafts', $_GET['filters']) ? 'draft' : 'publish',
 							);
 
 							if ($selected_category_id) {
