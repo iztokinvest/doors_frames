@@ -143,21 +143,21 @@ function frames_list_page()
 							$mass_title
 							<span class="badge bg-info">
 								<select id="operator-price-select" class="operator-price-select" name="operator_price">
+									<option value="=">=</option>
 									<option value="+">+</option>
 									<option value="-">-</option>
 									<option value="+%">+%</option>
 									<option value="-%">-%</option>
-									<option value="=">=</option>
 								</select>
 								<input type="number" step="0.01" id="sum-price-input" class="price-input" name="sum_price" placeholder="Цена" required />
 							</span>
 							<span class="badge bg-info">
 								<select id="operator-promotion-select" class="operator-promotion-select" name="operator_promotion">
+									<option value="=">=</option>
 									<option value="+">+</option>
 									<option value="-">-</option>
 									<option value="+%">+%</option>
 									<option value="-%">-%</option>
-									<option value="=">=</option>
 								</select>
 								<input type="number" step="0.01" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
 							</span>
@@ -953,6 +953,28 @@ function mass_insert_frames()
 
 				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round);
 				$new_promo_price = calculate_new_value($sale_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $regular_price);
+
+				$products_table_name = $wpdb->prefix . 'doors_frames_products';
+				$saved_prices = $wpdb->get_row($wpdb->prepare(
+					"SELECT product_price, product_promo_price FROM $products_table_name WHERE product_id = %d",
+					$product_id
+				));
+
+				if ($_POST['sum_price'] == '-1') {
+					if ($saved_prices) {
+						$new_price = $saved_prices->product_price;
+					} else {
+						$new_price = $regular_price;
+					}
+				}
+
+				if ($_POST['sum_promotion'] == '-1') {
+					if ($saved_prices) {
+						$new_promo_price = $saved_prices->product_promo_price;
+					} else {
+						$new_promo_price = $sale_price;
+					}
+				}
 
 				if ($new_price == 0) {
 					$new_price = "";

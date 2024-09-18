@@ -643,11 +643,11 @@ jQuery(document).ready(function ($) {
 			})
 			.get();
 
-		if (isNaN(sum_price)) {
-			sum_price = 0;
+		if ($("#sum-price-input").val() === "") {
+			sum_price = -1;
 		}
-		if (isNaN(sum_promotion)) {
-			sum_promotion = 0;
+		if ($("#sum-promotion-input").val() === "") {
+			sum_promotion = -1;
 		}
 
 		$.ajax({
