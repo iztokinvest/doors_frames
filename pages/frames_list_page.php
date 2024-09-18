@@ -928,10 +928,10 @@ function mass_insert_frames()
 
 						$wpdb->query($update_query);
 					} else {
-						$products_table_name = $wpdb->prefix . 'doors_frames_products';
+						$frames_table_name = $wpdb->prefix . 'doors_frames';
 						$saved_prices = $wpdb->get_row($wpdb->prepare(
-							"SELECT product_price, product_promo_price FROM $products_table_name WHERE product_id = %d",
-							$product_id
+							"SELECT frame_price, frame_promo_price FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 0",
+							$product_id, $current_value->frame_id
 						));
 
 						if ($_POST['sum_price'] == '-1') {
