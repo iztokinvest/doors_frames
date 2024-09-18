@@ -899,12 +899,12 @@ function mass_insert_frames()
 
 		if ($_POST['frame_ids']) {
 			$frame_ids =
-				implode(',', array_fill(0, count($_POST['frame_ids']), '%d'));
+				implode(',', $_POST['frame_ids']);
 
 			foreach ($product_ids as $product_id) {
 				$current_values_sql = $wpdb->prepare(
-					"SELECT * FROM {$frames_table_name} WHERE product_id = %d AND frame_id IN ($frame_ids)",
-					array_merge([$product_id], $_POST['frame_ids'])
+					"SELECT * FROM {$frames_table_name} WHERE product_id = %d AND frame_id IN ($frame_ids) AND active = 1",
+					array_merge([$product_id])
 				);
 				$current_values = $wpdb->get_results($current_values_sql);
 
@@ -928,19 +928,60 @@ function mass_insert_frames()
 
 						$wpdb->query($update_query);
 					} else {
-						$wpdb->insert(
-							$frames_table_name,
-							array(
-								'product_id' => $product_id,
-								'frame_id' => $current_value->frame_id,
-								'frame_price' => $new_price >= 0 ? $new_price : $current_value->frame_price,
-								'frame_promo_price' => $new_promo_price >= 0 ? $new_promo_price : $current_value->frame_promo_price,
-								'frame_image' => $current_value->frame_image,
-								'frame_description' => $current_value->frame_description,
-								'active' => 0
-							),
-							array('%d', '%d', '%f', '%f', '%s', '%s', '%d')
+						$products_table_name = $wpdb->prefix . 'doors_frames_products';
+						$saved_prices = $wpdb->get_row($wpdb->prepare(
+							"SELECT product_price, product_promo_price FROM $products_table_name WHERE product_id = %d",
+							$product_id
+						));
+
+						if ($_POST['sum_price'] == '-1') {
+							if ($saved_prices) {
+								$new_price = $saved_prices->product_price;
+							} else {
+								$new_price = $current_value->frame_price;
+							}
+						}
+
+						if ($_POST['sum_promotion'] == '-1') {
+							if ($saved_prices) {
+								$new_promo_price = $saved_prices->product_promo_price;
+							} else {
+								$new_promo_price = $current_value->frame_promo_price;
+							}
+						}
+
+						$data = array(
+							'product_id' => $product_id,
+							'frame_id' => $current_value->frame_id,
+							'frame_price' => $new_price >= 0 ? $new_price : $current_value->frame_price,
+							'frame_promo_price' => $new_promo_price >= 0 ? $new_promo_price : $current_value->frame_promo_price,
+							'frame_image' => $current_value->frame_image,
+							'frame_description' => $current_value->frame_description,
+							'active' => 0
 						);
+
+						$data_format = array('%d', '%d', '%f', '%f', '%s', '%s', '%d');
+
+						$existing_record = $wpdb->get_row(
+							$wpdb->prepare(
+								"SELECT ID FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = %d",
+								$product_id,
+								$current_value->frame_id,
+								0
+							)
+						);
+
+						if ($existing_record) {
+							$wpdb->update(
+								$frames_table_name,
+								$data,
+								array('ID' => $existing_record->ID),
+								$data_format,
+								array('%d')
+							);
+						} else {
+							$wpdb->insert($frames_table_name, $data, $data_format);
+						}
 					}
 				}
 			}
