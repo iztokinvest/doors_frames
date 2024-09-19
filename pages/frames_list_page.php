@@ -168,7 +168,11 @@ function frames_list_page()
 								<input type="checkbox" id="mass-round-prices" />Закръгли
 							</span>
 							<span class="badge bg-info text-dark checkbox-badge">
-								<input type="checkbox" id="mass-prices-to-promo" />Цена към промо
+								<select id="mass-prices-to-promo">
+									<option value=""></option>
+									<option value="old-to-promo">Цена към промо</option>
+									<option value="new-to-promo">Запазена цена към промо</option>
+								</select>
 							</span>
 						</span>
 						<button type="button" id="check-mass-insert" class="btn btn-warning">Промени</button>
@@ -361,7 +365,7 @@ function frames_list_page()
 										$saved_sale_price = $saved_prices && $saved_prices->product_promo_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_promo_price</span></div>" : '';
 
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" step="0.01" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" step="0.01" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" readonly></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" step="0.01" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-saved-price="' . ($saved_prices ? esc_attr($saved_prices->product_price) : '') . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" readonly></td>';
 									}
 
 									$modal_button = '<button class="frames-button btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
@@ -369,6 +373,26 @@ function frames_list_page()
 									if (isset($frame_data_list) && is_array($frame_data_list)) {
 										$first_frame = true;
 										foreach ($frame_data_list as $frame_data) {
+											$frames_table_name = $wpdb->prefix . 'doors_frames';
+											$saved_frame_prices = $wpdb->get_row($wpdb->prepare(
+												"SELECT frame_price, frame_promo_price FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 0",
+												$product_id,
+												$frame_data->frame_id
+											));
+
+											if ($saved_frame_prices && $saved_frame_prices->frame_price >= 0) {
+												$saved_frame_price =
+												'<div bis_skin_checked="1"><span class="badge bg-warning text-dark" id="price-promo-badge-60" title="Запазена цена за по-късно">' . $saved_frame_prices->frame_price . '</span></div>';
+											} else {
+												$saved_frame_price = "";
+											}
+
+											if ($saved_frame_prices && $saved_frame_prices->frame_promo_price >= 0) {
+												$saved_frame_promo_price = '<div bis_skin_checked="1"><span class="badge bg-warning text-dark" id="price-promo-badge-60" title="Запазена цена за по-късно">' . $saved_frame_prices->frame_promo_price . '</span></div>';
+											} else {
+												$saved_frame_promo_price = "";
+											}
+
 											if (!$first_frame) {
 												echo '<tr>';
 											}
@@ -388,8 +412,8 @@ function frames_list_page()
 											echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . $frame_data->frame_id . '</td>';
 											echo '<td class="' . $active_status . ' ' . $product_row_class . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
 											echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . $frame_data->frame_description . '</td>';
-											echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $frame_data->frame_price . '</td>';
-											echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $frame_data->frame_promo_price . '</td>';
+											echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_price . '<span class="saved">' . $frame_data->frame_price . '</span></td>';
+											echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_promo_price : '') . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_promo_price . '<span class="saved">' . $frame_data->frame_promo_price . '</span></td>';
 
 											if ($first_frame) {
 												echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $modal_button . '</td>';
@@ -909,8 +933,20 @@ function mass_insert_frames()
 				$current_values = $wpdb->get_results($current_values_sql);
 
 				foreach ($current_values as $current_value) {
+					$frames_table_name = $wpdb->prefix . 'doors_frames';
+						$saved_prices = $wpdb->get_row($wpdb->prepare(
+							"SELECT frame_price, frame_promo_price FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 0",
+							$product_id, $current_value->frame_id
+						));
+
+					if ($prices_to_promo == 'new-to-promo') {
+						$prices_to_promo_value = $saved_prices->frame_price;
+					} else {
+						$prices_to_promo_value = $current_value->frame_price;
+					}
+
 					$new_price = calculate_new_value($current_value->frame_price, $operator_price, $sum_price, $prices_round);
-					$new_promo_price = calculate_new_value($current_value->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $current_value->frame_price);
+					$new_promo_price = calculate_new_value($current_value->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $prices_to_promo_value);
 
 					if ($price_edit == 'true') {
 						$update_query = $wpdb->prepare(
@@ -928,23 +964,17 @@ function mass_insert_frames()
 
 						$wpdb->query($update_query);
 					} else {
-						$frames_table_name = $wpdb->prefix . 'doors_frames';
-						$saved_prices = $wpdb->get_row($wpdb->prepare(
-							"SELECT frame_price, frame_promo_price FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 0",
-							$product_id, $current_value->frame_id
-						));
-
 						if ($_POST['sum_price'] == '-1') {
-							if ($saved_prices) {
-								$new_price = $saved_prices->product_price;
+							if ($saved_prices->frame_price) {
+								$new_price = $saved_prices->frame_price;
 							} else {
 								$new_price = $current_value->frame_price;
 							}
 						}
 
 						if ($_POST['sum_promotion'] == '-1') {
-							if ($saved_prices) {
-								$new_promo_price = $saved_prices->product_promo_price;
+							if ($saved_prices->frame_promo_price) {
+								$new_promo_price = $saved_prices->frame_promo_price;
 							} else {
 								$new_promo_price = $current_value->frame_promo_price;
 							}
@@ -953,8 +983,8 @@ function mass_insert_frames()
 						$data = array(
 							'product_id' => $product_id,
 							'frame_id' => $current_value->frame_id,
-							'frame_price' => $new_price >= 0 ? $new_price : $current_value->frame_price,
-							'frame_promo_price' => $new_promo_price >= 0 ? $new_promo_price : $current_value->frame_promo_price,
+							'frame_price' => $new_price,
+							'frame_promo_price' => $new_promo_price,
 							'frame_image' => $current_value->frame_image,
 							'frame_description' => $current_value->frame_description,
 							'active' => 0
@@ -992,14 +1022,20 @@ function mass_insert_frames()
 				$regular_price = floatval($product->get_regular_price());
 				$sale_price = floatval($product->get_sale_price());
 
-				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round);
-				$new_promo_price = calculate_new_value($sale_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $regular_price);
-
 				$products_table_name = $wpdb->prefix . 'doors_frames_products';
 				$saved_prices = $wpdb->get_row($wpdb->prepare(
 					"SELECT product_price, product_promo_price FROM $products_table_name WHERE product_id = %d",
 					$product_id
 				));
+
+				if ($prices_to_promo == 'new-to-promo') {
+					$prices_to_promo_value = $saved_prices->product_price;
+				} else {
+					$prices_to_promo_value = $regular_price;
+				}
+
+				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round);
+				$new_promo_price = calculate_new_value($sale_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $prices_to_promo_value);
 
 				if ($_POST['sum_price'] == '-1') {
 					if ($saved_prices) {
@@ -1051,13 +1087,13 @@ function mass_insert_frames()
 	}
 }
 
-function calculate_new_value($current_value, $operator, $sum, $round, $to_promo = 'false', $to_promo_value = 0)
+function calculate_new_value($current_value, $operator, $sum, $round, $to_promo = '', $to_promo_value = 0)
 {
 	if ($round === 'true') {
 		$round = true;
 	}
 
-	if ($to_promo === 'true') {
+	if ($to_promo === 'old-to-promo' || $to_promo === 'new-to-promo') {
 		$current_value = $to_promo_value;
 	}
 

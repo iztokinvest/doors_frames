@@ -257,24 +257,33 @@ function changePriceVisual() {
 		);
 
 		if (changeFrame) {
-			oldColumnValue = parseFloat(column.innerHTML);
+			oldColumnValue = parseFloat(column.querySelector(".saved").innerHTML);
 		} else {
 			oldColumnValue = parseFloat(column.value);
 		}
 
 		const changePrice = column.getAttribute("data-change-price");
+		const massPriceSelect = document.getElementById("mass-prices-to-promo");
 
 		if (
-			document.getElementById("mass-prices-to-promo").checked &&
+			massPriceSelect.value !== "" &&
 			(column.classList.contains("frame-table-promo") || column.classList.contains("product-promo-input"))
 		) {
-			oldSum = parseFloat(column.getAttribute("data-price"));
+			if (massPriceSelect.value === "new-to-promo") {
+				oldSum = parseFloat(column.getAttribute("data-saved-price"));
+			} else {
+				oldSum = parseFloat(column.getAttribute("data-price"));
+			}
 		} else {
 			if (changeFrame) {
-				oldSum = parseFloat(column.innerHTML);
+				oldSum = parseFloat(column.querySelector(".saved").innerHTML);
 			} else {
 				oldSum = parseFloat(column.value);
 			}
+		}
+
+		if (isNaN(oldSum)) {
+			oldSum = 0;
 		}
 
 		const newSum = parseFloat(sum);
@@ -306,7 +315,7 @@ function changePriceVisual() {
 			}
 
 			if (changeFrame && result >= 0) {
-				column.innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
+				column.querySelector(".saved").innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
 			} else {
 				const selectedFrames = document.getElementById("frame-select");
 				const newPriceSpan = ` <span id='${column.getAttribute("data-type")}-price-result-${column.getAttribute(
@@ -635,7 +644,7 @@ jQuery(document).ready(function ($) {
 		let sum_promotion = parseFloat($("#sum-promotion-input").val());
 		const priceEdit = $("#mass-edit-prices").prop("checked");
 		const pricesRound = $("#mass-round-prices").prop("checked");
-		const pricesToPromo = $("#mass-prices-to-promo").prop("checked");
+		const pricesToPromo = $("#mass-prices-to-promo").val();
 		const activeSelect = $("#active-select").val();
 		const product_ids = $(".check-product:checked")
 			.map(function () {
