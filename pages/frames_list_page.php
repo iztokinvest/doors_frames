@@ -376,7 +376,7 @@ function frames_list_page()
 											$frames_table_name = $wpdb->prefix . 'doors_frames';
 											$saved_frame_prices = $wpdb->get_row($wpdb->prepare(
 												"SELECT frame_price, frame_promo_price FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 0",
-												$product_id,
+												get_the_ID(),
 												$frame_data->frame_id
 											));
 

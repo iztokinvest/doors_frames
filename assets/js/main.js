@@ -255,9 +255,10 @@ function changePriceVisual() {
 		const oldPriceSpan = document.getElementById(
 			`${column.getAttribute("data-type")}-price-result-${column.getAttribute("data-product-id")}`
 		);
+		const savedSpan = column.querySelector(".saved");
 
 		if (changeFrame) {
-			oldColumnValue = parseFloat(column.querySelector(".saved").innerHTML);
+			oldColumnValue = parseFloat(savedSpan.innerHTML);
 		} else {
 			oldColumnValue = parseFloat(column.value);
 		}
@@ -276,7 +277,7 @@ function changePriceVisual() {
 			}
 		} else {
 			if (changeFrame) {
-				oldSum = parseFloat(column.querySelector(".saved").innerHTML);
+				oldSum = parseFloat(savedSpan.innerHTML);
 			} else {
 				oldSum = parseFloat(column.value);
 			}
@@ -315,7 +316,7 @@ function changePriceVisual() {
 			}
 
 			if (changeFrame && result >= 0) {
-				column.querySelector(".saved").innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
+				savedSpan.innerHTML = `${oldColumnValue} / <span class="text-success">${result}</span>`;
 			} else {
 				const selectedFrames = document.getElementById("frame-select");
 				const newPriceSpan = ` <span id='${column.getAttribute("data-type")}-price-result-${column.getAttribute(
@@ -333,7 +334,7 @@ function changePriceVisual() {
 			if (oldPriceSpan) {
 				oldPriceSpan.remove();
 			}
-			column.innerHTML = oldColumnValue;
+			column.innerHTML = `<span class="saved">${oldColumnValue}</span>`;
 		}
 	}
 }
