@@ -382,7 +382,7 @@ function frames_list_page()
 
 											if ($saved_frame_prices && $saved_frame_prices->frame_price >= 0) {
 												$saved_frame_price =
-												'<div bis_skin_checked="1"><span class="badge bg-warning text-dark" id="price-promo-badge-60" title="Запазена цена за по-късно">' . $saved_frame_prices->frame_price . '</span></div>';
+													'<div bis_skin_checked="1"><span class="badge bg-warning text-dark" id="price-promo-badge-60" title="Запазена цена за по-късно">' . $saved_frame_prices->frame_price . '</span></div>';
 											} else {
 												$saved_frame_price = "";
 											}
@@ -413,7 +413,7 @@ function frames_list_page()
 											echo '<td class="' . $active_status . ' ' . $product_row_class . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
 											echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . $frame_data->frame_description . '</td>';
 											echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_price . '<span class="saved">' . $frame_data->frame_price . '</span></td>';
-											echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_promo_price : '') . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_promo_price . '<span class="saved">' . $frame_data->frame_promo_price . '</span></td>';
+											echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_price : '') . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_promo_price . '<span class="saved">' . $frame_data->frame_promo_price . '</span></td>';
 
 											if ($first_frame) {
 												echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $modal_button . '</td>';
@@ -934,10 +934,11 @@ function mass_insert_frames()
 
 				foreach ($current_values as $current_value) {
 					$frames_table_name = $wpdb->prefix . 'doors_frames';
-						$saved_prices = $wpdb->get_row($wpdb->prepare(
-							"SELECT frame_price, frame_promo_price FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 0",
-							$product_id, $current_value->frame_id
-						));
+					$saved_prices = $wpdb->get_row($wpdb->prepare(
+						"SELECT frame_price, frame_promo_price FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 0",
+						$product_id,
+						$current_value->frame_id
+					));
 
 					if ($prices_to_promo == 'new-to-promo') {
 						$prices_to_promo_value = $saved_prices->frame_price;
@@ -1028,30 +1029,22 @@ function mass_insert_frames()
 					$product_id
 				));
 
-				if ($prices_to_promo == 'new-to-promo') {
-					$prices_to_promo_value = $saved_prices->product_price;
-				} else {
-					$prices_to_promo_value = $regular_price;
+				switch ($prices_to_promo) {
+					case 'new-to-promo':
+						$prices_to_promo_value = $saved_prices->product_price;
+						break;
+					case 'old-to-promo':
+						$prices_to_promo_value = $regular_price;
+						break;
+					default:
+						$prices_to_promo_value = $sale_price;
+						break;
 				}
 
 				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round);
 				$new_promo_price = calculate_new_value($sale_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $prices_to_promo_value);
 
-				if ($_POST['sum_price'] == '-1') {
-					if ($saved_prices) {
-						$new_price = $saved_prices->product_price;
-					} else {
-						$new_price = $regular_price;
-					}
-				}
 
-				if ($_POST['sum_promotion'] == '-1') {
-					if ($saved_prices) {
-						$new_promo_price = $saved_prices->product_promo_price;
-					} else {
-						$new_promo_price = $sale_price;
-					}
-				}
 
 				if ($new_price == 0) {
 					$new_price = "";
@@ -1061,10 +1054,34 @@ function mass_insert_frames()
 				}
 
 				if ($price_edit == 'true') {
+					if ($_POST['sum_price'] == '-1') {
+						$new_price = $regular_price;
+					}
+
+					if ($_POST['sum_promotion'] == '-1') {
+						$new_promo_price = $sale_price;
+					}
+
 					$product->set_regular_price($new_price);
 					$product->set_sale_price($new_promo_price);
 					$product->save();
 				} else {
+					if ($_POST['sum_price'] == '-1') {
+						if ($saved_prices) {
+							$new_price = $saved_prices->product_price;
+						} else {
+							$new_price = $regular_price;
+						}
+					}
+
+					if ($_POST['sum_promotion'] == '-1') {
+						if ($saved_prices) {
+							$new_promo_price = $saved_prices->product_promo_price;
+						} else {
+							$new_promo_price = $sale_price;
+						}
+					}
+
 					$sql = $wpdb->prepare(
 						"INSERT INTO $products_table_name (product_id, product_price, product_promo_price) 
 						VALUES (%d, %f, %f) 
