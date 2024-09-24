@@ -176,6 +176,7 @@ function changePriceVisual() {
 			tr.style.display = "table-row";
 		}
 
+		document.getElementById("search-type").style.display = "none";
 		document.getElementById("search-input").value = "";
 
 		calculate(true);
@@ -821,6 +822,12 @@ function searchProducts() {
 
 		confirmButton.style.display = "none";
 
+		if (searchInput.value === "") {
+			searchTypeSelect.style.display = "none";
+		} else {
+			searchTypeSelect.style.display = "inline-block";
+		}
+
 		productsTitles.forEach(function (productTitle) {
 			const titleText = productTitle.textContent.toLowerCase();
 			const tr = productTitle.closest("tr");
@@ -847,7 +854,9 @@ function searchProducts() {
 	}
 
 	searchInput.addEventListener("keyup", performSearch);
-
+	searchInput.addEventListener("click", () => {
+		searchTypeSelect.style.display = "inline-block";
+	});
 	searchTypeSelect.addEventListener("change", performSearch);
 }
 searchProducts();

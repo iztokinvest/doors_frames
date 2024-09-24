@@ -48,12 +48,12 @@ function frames_list_page()
 			));
 		?>
 			<span class="float-end">
-				<input type="text" id="search-input" placeholder="Търсене на продукт">
-				<select id="search-type">
+				<select id="search-type" style="display: none;">
 					<option value="include">цялото име</option>
 					<option value="starts">началото на името</option>
 					<option value="ends">края на името</option>
 				</select>
+				<input type="text" id="search-input" placeholder="Търсене на продукт">
 				<button type="button" id="edit-tab" class="btn btn-secondary" title="Име на таба според категорията и описание под таблицата.">
 					<?php echo ($tab_data ? 'Таб <span class="badge bg-warning text-dark">' . $tab_data->tab_title . '</span>' : 'Таб <span class="badge bg-danger">без име</span>'); ?>
 				</button>
@@ -103,8 +103,10 @@ function frames_list_page()
 									<optgroup data-selectall="true" data-selectalltext="Всички цени">
 										<?php
 										foreach ($frames as $frame) {
-											if ($frame->frame_id > 0) {
-												$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
+											$selected = (is_array($selected_frame_ids) && in_array($frame->frame_id, $selected_frame_ids)) ? ' selected' : '';
+											if ($frame->frame_id == -5) {
+												echo '<option value="' . $frame->frame_id . '"' . $selected . ' data-mandatory="true">Основна</option>';
+											} else {
 												echo '<option value="' . $frame->frame_id . '"' . $selected . ' data-mandatory="true">' . $frame->frame_id . '</option>';
 											}
 										}
@@ -409,11 +411,16 @@ function frames_list_page()
 												$active_status = 'inactive-frame';
 											}
 
-											echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . $frame_data->frame_id . '</td>';
+											echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . ($frame_data->frame_id > 0 ? $frame_data->frame_id : 'Основна') . '</td>';
 											echo '<td class="' . $active_status . ' ' . $product_row_class . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
 											echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . $frame_data->frame_description . '</td>';
-											echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_price . '<span class="saved">' . $frame_data->frame_price . '</span></td>';
-											echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_price : '') . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_promo_price . '<span class="saved">' . $frame_data->frame_promo_price . '</span></td>';
+											if ($frame_data->frame_id == -5) {
+												echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . esc_attr($regular_price) . '</td>';
+												echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . esc_attr($sale_price) . '</td>';
+											} else {
+												echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_price . '<span class="saved">' . $frame_data->frame_price . '</span></td>';
+												echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_price : '') . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_promo_price . '<span class="saved">' . $frame_data->frame_promo_price . '</span></td>';
+											}
 
 											if ($first_frame) {
 												echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $modal_button . '</td>';
