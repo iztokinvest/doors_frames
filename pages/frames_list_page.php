@@ -874,6 +874,7 @@ function fetch_frame_prices()
 						<td><textarea class="form-control frame-description" cols="30" rows="3">$result->frame_description</textarea></td>
 						$show_prices
 						<td><input type="checkbox" class="form-control delete-frame"></td>
+						<td><button class="btn btn-primary btn-sm frame-duplicate" data-id="$product_id">Дублирай</button></td>
 					</tr>
 				HTML;
 			}

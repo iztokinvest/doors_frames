@@ -70,8 +70,8 @@ const slimFiltersSelect = new SlimSelect({
 	events: {
 		afterClose: () => {
 			document.getElementById("chose-frames").submit();
-		}
-	}
+		},
+	},
 });
 
 function editTab() {
@@ -507,38 +507,100 @@ jQuery(document).ready(function ($) {
 	});
 
 	$(document).on("click", "#add-new-frame", function () {
+		var data = {
+			data_id: $(this).data("id"),
+		};
+		addNewFrame(data);
+		initializeDatepickers();
+	});
+
+	$(document).on("click", ".frame-duplicate", function () {
+		var $row = $(this).closest("tr");
+		var data = {};
+
+		var data = {
+			data_id: $(this).data("id"),
+			frame_id: $row.find(".frame-id").val(),
+			frame_img: $row.find(".change-frame-image").val(),
+			frame_desc: $row.find(".frame-description").val(),
+			frame_price: $row.find(".frame-price").val(),
+			frame_promo_price: $row.find(".frame-promo-price").val(),
+		};
+
+		addNewFrame(data);
+		initializeDatepickers();
+	});
+
+	$(document).on("click", ".new-frame-duplicate", function () {
+		var $row = $(this).closest("tr");
+		var data = {};
+
+		var data = {
+			data_id: $(this).data("id"),
+			frame_id: $row.find(".frame-id").val(),
+			frame_img: $row.find(".change-frame-image").val(),
+			frame_desc: $row.find(".new-frame-description").val(),
+			frame_price: $row.find(".new-frame-price").val(),
+			frame_promo_price: $row.find(".new-frame-promo-price").val(),
+		};
+
+		addNewFrame(data);
+		initializeDatepickers();
+	});
+
+	function addNewFrame(copyData) {
 		const newId = new Date().getTime();
 		$("#new-frame-table").show();
 		$("#new-frame-table tbody").append(`
-			<tr class="new-frame" data-id="${$(this).data("id")}">>
+			<tr class="new-frame" data-id="${copyData.data_id}">>
 				<td>
 					<select class="form-control price-input frame-id">
 						<option value=""></option>
 						<option value="-5">Основна цена</option>
-						${Array.from({ length: 15 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+						${Array.from(
+							{ length: 15 },
+							(_, i) =>
+								`<option value="${i + 1}" ${copyData.frame_id == i + 1 ? "selected" : ""}>${
+									i + 1
+								}</option>`
+						).join("")}
 					</select>
 				</td>
 				<td class="frame-image-container">
-					<img id="frame-img-${newId}" class="frame-img">
+					<img id="frame-img-${newId}" class="frame-img" src="${copyData.frame_img ? $("#product-title").data("static-images-path") + copyData.frame_img : ""}">
 					<select class="form-control new-frame-image change-frame-image" data-image-id="frame-img-${newId}">
 						<option value="">Каса</option>
 						${$("#all-frame-images").data("frame-options")}
 					</select>
 				</td>
-				<td><textarea class="form-control new-frame-description" cols="30" rows="3" placeholder="Описание"></textarea></td>
-				<td><input type="number" step="0.01" class="form-control price-input new-frame-price" placeholder="Цена"></td>
-				<td><input type="number" step="0.01" class="form-control price-input new-frame-promo-price" placeholder="Промо"></td>
+				<td><textarea class="form-control new-frame-description" cols="30" rows="3" placeholder="Описание">${
+					copyData.frame_desc || ""
+				}</textarea></td>
+				<td><input type="number" step="0.01" class="form-control price-input new-frame-price" placeholder="Цена" value="${
+					copyData.frame_price || ""
+				}"></td>
+				<td><input type="number" step="0.01" class="form-control price-input new-frame-promo-price" placeholder="Промо" value="${
+					copyData.frame_promo_price || ""
+				}"></td>
+				<td><button class="btn btn-primary btn-sm new-frame-duplicate" data-id="${copyData.data_id}">Дублирай</button></td>
 			</tr>
     `);
-		initializeDatepickers();
-	});
+
+		const newFrameRow = $('[data-image-id="frame-img-' + newId + '"]');
+		newFrameRow.val(copyData.frame_img);
+
+		if (newFrameRow.length) {
+			newFrameRow[0].scrollIntoView({
+				behavior: "smooth",
+				block: "start",
+			});
+		}
+	}
 
 	$("#save-modal-prices").on("click", function () {
 		let requestsData = [];
 		let error = false;
 		const lastProductId = $("#modal-product-id").val();
-
-		console.log("lastId", lastProductId);
 
 		$(".frame-id").each(function () {
 			const data = {
