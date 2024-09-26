@@ -926,6 +926,13 @@ function searchProducts() {
 searchProducts();
 
 async function fetchGitHubRelease() {
+	const urlParams = new URLSearchParams(window.location.search);
+	const hasPromotionsPage = urlParams.get("page") === "frames-list-page";
+
+	if (!hasPromotionsPage) {
+		return;
+	}
+
 	const response = await fetch("https://api.github.com/repos/iztokinvest/doors_frames/releases/latest");
 	const currentVersion = document.getElementById("extension-version");
 	const wpBody = document.getElementById("wpbody-content");
