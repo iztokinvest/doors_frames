@@ -470,6 +470,7 @@ function frames_list_page()
 		</div>
 	</div>
 <?php
+	echo "<hr><div class='float-end me-5'>Версия на разширението: <span id='extension-version'>" . pluginData()['Version'] . '</span></div>';
 }
 
 function active_status($status_id)
