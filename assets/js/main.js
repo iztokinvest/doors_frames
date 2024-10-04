@@ -548,6 +548,10 @@ jQuery(document).ready(function ($) {
 		initializeDatepickers();
 	});
 
+	$(document).on("click", ".new-frame-delete", function () {
+		$(this).closest("tr").remove();
+	});
+
 	function addNewFrame(copyData) {
 		const newId = new Date().getTime();
 		$("#new-frame-table").show();
@@ -567,7 +571,9 @@ jQuery(document).ready(function ($) {
 					</select>
 				</td>
 				<td class="frame-image-container">
-					<img id="frame-img-${newId}" class="frame-img" src="${copyData.frame_img ? $("#product-title").data("static-images-path") + copyData.frame_img : ""}">
+					<img id="frame-img-${newId}" class="frame-img" src="${
+			copyData.frame_img ? $("#product-title").data("static-images-path") + copyData.frame_img : ""
+		}">
 					<select class="form-control new-frame-image change-frame-image" data-image-id="frame-img-${newId}">
 						<option value="">Каса</option>
 						${$("#all-frame-images").data("frame-options")}
@@ -582,7 +588,7 @@ jQuery(document).ready(function ($) {
 				<td><input type="number" step="0.01" class="form-control price-input new-frame-promo-price" placeholder="Промо" value="${
 					copyData.frame_promo_price || ""
 				}"></td>
-				<td><button class="btn btn-primary btn-sm new-frame-duplicate" data-id="${copyData.data_id}">Дублирай</button></td>
+				<td><button class="btn btn-primary btn-sm new-frame-duplicate" data-id="${copyData.data_id}">Дублирай</button> <span class="new-frame-delete btn">❌</span></td>
 			</tr>
     `);
 
