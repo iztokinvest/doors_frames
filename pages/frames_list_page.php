@@ -151,7 +151,7 @@ function frames_list_page()
 									<option value="+%">+%</option>
 									<option value="-%">-%</option>
 								</select>
-								<input type="number" step="0.01" id="sum-price-input" class="price-input" name="sum_price" placeholder="Цена" required />
+								<input type="number" id="sum-price-input" class="price-input" name="sum_price" placeholder="Цена" required />
 							</span>
 							<span class="badge bg-info">
 								<select id="operator-promotion-select" class="operator-promotion-select" name="operator_promotion">
@@ -161,7 +161,7 @@ function frames_list_page()
 									<option value="+%">+%</option>
 									<option value="-%">-%</option>
 								</select>
-								<input type="number" step="0.01" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
+								<input type="number" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
 							</span>
 							<span class="badge bg-info text-dark checkbox-badge">
 								<input type="checkbox" id="mass-edit-prices" />Промени текущите цени
@@ -366,8 +366,8 @@ function frames_list_page()
 										$saved_regular_price = $saved_prices && $saved_prices->product_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_price</span></div>" : '';
 										$saved_sale_price = $saved_prices && $saved_prices->product_promo_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_promo_price</span></div>" : '';
 
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" step="0.01" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" step="0.01" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-saved-price="' . ($saved_prices ? esc_attr($saved_prices->product_price) : '') . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" readonly></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-saved-price="' . ($saved_prices ? esc_attr($saved_prices->product_price) : '') . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" readonly></td>';
 									}
 
 									$modal_button = '<button class="frames-button btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
@@ -808,8 +808,8 @@ function fetch_frame_prices()
 			foreach ($results as $result) {
 				if ($result->frame_id > 0) {
 					$show_prices = <<<HTML
-						<td><input type="number" step="0.01" class="form-control price-input frame-price" value="$result->frame_price"></td>
-						<td><input type="number" step="0.01" class="form-control price-input frame-promo-price" value="$result->frame_promo_price"></td>
+						<td><input type="number" class="form-control price-input frame-price" value="$result->frame_price"></td>
+						<td><input type="number" class="form-control price-input frame-promo-price" value="$result->frame_promo_price"></td>
 					HTML;
 				} else {
 					$product = wc_get_product($result->product_id);

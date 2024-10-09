@@ -582,10 +582,10 @@ jQuery(document).ready(function ($) {
 				<td><textarea class="form-control new-frame-description" cols="30" rows="3" placeholder="Описание">${
 					copyData.frame_desc || ""
 				}</textarea></td>
-				<td><input type="number" step="0.01" class="form-control price-input new-frame-price" placeholder="Цена" value="${
+				<td><input type="number" class="form-control price-input new-frame-price" placeholder="Цена" value="${
 					copyData.frame_price || ""
 				}"></td>
-				<td><input type="number" step="0.01" class="form-control price-input new-frame-promo-price" placeholder="Промо" value="${
+				<td><input type="number" class="form-control price-input new-frame-promo-price" placeholder="Промо" value="${
 					copyData.frame_promo_price || ""
 				}"></td>
 				<td><button class="btn btn-primary btn-sm new-frame-duplicate" data-id="${copyData.data_id}">Дублирай</button> <span class="new-frame-delete btn">❌</span></td>
@@ -949,7 +949,7 @@ async function fetchGitHubRelease() {
 		wpBody.insertAdjacentHTML(
 			"afterbegin",
 			`<div class="alert alert-warning alert-dismissible fade show" role="alert">
-				Налична е нова версия на разширението: <strong>${data.tag_name}</strong>. В момента използвате <strong>${currentVersion.innerHTML}</strong>. <a href="plugins.php">Обновете от тук!</a>
+				Налична е нова версия на разширението: <strong>${data.tag_name}</strong>. В момента използвате <strong>${currentVersion.innerHTML}</strong>. <a href="?update=1">Обновете от тук!</a>
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 			</div>`
 		);
