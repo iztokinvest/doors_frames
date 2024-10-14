@@ -949,7 +949,7 @@ async function fetchGitHubRelease() {
 		wpBody.insertAdjacentHTML(
 			"afterbegin",
 			`<div class="alert alert-warning alert-dismissible fade show" role="alert">
-				Налична е нова версия на разширението: <strong>${data.tag_name}</strong>. В момента използвате <strong>${currentVersion.innerHTML}</strong>. <a href="?update=1">Обновете от тук!</a>
+				Налична е нова версия на разширението: <strong>${data.tag_name}</strong>. В момента използвате <strong>${currentVersion.innerHTML}</strong>. <a href="?update_frames=1">Обновете от тук!</a>
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 			</div>`
 		);
