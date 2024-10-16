@@ -357,6 +357,13 @@ function frames_list_page()
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_regular_price . '</td>';
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_sale_price . '</td>';
 									} else {
+										if ($regular_price > 0 && $sale_price > 0) {
+											$salePercent = ((floatval($regular_price) - floatval($sale_price)) / floatval($regular_price)) * 100;
+											$salePercent = "Отстъпка: " . round($salePercent, 2) . "%";
+										} else {
+											$salePercent = '';
+										}
+										
 										$products_table_name = $wpdb->prefix . 'doors_frames_products';
 										$saved_prices = $wpdb->get_row($wpdb->prepare(
 											"SELECT product_price, product_promo_price FROM $products_table_name WHERE product_id = %d",
@@ -367,7 +374,7 @@ function frames_list_page()
 										$saved_sale_price = $saved_prices && $saved_prices->product_promo_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_promo_price</span></div>" : '';
 
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-saved-price="' . ($saved_prices ? esc_attr($saved_prices->product_price) : '') . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" readonly></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-saved-price="' . ($saved_prices ? esc_attr($saved_prices->product_price) : '') . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" title="' . $salePercent . '" readonly></td>';
 									}
 
 									$modal_button = '<button class="frames-button btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
@@ -807,9 +814,16 @@ function fetch_frame_prices()
 			$show_prices = '';
 			foreach ($results as $result) {
 				if ($result->frame_id > 0) {
+					if ($result->frame_price > 0 && $result->frame_promo_price > 0) {
+						$salePercent = ((floatval($result->frame_price) - floatval($result->frame_promo_price)) / floatval($result->frame_price)) * 100;
+						$salePercent = "Отстъпка: " . round($salePercent, 2) . "%";
+					} else {
+						$salePercent = '';
+					}
+
 					$show_prices = <<<HTML
 						<td><input type="number" class="form-control price-input frame-price" value="$result->frame_price"></td>
-						<td><input type="number" class="form-control price-input frame-promo-price" value="$result->frame_promo_price"></td>
+						<td><input type="number" class="form-control price-input frame-promo-price" value="$result->frame_promo_price" title="$salePercent"></td>
 					HTML;
 				} else {
 					$product = wc_get_product($result->product_id);
