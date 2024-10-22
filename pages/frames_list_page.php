@@ -130,57 +130,57 @@ function frames_list_page()
 
 				<?php
 				if ($selected_frame_ids) {
-					$mass_title = <<<HTML
-						<div id="mass-frame-title"><b>Масова промяна на цени на каси <span class="badge bg-warning text-dark" title="От тук се променят масово цените на избраните каси.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови за по-късно:&#013;   1. Ако е маркирана отметката 'Промени текущите цени', тогава директно ще бъдат заменени цените на касите в момента.&#013;   2. Ако отметката не е маркирана, тогава цените ще бъдат запаметени като неактивни и ще могат да се активират по-късно.&#013;&#013;Ще бъдат променени само продуктите, които са визуализирани в момента и са маркирани с отметка. По подразбиране всички са маркирани, но при нужна отметката може да се премахне от определени продукти.&#013;&#013;Ще бъдат променени само цените на избраните номера на каси. Ако например от горното меню 'Цени на каси №' са избрани само 1 и 2, тогава промяната ще важи само за тях и останалите каси няма да бъдат засегнати.">?</span></b></div>
-					HTML;
+$mass_title = <<<HTML
+	<div id="mass-frame-title"><b>Масова промяна на цени на каси <span class="badge bg-warning text-dark" title="От тук се променят масово цените на избраните каси.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови за по-късно:&#013;   1. Ако е маркирана отметката 'Промени текущите цени', тогава директно ще бъдат заменени цените на касите в момента.&#013;   2. Ако отметката не е маркирана, тогава цените ще бъдат запаметени като неактивни и ще могат да се активират по-късно.&#013;&#013;Ще бъдат променени само продуктите, които са визуализирани в момента и са маркирани с отметка. По подразбиране всички са маркирани, но при нужна отметката може да се премахне от определени продукти.&#013;&#013;Ще бъдат променени само цените на избраните номера на каси. Ако например от горното меню 'Цени на каси №' са избрани само 1 и 2, тогава промяната ще важи само за тях и останалите каси няма да бъдат засегнати.">?</span></b></div>
+HTML;
 				} else {
-					$mass_title = <<<HTML
-						<div id="mass-product-title"><b>Масова промяна на цени на продукти <span class="badge bg-warning text-dark" title="От тук се променят масово цените на избраните продукти.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови за по-късно:&#013;   1. Ако е маркирана отметката 'Промени текущите цени', тогава директно ще бъдат заменени цените на продуктите в момента.&#013;   2. Ако отметката не е маркирана, тогава цените ще бъдат запазени и ще могат да се активират по-късно.&#013;&#013;Ще бъдат променени само продуктите, които са визуализирани в момента и са маркирани с отметка. По подразбиране всички са маркирани, но при нужна отметката може да се премахне от определени продукти.">?</span></b></div>
-					HTML;
+$mass_title = <<<HTML
+	<div id="mass-product-title"><b>Масова промяна на цени на продукти <span class="badge bg-warning text-dark" title="От тук се променят масово цените на избраните продукти.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови за по-късно:&#013;   1. Ако е маркирана отметката 'Промени текущите цени', тогава директно ще бъдат заменени цените на продуктите в момента.&#013;   2. Ако отметката не е маркирана, тогава цените ще бъдат запазени и ще могат да се активират по-късно.&#013;&#013;Ще бъдат променени само продуктите, които са визуализирани в момента и са маркирани с отметка. По подразбиране всички са маркирани, но при нужна отметката може да се премахне от определени продукти.">?</span></b></div>
+HTML;
 				}
 
-				echo <<<HTML
-					<form id="mass-insert-form" class="mt-2">
-						<span id="mass-insert-span">
-							$mass_title
-							<span class="badge bg-info">
-								<select id="operator-price-select" class="operator-price-select" name="operator_price">
-									<option value="=">=</option>
-									<option value="+">+</option>
-									<option value="-">-</option>
-									<option value="+%">+%</option>
-									<option value="-%">-%</option>
-								</select>
-								<input type="number" id="sum-price-input" class="price-input" name="sum_price" placeholder="Цена" required />
-							</span>
-							<span class="badge bg-info">
-								<select id="operator-promotion-select" class="operator-promotion-select" name="operator_promotion">
-									<option value="=">=</option>
-									<option value="+">+</option>
-									<option value="-">-</option>
-									<option value="+%">+%</option>
-									<option value="-%">-%</option>
-								</select>
-								<input type="number" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
-							</span>
-							<span class="badge bg-info text-dark checkbox-badge">
-								<input type="checkbox" id="mass-edit-prices" />Промени текущите цени
-							</span>
-							<span class="badge bg-info text-dark checkbox-badge">
-								<input type="checkbox" id="mass-round-prices" />Закръгли
-							</span>
-							<span class="badge bg-info text-dark checkbox-badge">
-								<select id="mass-prices-to-promo">
-									<option value=""></option>
-									<option value="old-to-promo">Цена към промо</option>
-									<option value="new-to-promo">Запазена цена към промо</option>
-								</select>
-							</span>
-						</span>
-						<button type="button" id="check-mass-insert" class="btn btn-warning">Промени</button>
-						<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none"></button>
-					</form>
-				HTML;
+echo <<<HTML
+	<form id="mass-insert-form" class="mt-2">
+		<span id="mass-insert-span">
+			$mass_title
+			<span class="badge bg-info">
+				<select id="operator-price-select" class="operator-price-select" name="operator_price">
+					<option value="=">=</option>
+					<option value="+">+</option>
+					<option value="-">-</option>
+					<option value="+%">+%</option>
+					<option value="-%">-%</option>
+				</select>
+				<input type="number" id="sum-price-input" class="price-input" name="sum_price" placeholder="Цена" required />
+			</span>
+			<span class="badge bg-info">
+				<select id="operator-promotion-select" class="operator-promotion-select" name="operator_promotion">
+					<option value="=">=</option>
+					<option value="+">+</option>
+					<option value="-">-</option>
+					<option value="+%">+%</option>
+					<option value="-%">-%</option>
+				</select>
+				<input type="number" id="sum-promotion-input" class="price-input" name="sum_promotion" placeholder="Промо" required />
+			</span>
+			<span class="badge bg-info text-dark checkbox-badge">
+				<input type="checkbox" id="mass-edit-prices" />Промени текущите цени
+			</span>
+			<span class="badge bg-info text-dark checkbox-badge">
+				<input type="checkbox" id="mass-round-prices" />Закръгли
+			</span>
+			<span class="badge bg-info text-dark checkbox-badge">
+				<select id="mass-prices-to-promo">
+					<option value=""></option>
+					<option value="old-to-promo">Цена към промо</option>
+					<option value="new-to-promo">Запазена цена към промо</option>
+				</select>
+			</span>
+		</span>
+		<button type="button" id="check-mass-insert" class="btn btn-warning">Промени</button>
+		<button type="button" id="apply-mass-insert" class="btn btn-success" style="display:none"></button>
+	</form>
+HTML;
 
 				$order = isset($_SESSION['order_by_price']) ? $_SESSION['order_by_price'] : 'ASC';
 				$icon = $order === 'ASC' ? '▲' : '▼';
@@ -703,7 +703,7 @@ function add_frame_prices()
 					'frame_image' => $new_frame_image,
 					'frame_description' => $new_frame_description,
 				),
-				array('%d', '%d', '%f', '%f', '%s', '%s'),
+				array('%d', '%d', '%f', '%f', '%s', '%s')
 			);
 		} else {
 			$result = $wpdb->insert(
@@ -714,7 +714,7 @@ function add_frame_prices()
 					'frame_image' => $new_frame_image,
 					'frame_description' => $new_frame_description
 				),
-				array('%d', '%d', '%s', '%s'),
+				array('%d', '%d', '%s', '%s')
 			);
 		}
 
@@ -781,35 +781,35 @@ function fetch_frame_prices()
 
 		$html_product_title = "<h5 id='product-title' class='text-center' data-static-images-path='{$upload_dir['baseurl']}/doors_frames/'><mark>$product_title</mark></h5><input type='hidden' id='modal-product-id' value='$product_id'>";
 
-		$html_new_table = <<<HTML
-			<div id="all-frame-images" class="m-1" data-frame-options="$blankImageOptions">
-				<table class="table bg-info" id="new-frame-table" style="display: none;">
-					<thead>
-						<tbody></tbody>
-					</tbody>
-				</table>
-				<div><button class="btn btn-success mb-3 mx-3" id="add-new-frame" data-id="$product_id">Добави нова цена на каса</button></div>
-			</div>
-		HTML;
+$html_new_table = <<<HTML
+	<div id="all-frame-images" class="m-1" data-frame-options="$blankImageOptions">
+		<table class="table bg-info" id="new-frame-table" style="display: none;">
+			<thead>
+				<tbody></tbody>
+			</tbody>
+		</table>
+		<div><button class="btn btn-success mb-3 mx-3" id="add-new-frame" data-id="$product_id">Добави нова цена на каса</button></div>
+	</div>
+HTML;
 
 		if (!empty($results)) {
 			$result = $results[0];
 
-			$html = <<<HTML
-				<div class="m-1">
-					<table class="table table-striped">
-						<thead>
-							<tr>
-								<th>Цена №</th>
-								<th>Каса</th>
-								<th>Описание</th>
-								<th>Цена</th>
-								<th>Промоция</th>
-								<th>Изтрий</th>
-							</tr>
-						</thead>
-						<tbody>
-			HTML;
+$html = <<<HTML
+	<div class="m-1">
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Цена №</th>
+					<th>Каса</th>
+					<th>Описание</th>
+					<th>Цена</th>
+					<th>Промоция</th>
+					<th>Изтрий</th>
+				</tr>
+			</thead>
+			<tbody>
+HTML;
 
 			$show_prices = '';
 			foreach ($results as $result) {
@@ -821,10 +821,10 @@ function fetch_frame_prices()
 						$salePercent = '';
 					}
 
-					$show_prices = <<<HTML
-						<td><input type="number" class="form-control price-input frame-price" value="$result->frame_price"></td>
-						<td><input type="number" class="form-control price-input frame-promo-price" value="$result->frame_promo_price" title="$salePercent"></td>
-					HTML;
+$show_prices = <<<HTML
+	<td><input type="number" class="form-control price-input frame-price" value="$result->frame_price"></td>
+	<td><input type="number" class="form-control price-input frame-promo-price" value="$result->frame_promo_price" title="$salePercent"></td>
+HTML;
 				} else {
 					$product = wc_get_product($result->product_id);
 					if ($product->is_type('variable')) {
@@ -873,32 +873,32 @@ function fetch_frame_prices()
 					$frame_status = '';
 				}
 
-				$html .= <<<HTML
-					<tr class="frame-id $frame_status" data-id="$result->id">
-						<td>
-							<select class="form-control price-input frame-id">
-								$frame_id_options
-							</select>
-						</td>
-						<td class="frame-image-container">
-							<img id="frame-img-$result->id" src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
-							<select class="form-control frame-image change-frame-image" data-image-id="frame-img-$result->id">
-								$image_options
-							</select>
-						</td>
-						<td><textarea class="form-control frame-description" cols="30" rows="3">$result->frame_description</textarea></td>
-						$show_prices
-						<td><input type="checkbox" class="form-control delete-frame"></td>
-						<td><button class="btn btn-primary btn-sm frame-duplicate" data-id="$product_id">Дублирай</button></td>
-					</tr>
-				HTML;
+$html .= <<<HTML
+	<tr class="frame-id $frame_status" data-id="$result->id">
+		<td>
+			<select class="form-control price-input frame-id">
+				$frame_id_options
+			</select>
+		</td>
+		<td class="frame-image-container">
+			<img id="frame-img-$result->id" src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
+			<select class="form-control frame-image change-frame-image" data-image-id="frame-img-$result->id">
+				$image_options
+			</select>
+		</td>
+		<td><textarea class="form-control frame-description" cols="30" rows="3">$result->frame_description</textarea></td>
+		$show_prices
+		<td><input type="checkbox" class="form-control delete-frame"></td>
+		<td><button class="btn btn-primary btn-sm frame-duplicate" data-id="$product_id">Дублирай</button></td>
+	</tr>
+HTML;
 			}
 
-			$html .= <<<HTML
-					</tbody>
-				</table>
-			</div>
-			HTML;
+$html .= <<<HTML
+		</tbody>
+	</table>
+</div>
+HTML;
 
 			$html .= $html_new_table;
 

@@ -122,17 +122,17 @@ function custom_product_tab_content()
 			$folderPath = esc_url("{$upload_dir['baseurl']}/doors_frames");
 
 			
-			$frame_rows .= <<<HTML
-				<tr>
-					<td data-th="Каса">
-						<img src='$folderPath/$image' alt='$alt'>
-					</td>
-					<td data-th="Описание">
-						$description
-					</td>
-					$price_td
-				</tr>
-			HTML;
+$frame_rows .= <<<HTML
+	<tr>
+		<td data-th="Каса">
+			<img src='$folderPath/$image' alt='$alt'>
+		</td>
+		<td data-th="Описание">
+			$description
+		</td>
+		$price_td
+	</tr>
+HTML;
 		}
 
 		if ($tab_data && !empty($tab_data[0]->table_text)) {
@@ -143,18 +143,18 @@ function custom_product_tab_content()
 			$text_rows = '<div class="frame_table_text">' . $rows_html . '</div>';
 		}
 
-		echo <<<HTML
-		<div class="container-kasi">
-			<table class="kasi-table">
-				<tr>
-					<th>Каса</th>
-					<th>Описание</th>
-					$price_th
-				</tr>
-				$frame_rows
-			</table>
-			$text_rows
-		</div>
-		HTML;
+echo <<<HTML
+<div class="container-kasi">
+	<table class="kasi-table">
+		<tr>
+			<th>Каса</th>
+			<th>Описание</th>
+			$price_th
+		</tr>
+		$frame_rows
+	</table>
+	$text_rows
+</div>
+HTML;
 	}
 }
