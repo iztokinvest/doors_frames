@@ -899,9 +899,18 @@ function searchProducts() {
 		productsTitles.forEach(function (productTitle) {
 			const titleText = productTitle.textContent.toLowerCase();
 			const tr = productTitle.closest("tr");
+			const checkbox = productTitle.closest("tr").querySelector("input[type=checkbox]");
+			const changePriceElements = tr.querySelectorAll("[data-change-price]");
 			let result = false;
 
 			tr.style.display = "none";
+
+			if (checkbox) {
+				checkbox.checked = false;
+				changePriceElements.forEach((element) => {
+					element.setAttribute("data-change-price", false);
+				});
+			}
 
 			switch (searchType) {
 				case "include":
@@ -917,6 +926,13 @@ function searchProducts() {
 
 			if (result) {
 				tr.style.display = "table-row";
+
+				if (checkbox) {
+					checkbox.checked = true;
+					changePriceElements.forEach((element) => {
+						element.setAttribute("data-change-price", true);
+					});
+				}
 			}
 		});
 	}
