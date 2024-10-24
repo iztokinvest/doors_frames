@@ -267,14 +267,19 @@ function changePriceVisual() {
 		const changePrice = column.getAttribute("data-change-price");
 		const massPriceSelect = document.getElementById("mass-prices-to-promo");
 
-		if (
-			massPriceSelect.value !== "" &&
-			(column.classList.contains("frame-table-promo") || column.classList.contains("product-promo-input"))
-		) {
-			if (massPriceSelect.value === "new-to-promo") {
-				oldSum = parseFloat(column.getAttribute("data-saved-price"));
+		if (massPriceSelect.value !== "") {
+			if (column.classList.contains("frame-table-promo") || column.classList.contains("product-promo-input")) {
+				if (massPriceSelect.value === "new-to-promo") {
+					oldSum = parseFloat(column.getAttribute("data-saved-price"));
+				} else {
+					oldSum = parseFloat(column.getAttribute("data-price"));
+				}
 			} else {
-				oldSum = parseFloat(column.getAttribute("data-price"));
+				if (massPriceSelect.value === "new-promo-to-price") {
+					oldSum = parseFloat(column.getAttribute("data-saved-promo-price"));
+				} else {
+					oldSum = parseFloat(column.getAttribute("data-promo-price"));
+				}
 			}
 		} else {
 			if (changeFrame) {
@@ -946,6 +951,81 @@ function searchProducts() {
 	}
 }
 searchProducts();
+
+function priceToPromoSelect() {
+	const sumPriceInput = document.getElementById("sum-price-input");
+	const sumPromotionInput = document.getElementById("sum-promotion-input");
+	const massPricesToPromoContainer = document.getElementById("mass-prices-to-promo-container");
+	const massPricesToPromoSelect = document.getElementById("mass-prices-to-promo");
+
+	// Define all possible options with original values
+	const allOptions = [
+		{
+			value: "old-to-promo",
+			text: "Цена към промо",
+			title: "Промоционалната цена се изчислява според текущата цена на продукта.",
+		},
+		{
+			value: "new-to-promo",
+			text: "Запазена цена към промо",
+			title: "Промоционалната цена се изчислява според запазената за по-късно цена на продукта.",
+		},
+		{
+			value: "old-promo-to-price",
+			text: "Промо към цена",
+			title: "Базовата цена се изчислява според текущата промоционална цена на продукта.",
+		},
+		{
+			value: "new-promo-to-price",
+			text: "Запазено промо към цена",
+			title: "Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.",
+		},
+	];
+
+	function showHidePriceToPromoSelect() {
+		const priceFilled = sumPriceInput.value !== "";
+		const promoFilled = sumPromotionInput.value !== "";
+
+		if (priceFilled || promoFilled) {
+			if (priceFilled && promoFilled) {
+				massPricesToPromoContainer.style.display = "none";
+				massPricesToPromoSelect.innerHTML = "<option value=''></option>";
+				return;
+			}
+
+			massPricesToPromoContainer.style.display = "inline-block";
+			updateSelectOptions(
+				priceFilled ? ["old-to-promo", "new-to-promo"] : ["old-promo-to-price", "new-promo-to-price"]
+			);
+		} else {
+			massPricesToPromoContainer.style.display = "none";
+			massPricesToPromoSelect.innerHTML = "<option value=''></option>";
+		}
+	}
+
+	function updateSelectOptions(removeOptions) {
+		massPricesToPromoSelect.innerHTML = "<option value=''></option>";
+
+		allOptions.forEach((option) => {
+			if (!removeOptions.includes(option.value)) {
+				const opt = document.createElement("option");
+				opt.value = option.value;
+				opt.textContent = option.text;
+				opt.title = option.title;
+				massPricesToPromoSelect.appendChild(opt);
+			}
+		});
+	}
+
+	sumPriceInput.addEventListener("keyup", showHidePriceToPromoSelect);
+	sumPriceInput.addEventListener("paste", showHidePriceToPromoSelect);
+	sumPromotionInput.addEventListener("keyup", showHidePriceToPromoSelect);
+	sumPromotionInput.addEventListener("paste", showHidePriceToPromoSelect);
+
+	showHidePriceToPromoSelect();
+}
+
+priceToPromoSelect();
 
 async function fetchGitHubRelease() {
 	const urlParams = new URLSearchParams(window.location.search);

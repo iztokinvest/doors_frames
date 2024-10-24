@@ -130,16 +130,16 @@ function frames_list_page()
 
 				<?php
 				if ($selected_frame_ids) {
-$mass_title = <<<HTML
+					$mass_title = <<<HTML
 	<div id="mass-frame-title"><b>Масова промяна на цени на каси <span class="badge bg-warning text-dark" title="От тук се променят масово цените на избраните каси.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови за по-късно:&#013;   1. Ако е маркирана отметката 'Промени текущите цени', тогава директно ще бъдат заменени цените на касите в момента.&#013;   2. Ако отметката не е маркирана, тогава цените ще бъдат запаметени като неактивни и ще могат да се активират по-късно.&#013;&#013;Ще бъдат променени само продуктите, които са визуализирани в момента и са маркирани с отметка. По подразбиране всички са маркирани, но при нужна отметката може да се премахне от определени продукти.&#013;&#013;Ще бъдат променени само цените на избраните номера на каси. Ако например от горното меню 'Цени на каси №' са избрани само 1 и 2, тогава промяната ще важи само за тях и останалите каси няма да бъдат засегнати.">?</span></b></div>
 HTML;
 				} else {
-$mass_title = <<<HTML
+					$mass_title = <<<HTML
 	<div id="mass-product-title"><b>Масова промяна на цени на продукти <span class="badge bg-warning text-dark" title="От тук се променят масово цените на избраните продукти.&#013;&#013;Има два варианта за промяна на цени - редактиране на текущите или създаване на нови за по-късно:&#013;   1. Ако е маркирана отметката 'Промени текущите цени', тогава директно ще бъдат заменени цените на продуктите в момента.&#013;   2. Ако отметката не е маркирана, тогава цените ще бъдат запазени и ще могат да се активират по-късно.&#013;&#013;Ще бъдат променени само продуктите, които са визуализирани в момента и са маркирани с отметка. По подразбиране всички са маркирани, но при нужна отметката може да се премахне от определени продукти.">?</span></b></div>
 HTML;
 				}
 
-echo <<<HTML
+				echo <<<HTML
 	<form id="mass-insert-form" class="mt-2">
 		<span id="mass-insert-span">
 			$mass_title
@@ -169,12 +169,8 @@ echo <<<HTML
 			<span class="badge bg-info text-dark checkbox-badge">
 				<input type="checkbox" id="mass-round-prices" />Закръгли
 			</span>
-			<span class="badge bg-info text-dark checkbox-badge">
-				<select id="mass-prices-to-promo">
-					<option value=""></option>
-					<option value="old-to-promo">Цена към промо</option>
-					<option value="new-to-promo">Запазена цена към промо</option>
-				</select>
+			<span class="badge bg-info text-dark checkbox-badge" id="mass-prices-to-promo-container" style="display:none">
+				<select id="mass-prices-to-promo"></select>
 			</span>
 		</span>
 		<button type="button" id="check-mass-insert" class="btn btn-warning">Промени</button>
@@ -363,7 +359,7 @@ HTML;
 										} else {
 											$salePercent = '';
 										}
-										
+
 										$products_table_name = $wpdb->prefix . 'doors_frames_products';
 										$saved_prices = $wpdb->get_row($wpdb->prepare(
 											"SELECT product_price, product_promo_price FROM $products_table_name WHERE product_id = %d",
@@ -373,7 +369,7 @@ HTML;
 										$saved_regular_price = $saved_prices && $saved_prices->product_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_price</span></div>" : '';
 										$saved_sale_price = $saved_prices && $saved_prices->product_promo_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_promo_price</span></div>" : '';
 
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-promo-price="' . esc_attr($sale_price) . '" data-saved-promo-price="' . ($saved_prices ? esc_attr($saved_prices->product_promo_price) : '') . '" data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "true"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-saved-price="' . ($saved_prices ? esc_attr($saved_prices->product_price) : '') . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" title="' . $salePercent . '" readonly></td>';
 									}
 
@@ -425,7 +421,7 @@ HTML;
 												echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . esc_attr($regular_price) . '</td>';
 												echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . esc_attr($sale_price) . '</td>';
 											} else {
-												echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_price . '<span class="saved">' . $frame_data->frame_price . '</span></td>';
+												echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-promo-price = "' . $frame_data->frame_promo_price . '" data-saved-promo-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_promo_price : '') . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_price . '<span class="saved">' . $frame_data->frame_price . '</span></td>';
 												echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_price : '') . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_promo_price . '<span class="saved">' . $frame_data->frame_promo_price . '</span></td>';
 											}
 
@@ -781,7 +777,7 @@ function fetch_frame_prices()
 
 		$html_product_title = "<h5 id='product-title' class='text-center' data-static-images-path='{$upload_dir['baseurl']}/doors_frames/'><mark>$product_title</mark></h5><input type='hidden' id='modal-product-id' value='$product_id'>";
 
-$html_new_table = <<<HTML
+		$html_new_table = <<<HTML
 	<div id="all-frame-images" class="m-1" data-frame-options="$blankImageOptions">
 		<table class="table bg-info" id="new-frame-table" style="display: none;">
 			<thead>
@@ -795,7 +791,7 @@ HTML;
 		if (!empty($results)) {
 			$result = $results[0];
 
-$html = <<<HTML
+			$html = <<<HTML
 	<div class="m-1">
 		<table class="table table-striped">
 			<thead>
@@ -821,7 +817,7 @@ HTML;
 						$salePercent = '';
 					}
 
-$show_prices = <<<HTML
+					$show_prices = <<<HTML
 	<td><input type="number" class="form-control price-input frame-price" value="$result->frame_price"></td>
 	<td><input type="number" class="form-control price-input frame-promo-price" value="$result->frame_promo_price" title="$salePercent"></td>
 HTML;
@@ -873,7 +869,7 @@ HTML;
 					$frame_status = '';
 				}
 
-$html .= <<<HTML
+				$html .= <<<HTML
 	<tr class="frame-id $frame_status" data-id="$result->id">
 		<td>
 			<select class="form-control price-input frame-id">
@@ -894,7 +890,7 @@ $html .= <<<HTML
 HTML;
 			}
 
-$html .= <<<HTML
+			$html .= <<<HTML
 		</tbody>
 	</table>
 </div>
@@ -963,14 +959,26 @@ function mass_insert_frames()
 						$current_value->frame_id
 					));
 
-					if ($prices_to_promo == 'new-to-promo') {
-						$prices_to_promo_value = $saved_prices->frame_price;
-					} else {
-						$prices_to_promo_value = $current_value->frame_price;
+					switch ($prices_to_promo) {
+						case 'old-to-promo':
+							$target_value =	$current_value->frame_price;
+							break;
+						case 'new-to-promo':
+							$target_value = $saved_prices->frame_price;
+							break;
+						case 'old-promo-to-price':
+							$target_value =	$current_value->frame_promo_price;
+							break;
+						case 'new-promo-to-price':
+							$target_value = $saved_prices->frame_promo_price;
+							break;
+						default:
+							$target_value = null;
+							break;
 					}
 
-					$new_price = calculate_new_value($current_value->frame_price, $operator_price, $sum_price, $prices_round);
-					$new_promo_price = calculate_new_value($current_value->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $prices_to_promo_value);
+					$new_price = calculate_new_value($current_value->frame_price, $operator_price, $sum_price, $prices_round, $target_value);
+					$new_promo_price = calculate_new_value($current_value->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $target_value);
 
 					if ($price_edit == 'true') {
 						$update_query = $wpdb->prepare(
@@ -1053,21 +1061,25 @@ function mass_insert_frames()
 				));
 
 				switch ($prices_to_promo) {
-					case 'new-to-promo':
-						$prices_to_promo_value = $saved_prices->product_price;
-						break;
 					case 'old-to-promo':
-						$prices_to_promo_value = $regular_price;
+						$target_value =	$regular_price;
+						break;
+					case 'new-to-promo':
+						$target_value =	$saved_prices->product_price;
+						break;
+					case 'old-promo-to-price':
+						$target_value =	$sale_price;
+						break;
+					case 'new-promo-to-price':
+						$target_value = $saved_prices->product_promo_price;
 						break;
 					default:
-						$prices_to_promo_value = $sale_price;
+						$target_value = null;
 						break;
 				}
 
-				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round);
-				$new_promo_price = calculate_new_value($sale_price, $operator_promotion, $sum_promotion, $prices_round, $prices_to_promo, $prices_to_promo_value);
-
-
+				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round, $target_value);
+				$new_promo_price = calculate_new_value($sale_price, $operator_promotion, $sum_promotion, $prices_round, $target_value);
 
 				if ($new_price == 0) {
 					$new_price = "";
@@ -1127,14 +1139,14 @@ function mass_insert_frames()
 	}
 }
 
-function calculate_new_value($current_value, $operator, $sum, $round, $to_promo = '', $to_promo_value = 0)
+function calculate_new_value($current_value, $operator, $sum, $round, $target_value)
 {
 	if ($round === 'true') {
 		$round = true;
 	}
 
-	if ($to_promo === 'old-to-promo' || $to_promo === 'new-to-promo') {
-		$current_value = $to_promo_value;
+	if ($target_value) {
+		$current_value = $target_value;
 	}
 
 	switch ($operator) {
