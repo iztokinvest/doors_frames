@@ -167,7 +167,7 @@ HTML;
 				<input type="checkbox" id="mass-edit-prices" />Промени текущите цени
 			</span>
 			<span class="badge bg-info text-dark checkbox-badge">
-				<input type="checkbox" id="mass-round-prices" />Закръгли
+				<input type="checkbox" id="mass-round-prices" checked />Закръгли
 			</span>
 			<span class="badge bg-info text-dark checkbox-badge" id="mass-prices-to-promo-container" style="display:none">
 				<select id="mass-prices-to-promo"></select>
@@ -968,16 +968,18 @@ function mass_insert_frames()
 							break;
 						case 'old-promo-to-price':
 							$target_value =	$current_value->frame_promo_price;
+							$priceBeforeSale = true;
 							break;
 						case 'new-promo-to-price':
 							$target_value = $saved_prices->frame_promo_price;
+							$priceBeforeSale = true;
 							break;
 						default:
 							$target_value = null;
 							break;
 					}
 
-					$new_price = calculate_new_value($current_value->frame_price, $operator_price, $sum_price, $prices_round, $target_value);
+					$new_price = calculate_new_value($current_value->frame_price, $operator_price, $sum_price, $prices_round, $target_value, $priceBeforeSale);
 					$new_promo_price = calculate_new_value($current_value->frame_promo_price, $operator_promotion, $sum_promotion, $prices_round, $target_value);
 
 					if ($price_edit == 'true') {
@@ -1069,16 +1071,18 @@ function mass_insert_frames()
 						break;
 					case 'old-promo-to-price':
 						$target_value =	$sale_price;
+						$priceBeforeSale = true;
 						break;
 					case 'new-promo-to-price':
 						$target_value = $saved_prices->product_promo_price;
+						$priceBeforeSale = true;
 						break;
 					default:
 						$target_value = null;
 						break;
 				}
 
-				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round, $target_value);
+				$new_price = calculate_new_value($regular_price, $operator_price, $sum_price, $prices_round, $target_value, $priceBeforeSale);
 				$new_promo_price = calculate_new_value($sale_price, $operator_promotion, $sum_promotion, $prices_round, $target_value);
 
 				if ($new_price == 0) {
@@ -1139,7 +1143,7 @@ function mass_insert_frames()
 	}
 }
 
-function calculate_new_value($current_value, $operator, $sum, $round, $target_value)
+function calculate_new_value($current_value, $operator, $sum, $round, $target_value, $priceBeforeSale = false)
 {
 	if ($round === 'true') {
 		$round = true;
@@ -1157,7 +1161,11 @@ function calculate_new_value($current_value, $operator, $sum, $round, $target_va
 			$total =  $current_value - $sum;
 			break;
 		case '+%':
-			$total =  $current_value + ($current_value * $sum / 100);
+			if ($priceBeforeSale) {
+				$total = $current_value / (1 - $sum / 100);
+			} else {
+				$total =  $current_value + ($current_value * $sum / 100);
+			}
 			break;
 		case '-%':
 			$total =  $current_value - ($current_value * $sum / 100);

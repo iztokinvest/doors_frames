@@ -249,6 +249,7 @@ function changePriceVisual() {
 		let oldSum = 0;
 		let oldColumnValue;
 		let changeFrame = true;
+		let priceBeforeSale = false;
 		const iconSpan = column.parentNode.querySelector(".icon");
 		if (column.tagName.toLowerCase() === "input") {
 			changeFrame = false;
@@ -275,6 +276,8 @@ function changePriceVisual() {
 					oldSum = parseFloat(column.getAttribute("data-price"));
 				}
 			} else {
+				priceBeforeSale = true;
+
 				if (massPriceSelect.value === "new-promo-to-price") {
 					oldSum = parseFloat(column.getAttribute("data-saved-promo-price"));
 				} else {
@@ -305,7 +308,11 @@ function changePriceVisual() {
 					result = oldSum - newSum;
 					break;
 				case "+%":
-					result = (oldSum * (100 + newSum)) / 100;
+					if (priceBeforeSale) {
+						result = oldSum / (1 - newSum / 100);
+					} else {
+						result = (oldSum * (100 + newSum)) / 100;
+					}
 					break;
 				case "-%":
 					result = (oldSum * (100 - newSum)) / 100;
