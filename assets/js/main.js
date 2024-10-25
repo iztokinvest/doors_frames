@@ -1024,10 +1024,12 @@ function priceToPromoSelect() {
 		});
 	}
 
-	sumPriceInput.addEventListener("keyup", showHidePriceToPromoSelect);
-	sumPriceInput.addEventListener("paste", showHidePriceToPromoSelect);
-	sumPromotionInput.addEventListener("keyup", showHidePriceToPromoSelect);
-	sumPromotionInput.addEventListener("paste", showHidePriceToPromoSelect);
+	if (sumPriceInput && sumPromotionInput) {
+		sumPriceInput.addEventListener("keyup", showHidePriceToPromoSelect);
+		sumPriceInput.addEventListener("paste", showHidePriceToPromoSelect);
+		sumPromotionInput.addEventListener("keyup", showHidePriceToPromoSelect);
+		sumPromotionInput.addEventListener("paste", showHidePriceToPromoSelect);
+	}
 
 	showHidePriceToPromoSelect();
 }
