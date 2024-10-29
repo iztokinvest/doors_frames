@@ -418,8 +418,13 @@ HTML;
 											echo '<td class="' . $active_status . ' ' . $product_row_class . '"><img src="' . $upload_dir['baseurl'] . '/doors_frames/' . $frame_data->frame_image . '" style="max-height: 38px"></td>';
 											echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . $frame_data->frame_description . '</td>';
 											if ($frame_data->frame_id == -5) {
-												echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . esc_attr($regular_price) . '</td>';
-												echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . esc_attr($sale_price) . '</td>';
+												if ($product->is_type('variable')) {
+													echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . esc_attr($min_regular_price) . '</td>';
+													echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . esc_attr($min_sale_price) . '</td>';
+												} else {
+													echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . $saved_regular_price . esc_attr($regular_price) . '</td>';
+													echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . $saved_sale_price . esc_attr($sale_price) . '</td>';
+												}
 											} else {
 												echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-promo-price = "' . $frame_data->frame_promo_price . '" data-saved-promo-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_promo_price : '') . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_price . '<span class="saved">' . $frame_data->frame_price . '</span></td>';
 												echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_price : '') . '" data-change-price="true" data-product-id="' . get_the_ID() . '">' . $saved_frame_promo_price . '<span class="saved">' . $frame_data->frame_promo_price . '</span></td>';
@@ -1088,7 +1093,7 @@ function mass_insert_frames()
 				if ($new_price == 0) {
 					$new_price = "";
 				}
-				if ($new_promo_price == 0) {
+				if ($new_promo_price <= 0) {
 					$new_promo_price = "";
 				}
 
@@ -1099,6 +1104,10 @@ function mass_insert_frames()
 
 					if ($_POST['sum_promotion'] == '-1') {
 						$new_promo_price = $sale_price;
+					}
+
+					if ($new_promo_price <= 0) {
+						$new_promo_price = "";
 					}
 
 					$product->set_regular_price($new_price);

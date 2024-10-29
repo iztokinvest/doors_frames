@@ -94,11 +94,35 @@ function selectCategory() {
 	if (categorySelect) {
 		const form = categorySelect.closest("form");
 
-		categorySelect.addEventListener("change", () => {
+		categorySelect.addEventListener("change", function () {
 			if (framePricesSelect) {
 				framePricesSelect.remove();
 			}
-			form.submit();
+
+			const formData = new FormData(form);
+
+			for (let [key] of formData.entries()) {
+				if (key.startsWith("frame_id[")) {
+					formData.delete(key);
+				}
+			}
+
+			const newForm = document.createElement("form");
+			newForm.method = form.method;
+			newForm.action = form.action;
+
+			for (let [key, value] of formData.entries()) {
+				const input = document.createElement("input");
+				input.type = "hidden";
+				input.name = key;
+				input.value = value;
+				newForm.appendChild(input);
+			}
+
+			form.parentNode.removeChild(form);
+
+			document.body.appendChild(newForm);
+			newForm.submit();
 		});
 	}
 }
