@@ -1018,7 +1018,7 @@ function priceToPromoSelect() {
 		if (!sumPriceInput || !sumPromotionInput) {
 			return;
 		}
-		
+
 		const priceFilled = sumPriceInput.value !== "";
 		const promoFilled = sumPromotionInput.value !== "";
 
@@ -1102,6 +1102,7 @@ function getLastCheckedProducts() {
 		document.getElementById("last-checked-products").addEventListener("click", () => {
 			const productIds = checkProducts.split(",").map((id) => id.trim());
 			const checkboxes = document.querySelectorAll("input.check-product");
+			const changePriceElements = document.querySelectorAll("[data-change-price]");
 
 			checkboxes.forEach((checkbox) => {
 				const checkboxId = checkbox.getAttribute("data-product-id");
@@ -1109,6 +1110,14 @@ function getLastCheckedProducts() {
 					checkbox.checked = true;
 				}
 			});
+
+			changePriceElements.forEach((changePriceElement) => {
+				const priceId = changePriceElement.getAttribute("data-product-id");
+
+				if (productIds.includes(priceId)) {
+					changePriceElement.setAttribute("data-change-price", true);
+				}
+			})
 		});
 
 		sessionStorage.removeItem("checked_product_ids");
