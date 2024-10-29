@@ -784,6 +784,7 @@ jQuery(document).ready(function ($) {
 			success: function (response) {
 				if (response.success) {
 					frame_notifier.success(`Цените са променени.`);
+					sessionStorage.setItem("checked_product_ids", product_ids);
 					location.reload();
 				} else {
 					frame_notifier.alert(`Цените не са променени.`);
@@ -1014,6 +1015,10 @@ function priceToPromoSelect() {
 	];
 
 	function showHidePriceToPromoSelect() {
+		if (!sumPriceInput || !sumPromotionInput) {
+			return;
+		}
+		
 		const priceFilled = sumPriceInput.value !== "";
 		const promoFilled = sumPromotionInput.value !== "";
 
@@ -1085,3 +1090,30 @@ async function fetchGitHubRelease() {
 	}
 }
 fetchGitHubRelease();
+
+function getLastCheckedProducts() {
+	const checkProducts = sessionStorage.getItem("checked_product_ids");
+
+	if (checkProducts) {
+		const buttonHTML =
+			"<button class='btn btn-sm btn-success' id='last-checked-products'>Възстанови маркираните!</button>";
+		const infoArea = frame_notifier.info(buttonHTML, buttonHTML);
+
+		document.getElementById("last-checked-products").addEventListener("click", () => {
+			const productIds = checkProducts.split(",").map((id) => id.trim());
+			const checkboxes = document.querySelectorAll("input.check-product");
+
+			checkboxes.forEach((checkbox) => {
+				const checkboxId = checkbox.getAttribute("data-product-id");
+				if (productIds.includes(checkboxId)) {
+					checkbox.checked = true;
+				}
+			});
+		});
+
+		sessionStorage.removeItem("checked_product_ids");
+
+		return infoArea;
+	}
+}
+getLastCheckedProducts();

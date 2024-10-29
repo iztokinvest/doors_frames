@@ -186,7 +186,7 @@ HTML;
 						<thead>
 							<tr class="table-light">
 								<th><span class="badge bg-secondary">
-										<input type="checkbox" class="check-all-products" checked>
+										<input type="checkbox" class="check-all-products">
 										ID
 									</span></th>
 								<th>🖼️</th>
@@ -326,7 +326,7 @@ HTML;
 
 									echo '<tr class="table-secondary">';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">
-									' . (!$product->is_type('variable') || $selected_frame_ids ? '<input type="checkbox" class="check-product" data-product-id="' . get_the_ID() . '" checked>' : '') .  get_the_ID() . '
+									' . (!$product->is_type('variable') || $selected_frame_ids ? '<input type="checkbox" class="check-product" data-product-id="' . get_the_ID() . '">' : '') .  get_the_ID() . '
 									</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $product_image . '</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a class="product-title" target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
