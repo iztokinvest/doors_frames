@@ -1103,13 +1103,20 @@ function getLastCheckedProducts() {
 			const productIds = checkProducts.split(",").map((id) => id.trim());
 			const checkboxes = document.querySelectorAll("input.check-product");
 			const changePriceElements = document.querySelectorAll("[data-change-price]");
+			const checkAll = document.querySelector(".check-all-products");
+			let countChecked = 0;
 
 			checkboxes.forEach((checkbox) => {
 				const checkboxId = checkbox.getAttribute("data-product-id");
 				if (productIds.includes(checkboxId)) {
 					checkbox.checked = true;
+					countChecked++;
 				}
 			});
+
+			if (countChecked === checkboxes.length) {
+				checkAll.checked = true;
+			}
 
 			changePriceElements.forEach((changePriceElement) => {
 				const priceId = changePriceElement.getAttribute("data-product-id");
@@ -1117,7 +1124,7 @@ function getLastCheckedProducts() {
 				if (productIds.includes(priceId)) {
 					changePriceElement.setAttribute("data-change-price", true);
 				}
-			})
+			});
 		});
 
 		sessionStorage.removeItem("checked_product_ids");
