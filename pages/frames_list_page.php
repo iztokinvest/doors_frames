@@ -1223,11 +1223,21 @@ function activate_single_price()
 
 		if ($product) {
 			if (!is_null($regular_price)) {
-				$product->set_regular_price($regular_price === 0 ? '' : $regular_price);
+				if ($regular_price == 0) {
+					$product->set_regular_price('');
+				} else {
+					$product->set_regular_price($regular_price);
+				}
 			}
+
 			if (!is_null($promo_price)) {
-				$product->set_sale_price($promo_price === 0 ? '' : $promo_price);
+				if ($promo_price == 0) {
+					$product->set_sale_price('');
+				} else {
+					$product->set_sale_price($promo_price);
+				}
 			}
+			
 			$product->save();
 		} else {
 			error_log("Product with ID $product_id not found in WooCommerce.");
