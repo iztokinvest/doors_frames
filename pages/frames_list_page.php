@@ -448,6 +448,11 @@ HTML;
 							?>
 						</tbody>
 					</table>
+					<div id="progress-div" class="progress m-3" style="display: none;">
+						<div class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+							<span class="progress-bar-text">0%</span>
+						</div>
+					</div>
 					<select id="edit-prices-type">
 						<option value="">🚫 Забранена промяна на единичните цени</option>
 						<option value="later">💾 Запазване на единичните цени за по-късно</option>
@@ -1194,47 +1199,51 @@ function calculate_new_value($current_value, $operator, $sum, $round, $target_va
 	return $total;
 }
 
-add_action('wp_ajax_activate_prices', 'activate_prices');
-function activate_prices()
+add_action('wp_ajax_get_product_ids', function () {
+	global $wpdb;
+	$products_table_name = $wpdb->prefix . 'doors_frames_products';
+	$product_ids = $wpdb->get_col("SELECT product_id FROM $products_table_name ORDER BY product_id ASC");
+	wp_send_json_success($product_ids);
+});
+
+add_action('wp_ajax_activate_single_price', 'activate_single_price');
+function activate_single_price()
 {
 	global $wpdb;
-
 	$products_table_name = $wpdb->prefix . 'doors_frames_products';
 
-	$saved_products = $wpdb->get_results("SELECT product_id, product_price, product_promo_price FROM $products_table_name");
+	$product_id = intval($_POST['product_id']);
 
-	foreach ($saved_products as $saved_product) {
-		$product_id = $saved_product->product_id;
+	$saved_product = $wpdb->get_row($wpdb->prepare("SELECT product_id, product_price, product_promo_price FROM $products_table_name WHERE product_id = %d", $product_id));
+
+	if ($saved_product) {
 		$regular_price = !is_null($saved_product->product_price) ? (float)$saved_product->product_price : null;
 		$promo_price = !is_null($saved_product->product_promo_price) ? (float)$saved_product->product_promo_price : null;
 		$product = wc_get_product($product_id);
 
-		if (!is_null($regular_price)) {
-			if ($regular_price == 0) {
-				$product->set_regular_price('');
-			} else {
-				$product->set_regular_price($regular_price);
+		if ($product) {
+			if (!is_null($regular_price)) {
+				$product->set_regular_price($regular_price === 0 ? '' : $regular_price);
 			}
+			if (!is_null($promo_price)) {
+				$product->set_sale_price($promo_price === 0 ? '' : $promo_price);
+			}
+			$product->save();
+		} else {
+			error_log("Product with ID $product_id not found in WooCommerce.");
+			wp_send_json_error(array('message' => 'Product not found in WooCommerce.'));
+			return;
 		}
 
-		if (!is_null($promo_price)) {
-			if ($promo_price == 0) {
-				$product->set_sale_price('');
-			} else {
-				$product->set_sale_price($promo_price);
-			}
-		}
+		$wpdb->delete($products_table_name, array('product_id' => $product_id), array('%d'));
 
-		$product->save();
+		wp_send_json_success(array('product_id' => $product_id));
+	} else {
+		wp_send_json_error('Product not found.');
 	}
-
-	$wpdb->query("TRUNCATE TABLE $products_table_name");
-
-	wp_send_json_success();
 }
 
 add_action('wp_ajax_activate_frame_prices', 'activate_frame_prices');
-
 function activate_frame_prices()
 {
 	global $wpdb;

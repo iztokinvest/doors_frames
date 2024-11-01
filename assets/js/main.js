@@ -847,24 +847,64 @@ jQuery(document).ready(function ($) {
 		frame_notifier.confirm(
 			`Сигурни ли сте, че искате да замените цените на всички продукти? Това действие е необратимо.`,
 			function () {
+				var productIds;
+				var processed = 0;
+				var $progressDiv = $("#progress-div");
+				var $progressBar = $(".progress-bar");
+				var $progressBarText = $(".progress-bar-text");
+
 				$.ajax({
 					url: ajaxurl,
 					method: "POST",
 					data: {
-						action: "activate_prices",
+						action: "get_product_ids",
 					},
 					success: function (response) {
 						if (response.success) {
-							frame_notifier.success(`Цените са променени.`);
-							location.reload();
+							productIds = response.data;
+							updatePrices();
 						} else {
-							frame_notifier.alert(`Цените не са променени.`);
+							frame_notifier.alert(`Грешка при получаването на списъка с продукти.`);
 						}
 					},
-					error: function () {
-						frame_notifier.alert(`Цените не са променени.`);
-					},
 				});
+
+				function updatePrices() {
+					if (processed >= productIds.length) {
+						frame_notifier.success(`Всички цени са променени.`);
+						$progressBar.attr("aria-valuenow", 100).css("width", "100%");
+						$progressBarText.text("100%");
+						location.reload();
+						return;
+					}
+
+					$progressDiv.show();
+
+					$.ajax({
+						url: ajaxurl,
+						method: "POST",
+						data: {
+							action: "activate_single_price",
+							product_id: productIds[processed],
+						},
+						success: function (response) {
+							if (response.success) {
+								processed++;
+								var percentComplete = Math.round((processed / productIds.length) * 100);
+								$progressBar.attr("aria-valuenow", percentComplete).css("width", percentComplete + "%");
+								$progressBarText.text(percentComplete + "%");
+								updatePrices();
+							} else {
+								frame_notifier.alert(
+									`Грешка при промяна на цената за продукт ${productIds[processed]}.`
+								);
+							}
+						},
+						error: function (xhr, status, error) {
+							frame_notifier.alert(`Грешка при промяна на цената. Моля опитайте отново.`);
+						},
+					});
+				}
 			},
 			function () {
 				frame_notifier.info(`Действието е отменено.`);

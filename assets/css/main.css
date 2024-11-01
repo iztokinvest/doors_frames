@@ -106,3 +106,10 @@
 	filter: blur(5px);
 	pointer-events: none;
 }
+
+.progress-bar-text {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	color: black;
+}
