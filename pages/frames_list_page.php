@@ -449,7 +449,7 @@ HTML;
 						</tbody>
 					</table>
 					<div id="progress-div" class="progress m-3" style="display: none;">
-						<div class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+						<div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
 							<span class="progress-bar-text">0%</span>
 						</div>
 					</div>
@@ -1247,7 +1247,7 @@ function activate_single_price()
 
 		$wpdb->delete($products_table_name, array('product_id' => $product_id), array('%d'));
 
-		wp_send_json_success(array('product_id' => $product_id));
+		wp_send_json_success(array('product_id' => $product_id, 'product_title' => $product->get_title()));
 	} else {
 		wp_send_json_error('Product not found.');
 	}

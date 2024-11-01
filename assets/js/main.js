@@ -892,7 +892,8 @@ jQuery(document).ready(function ($) {
 								processed++;
 								var percentComplete = Math.round((processed / productIds.length) * 100);
 								$progressBar.attr("aria-valuenow", percentComplete).css("width", percentComplete + "%");
-								$progressBarText.text(percentComplete + "%");
+								$progressBarText.html(`${percentComplete}%<br>${response.data["product_title"]}`);
+								document.title = `${percentComplete}% ${window.location.hostname}`;
 								updatePrices();
 							} else {
 								frame_notifier.alert(

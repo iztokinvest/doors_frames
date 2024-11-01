@@ -113,3 +113,7 @@
 	text-align: center;
 	color: black;
 }
+
+#progress-div {
+	height: 50px;
+}
