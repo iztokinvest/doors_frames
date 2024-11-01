@@ -848,7 +848,9 @@ jQuery(document).ready(function ($) {
 			`Сигурни ли сте, че искате да замените цените на всички продукти? Това действие е необратимо.`,
 			function () {
 				var productIds;
+				let startTime = new Date().getTime();
 				var processed = 0;
+				let lastProcessTime = startTime;
 				var $progressDiv = $("#progress-div");
 				var $progressBar = $(".progress-bar");
 				var $progressBarText = $(".progress-bar-text");
@@ -892,8 +894,31 @@ jQuery(document).ready(function ($) {
 								processed++;
 								var percentComplete = Math.round((processed / productIds.length) * 100);
 								$progressBar.attr("aria-valuenow", percentComplete).css("width", percentComplete + "%");
-								$progressBarText.html(`${percentComplete}%<br>${response.data["product_title"]}`);
+								$progressBarText.html(
+									`<strong>${percentComplete}%</strong><br>${response.data["product_title"]}`
+								);
 								document.title = `${percentComplete}% ${window.location.hostname}`;
+
+								// Calculate time metrics
+								let currentTime = new Date().getTime();
+								let timeSpent = currentTime - startTime;
+								let averageTimePerItem = timeSpent / processed;
+								let remainingItems = productIds.length - processed;
+								let remainingTime = averageTimePerItem * remainingItems;
+
+								let seconds = Math.floor((remainingTime / 1000) % 60);
+								let minutes = Math.floor((remainingTime / (1000 * 60)) % 60);
+
+								if (processed > 1) {
+									$progressBarText.append(
+										`<br><i>Оставащо време: ${minutes}мин и ${seconds}сек</i>`
+									);
+								} else {
+									$progressBarText.append(`<br>Оставащо време: изчисляване...`);
+								}
+
+								lastProcessTime = currentTime;
+
 								updatePrices();
 							} else {
 								frame_notifier.alert(
