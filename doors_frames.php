@@ -155,6 +155,7 @@ function create_tables()
 		product_id int(11) NOT NULL,
 		product_price float NULL,
 		product_promo_price float NULL,
+    	variations json NULL,
 		PRIMARY KEY (id),
 		UNIQUE KEY (product_id)
 	) $charset_collate;";
@@ -166,6 +167,11 @@ function create_tables()
 		table_text varchar(500) NOT NULL,
 		PRIMARY KEY (id)
 	) $charset_collate;";
+
+	if ($wpdb->get_var("SHOW TABLES LIKE '$products_table'") == $products_table) {
+		$sql_alter = "ALTER TABLE $products_table ADD COLUMN variations json NULL AFTER product_promo_price;";
+		$wpdb->query($sql_alter);
+	}
 
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 	dbDelta($sql_frames);

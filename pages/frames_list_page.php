@@ -350,8 +350,8 @@ HTML;
 											}
 										}
 
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_regular_price . '</td>';
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $min_sale_price . '</td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal pointer" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $min_regular_price . '</td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal pointer" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $min_sale_price . '</td>';
 									} else {
 										if ($regular_price > 0 && $sale_price > 0) {
 											$salePercent = ((floatval($regular_price) - floatval($sale_price)) / floatval($regular_price)) * 100;
@@ -464,7 +464,6 @@ HTML;
 			<?php endif; ?>
 		</div>
 	</div>
-	<!-- Modal Structure -->
 	<div id="frameModal" class="modal" style="display:none;">
 		<div class="modal-dialog modal-xl">
 			<div class="modal-content">
@@ -478,6 +477,23 @@ HTML;
 				<div class=" modal-footer">
 					<button type="button" class="btn btn-secondary close" data-bs-dismiss="modal">Затвори</button>
 					<button type="button" id="save-modal-prices" class="btn btn-primary">Запази промените</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="variationsModal" class="modal" style="display:none;">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Вариации</h4>
+					<button type="button" id="close-variations" class=" btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div id="variations-modal-body" style="max-height: calc(100vh - 200px); overflow-y: auto;">
+					<!-- Dynamic content will be loaded here -->
+				</div>
+				<div class=" modal-footer">
+					<button type="button" class="btn btn-secondary closeVariations" data-bs-dismiss="modal">Затвори</button>
+					<button type="button" id="save-modal-variation-prices" class="btn btn-primary" style="display:none;">Запази промените</button>
 				</div>
 			</div>
 		</div>
@@ -917,6 +933,163 @@ HTML;
 	}
 }
 
+add_action('wp_ajax_fetch_variation_prices', 'fetch_variation_prices');
+function fetch_variation_prices()
+{
+	global $wpdb;
+
+	if (isset($_POST['product_id'])) {
+		$product_id = intval($_POST['product_id']);
+		$product = wc_get_product($product_id);
+		$product_title = get_the_title($product_id);
+		$available_variations = $product->get_available_variations();
+		$html_product_title = "<h5 id='product-title' class='text-center' <mark>$product_title</mark></h5><input type='hidden' id='modal-product-id' value='$product_id'>";
+
+		$variations_with_prices = array();
+		foreach ($available_variations as $variation) {
+			$variation_product = wc_get_product($variation['variation_id']);
+			$regular_price = floatval($variation_product->get_regular_price());
+			$sale_price = floatval($variation_product->get_sale_price());
+
+			$sort_price = $sale_price ? $sale_price : $regular_price;
+
+			$variations_with_prices[] = array(
+				'variation_id' => $variation['variation_id'],
+				'regular_price' => $regular_price,
+				'sale_price' => $sale_price,
+				'sort_price' => $sort_price,
+				'variation_attributes' => $variation['attributes'],
+			);
+		}
+
+		usort($variations_with_prices, function ($a, $b) {
+			if ($a['sort_price'] == $b['sort_price']) {
+				return 0;
+			}
+			return ($a['sort_price'] < $b['sort_price']) ? -1 : 1;
+		});
+
+		if ($variations_with_prices) {
+
+			$variations_table = $wpdb->prefix . 'doors_frames_products';
+			$saved_prices = $wpdb->get_var($wpdb->prepare("SELECT variations FROM $variations_table WHERE product_id = %d LIMIT 1", $product_id));
+
+			$saved_variations = json_decode($saved_prices, true);
+
+			$structuredVariations = array();
+			foreach ($saved_variations as $saved_variation) {
+				$structuredVariations[$saved_variation['variation_id']] = array(
+					'sale_price' => $saved_variation['sale_price'],
+					'regular_price' => $saved_variation['regular_price']
+				);
+			}
+
+			$html = <<<HTML
+<div class="m-1">
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Атрибути</th>
+				<th>Цена</th>
+				<th>Промоция</th>
+			</tr>
+		</thead>
+		<tbody>
+HTML;
+
+			foreach ($variations_with_prices as $variation) {
+				$attributes = array_map(function ($value) {
+					return "<span class='badge bg-secondary'>" . htmlspecialchars($value) . "</span>";
+				}, $variation['variation_attributes']);
+				$attributes = implode(' ', $attributes);
+
+				if (count($structuredVariations) > 0) {
+					$saved_variation_price = '<div class="badge-container" bis_skin_checked="1"><span id="price-badge-60" class="badge bg-warning text-dark">' . $structuredVariations[$variation['variation_id']]['regular_price'] . '</span></div>';
+					$saved_variation_promo = '<div class="badge-container" bis_skin_checked="1"><span id="price-badge-60" class="badge bg-warning text-dark">' . $structuredVariations[$variation['variation_id']]['sale_price'] . '</span></div>';
+				} else {
+					$saved_variation_price = '';
+					$saved_variation_promo = '';
+				}
+
+				$html .= <<<HTML
+	<tr class="variation-row" data-variation-id="$variation[variation_id]">
+		<td>$variation[variation_id]</td>
+		<td>$attributes</td>
+		<td>$saved_variation_price<input type="number" class="form-control price-input variation-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="regular" value="$variation[regular_price]" readonly></td>
+		<td>$saved_variation_promo<input type="number" class="form-control price-input variation-promo-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="sale" value="$variation[sale_price]" readonly></td>
+	</tr>
+HTML;
+			}
+
+			$html .= <<<HTML
+		</tbody>
+	</table>
+</div>
+HTML;
+
+			wp_send_json_success($html_product_title . $html);
+		} else {
+			wp_send_json_error();
+		}
+	}
+}
+
+add_action('wp_ajax_update_variation_prices', 'update_variation_prices');
+function update_variation_prices()
+{
+	global $wpdb;
+
+	if (isset($_POST['variations'])) {
+		$product_id = $_POST['product_id'];
+
+		foreach ($_POST['variations'] as $variation) {
+			$variation_id = $variation['variation_id'];
+			$variation_data = new WC_Product_Variation($variation_id);
+			$regular_price = $variation['variation_price'];
+			$sale_price = $variation['variation_promo_price'];
+
+			if ($sale_price == 0) {
+				$sale_price = "";
+			}
+
+			if ($_POST['edit_type'] == 'now') {
+				$variation_data->set_regular_price($regular_price);
+				$variation_data->set_sale_price($sale_price);
+
+				$variation_data->save();
+			} else {
+				$variations_array[] = [
+					'variation_id' => $variation_id,
+					'regular_price' => $regular_price,
+					'sale_price' => $sale_price,
+				];
+			}
+		}
+
+		if (!empty($variations_array)) {
+			$products_table_name = $wpdb->prefix . 'doors_frames_products';
+
+			$variations_json = json_encode($variations_array);
+
+			$sql = $wpdb->prepare(
+				"INSERT INTO $products_table_name (product_id, variations) 
+						VALUES (%d, %s) 
+						ON DUPLICATE KEY UPDATE 
+						variations = VALUES(variations)",
+				$product_id,
+				$variations_json
+			);
+
+			$wpdb->query($sql);
+		}
+
+		wp_send_json_success();
+	} else {
+		wp_send_json_error();
+	}
+}
+
 add_action('wp_ajax_order_by_price', 'order_by_price');
 function order_by_price()
 {
@@ -1237,7 +1410,7 @@ function activate_single_price()
 					$product->set_sale_price($promo_price);
 				}
 			}
-			
+
 			$product->save();
 		} else {
 			error_log("Product with ID $product_id not found in WooCommerce.");

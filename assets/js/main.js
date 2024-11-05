@@ -513,7 +513,7 @@ jQuery(document).ready(function ($) {
 		});
 	});
 
-	// Handle modal open button click
+	// Frames Modal
 	$(".open-modal").on("click", function () {
 		const productId = $(this).data("id");
 
@@ -537,9 +537,52 @@ jQuery(document).ready(function ($) {
 		});
 	});
 
-	// Handle modal close
+	// Close Frames Modal
 	$(".close, .btn-close").on("click", function () {
 		$("#frameModal").hide();
+	});
+
+	// Variations Modal
+	$(".open-variations-modal").on("click", function () {
+		const productId = $(this).data("id");
+
+		// Fetch data from the server
+		$.ajax({
+			url: ajaxurl,
+			type: "POST",
+			data: {
+				action: "fetch_variation_prices",
+				product_id: productId,
+			},
+			success: function (response) {
+				if (response.success) {
+					$("#variations-modal-body").html(response.data);
+					$("#variationsModal").show();
+
+					if (sessionStorage.getItem("editPricesType") !== "") {
+						$(".price-input").removeAttr("readonly");
+						if (sessionStorage.getItem("editPricesType") === "now") {
+							$("#save-modal-variation-prices").text("⚡ Промени текущите цени");
+							$("#save-modal-variation-prices").attr("data-edit-type", 'now');
+						} else {
+							$("#save-modal-variation-prices").text("💾 Запази цените за по-късно");
+							$("#save-modal-variation-prices").attr("data-edit-type", "later");
+						}
+						$("#save-modal-variation-prices").show();
+					} else {
+						$(".price-input").attr("readonly", "readonly");
+						$("#save-modal-variation-prices").hide();
+					}
+				} else {
+					frame_notifier.warning("Няма вариации за показване.");
+				}
+			},
+		});
+	});
+
+	// Close Variations Modal
+	$(".closeVariations, #close-variations").on("click", function () {
+		$("#variationsModal").hide();
 	});
 
 	$(document).on("click", "#add-new-frame", function () {
@@ -742,6 +785,56 @@ jQuery(document).ready(function ($) {
 		});
 	});
 
+	$("#save-modal-variation-prices").on("click", function () {
+		let requestsData = [];
+		let error = false;
+		const editType = $(this).attr("data-edit-type");
+		const lastProductId = $("#modal-product-id").val();
+
+		$(".variation-row").each(function () {
+			const data = {
+				variation_id: $(this).data("variation-id"),
+				variation_price: $(this).find(".variation-price").val(),
+				variation_promo_price: $(this).find(".variation-promo-price").val(),
+			};
+
+			if (data.variation_price === "") {
+				frame_notifier.alert("Трябва да въведете цена.");
+				error = true;
+			}
+
+			if (error) {
+				return false;
+			}
+
+			requestsData.push(data);
+		});
+
+		$.ajax({
+			url: ajaxurl,
+			type: "POST",
+			data: {
+				action: "update_variation_prices",
+				edit_type: editType,
+				product_id: lastProductId,
+				variations: requestsData,
+			},
+			success: function (response) {
+				if (response.success) {
+					frame_notifier.success("Промените са запазени.");
+					sessionStorage.setItem("last_variation_product_id", lastProductId);
+					location.reload();
+				} else {
+					frame_notifier.alert("Промените не са запазени.");
+				}
+				$("#variationsModal").hide();
+			},
+			error: function () {
+				frame_notifier.alert("Промените не са запазени.");
+			},
+		});
+	});
+
 	$("#apply-mass-insert").on("click", function () {
 		const frameIds = $("#frame-select").val();
 		const operator_price = $("#operator-price-select").val();
@@ -910,9 +1003,7 @@ jQuery(document).ready(function ($) {
 								let minutes = Math.floor((remainingTime / (1000 * 60)) % 60);
 
 								if (processed > 1) {
-									$progressBarText.append(
-										`<br><i>Оставащо време: ${minutes}мин и ${seconds}сек</i>`
-									);
+									$progressBarText.append(`<br><i>Оставащо време: ${minutes}мин и ${seconds}сек</i>`);
 								} else {
 									$progressBarText.append(`<br>Оставащо време: изчисляване...`);
 								}
