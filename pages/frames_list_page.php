@@ -341,6 +341,8 @@ HTML;
 										$available_variations = $product->get_available_variations();
 										$min_regular_price = null;
 										$min_sale_price = null;
+										$min_regular_saved_price = null;
+										$min_sale_saved_price = null;
 
 										foreach ($available_variations as $variation) {
 											$saved_regular_price = '';
@@ -349,30 +351,35 @@ HTML;
 
 											if ($saved_prices) {
 												$variations_array = json_decode($saved_prices->variations, true);
-
-												if (is_array($variations_array)) {
-													foreach ($variations_array as $var) {
-														if ($var['variation_id'] == $variation['variation_id']) {
-															$regular_variation_price = $var['regular_price'];
-															$sale_variation_price = $var['sale_price'];
-															break;
-														} else {
-															$regular_variation_price = null;
-															$sale_variation_price = null;
-														}
-													}
-												}
 											}
 
 											$regular_price = $variation_product->get_regular_price();
 											$sale_price = $variation_product->get_sale_price();
 
 											if ($min_regular_price === null || $regular_price < $min_regular_price) {
-												$min_regular_saved_price = $regular_variation_price ?? null;
+												if ($saved_prices && is_array($variations_array)) {
+													foreach ($variations_array as $var) {
+														if ($var['variation_id'] == $variation['variation_id']) {
+															$min_regular_saved_price = $var['regular_price'];
+															break;
+														} else {
+															$min_regular_saved_price = null;
+														}
+													}
+												}
 												$min_regular_price = $regular_price;
 											}
 											if ($sale_price && ($min_sale_price === null || $sale_price < $min_sale_price)) {
-												$min_sale_saved_price = $sale_variation_price ?? null;
+												if ($saved_prices && is_array($variations_array)) {
+													foreach ($variations_array as $var) {
+														if ($var['variation_id'] == $variation['variation_id']) {
+															$min_sale_saved_price = $var['sale_price'];
+															break;
+														} else {
+															$min_sale_saved_price = null;
+														}
+													}
+												}
 												$min_sale_price = $sale_price;
 											}
 
