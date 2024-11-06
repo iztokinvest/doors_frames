@@ -974,7 +974,7 @@ function fetch_variation_prices()
 		$product = wc_get_product($product_id);
 		$product_title = get_the_title($product_id);
 		$available_variations = $product->get_available_variations();
-		$html_product_title = "<h5 id='product-title' class='text-center' <mark>$product_title</mark></h5><input type='hidden' id='modal-product-id' value='$product_id'>";
+		$html_product_title = "<h5 id='product-title' class='text-center'><mark>$product_title</mark></h5><input type='hidden' id='modal-product-id' value='$product_id'>";
 
 		$variations_with_prices = array();
 		foreach ($available_variations as $variation) {
