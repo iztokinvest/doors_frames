@@ -3,7 +3,7 @@
 Plugin Name: Doors Frames
 Plugin URI: https://github.com/iztokinvest/doors_frames
 Description: Цени на каси.
-Version: 1.17.3
+Version: 1.18.0
 Author: Martin Mladenov
 GitHub Plugin URI: https://github.com/iztokinvest/doors_frames
 GitHub Branch: main
@@ -111,10 +111,40 @@ function pluginData()
 	return $plugin_data;
 }
 
+function addColumnIfNotExists($table, $columnName, $columnType, $after = null, $nullable = true)
+{
+	global $wpdb;
+	$table = $wpdb->prefix . $table;
+
+	$sql_check = $wpdb->prepare(
+		"SELECT * FROM information_schema.COLUMNS 
+         WHERE TABLE_SCHEMA = DATABASE() 
+         AND TABLE_NAME = %s 
+         AND COLUMN_NAME = %s",
+		$table,
+		$columnName
+	);
+
+	if ($wpdb->get_var($sql_check) == null) {
+
+		$add_after = $after ? "AFTER $after" : "FIRST";
+		$is_nullable = $nullable ? "NULL" : "NOT NULL";
+
+		$sql_alter = "ALTER TABLE `$table` ADD COLUMN $columnName $columnType $is_nullable $add_after";
+
+		$wpdb->query($sql_alter);
+		echo "Added column $columnName to table $table.\n";
+	} else {
+		echo "Column $columnName already exists in table $table.\n";
+	}
+}
+
 function force_check_for_frame_plugin_updates()
 {
 	if (isset($_GET['update_frames']) && $_GET['update_frames'] === '1') {
 		delete_site_transient('update_plugins');
+
+		addColumnIfNotExists('doors_frames_products', 'variations', 'json', 'product_promo_price', true);
 
 		wp_update_plugins();
 
@@ -167,11 +197,6 @@ function create_tables()
 		table_text varchar(500) NOT NULL,
 		PRIMARY KEY (id)
 	) $charset_collate;";
-
-	if ($wpdb->get_var("SHOW TABLES LIKE '$products_table'") == $products_table) {
-		$sql_alter = "ALTER TABLE $products_table ADD COLUMN variations json NULL AFTER product_promo_price;";
-		$wpdb->query($sql_alter);
-	}
 
 	require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 	dbDelta($sql_frames);

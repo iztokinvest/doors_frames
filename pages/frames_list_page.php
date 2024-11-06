@@ -331,27 +331,57 @@ HTML;
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $product_image . '</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a class="product-title" target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
 
+									$products_table_name = $wpdb->prefix . 'doors_frames_products';
+									$saved_prices = $wpdb->get_row($wpdb->prepare(
+										"SELECT * FROM $products_table_name WHERE product_id = %d",
+										get_the_ID()
+									));
+
 									if ($product->is_type('variable')) {
 										$available_variations = $product->get_available_variations();
 										$min_regular_price = null;
 										$min_sale_price = null;
 
 										foreach ($available_variations as $variation) {
+											$saved_regular_price = '';
+											$saved_sale_price = '';
 											$variation_product = wc_get_product($variation['variation_id']);
+
+											if ($saved_prices) {
+												$variations_array = json_decode($saved_prices->variations, true);
+
+												if (is_array($variations_array)) {
+													foreach ($variations_array as $var) {
+														if ($var['variation_id'] == $variation['variation_id']) {
+															$regular_variation_price = $var['regular_price'];
+															$sale_variation_price = $var['sale_price'];
+															break;
+														} else {
+															$regular_variation_price = null;
+															$sale_variation_price = null;
+														}
+													}
+												}
+											}
 
 											$regular_price = $variation_product->get_regular_price();
 											$sale_price = $variation_product->get_sale_price();
 
 											if ($min_regular_price === null || $regular_price < $min_regular_price) {
+												$min_regular_saved_price = $regular_variation_price ?? null;
 												$min_regular_price = $regular_price;
 											}
 											if ($sale_price && ($min_sale_price === null || $sale_price < $min_sale_price)) {
+												$min_sale_saved_price = $sale_variation_price ?? null;
 												$min_sale_price = $sale_price;
 											}
+
+											$saved_regular_price = $min_regular_saved_price && $min_regular_saved_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$min_regular_saved_price</span></div>" : '';
+											$saved_sale_price = $min_sale_saved_price && $min_sale_saved_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$min_sale_saved_price</span></div>" : '';
 										}
 
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal pointer" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $min_regular_price . '</td>';
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal pointer" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $min_sale_price . '</td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal pointer" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $saved_regular_price . $min_regular_price . '</td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal pointer" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $saved_sale_price . $min_sale_price . '</td>';
 									} else {
 										if ($regular_price > 0 && $sale_price > 0) {
 											$salePercent = ((floatval($regular_price) - floatval($sale_price)) / floatval($regular_price)) * 100;
@@ -359,12 +389,6 @@ HTML;
 										} else {
 											$salePercent = '';
 										}
-
-										$products_table_name = $wpdb->prefix . 'doors_frames_products';
-										$saved_prices = $wpdb->get_row($wpdb->prepare(
-											"SELECT product_price, product_promo_price FROM $products_table_name WHERE product_id = %d",
-											get_the_ID()
-										));
 
 										$saved_regular_price = $saved_prices && $saved_prices->product_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_price</span></div>" : '';
 										$saved_sale_price = $saved_prices && $saved_prices->product_promo_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_promo_price</span></div>" : '';
@@ -986,7 +1010,7 @@ function fetch_variation_prices()
 
 			$html = <<<HTML
 <div class="m-1">
-	<table class="table table-striped">
+	<table class="table table-secondary table-striped">
 		<thead>
 			<tr>
 				<th>ID</th>
@@ -1000,7 +1024,7 @@ HTML;
 
 			foreach ($variations_with_prices as $variation) {
 				$attributes = array_map(function ($value) {
-					return "<span class='badge bg-secondary'>" . htmlspecialchars($value) . "</span>";
+					return "<span class='badge bg-white text-dark'>" . htmlspecialchars($value) . "</span>";
 				}, $variation['variation_attributes']);
 				$attributes = implode(' ', $attributes);
 
@@ -1387,31 +1411,44 @@ function activate_single_price()
 
 	$product_id = intval($_POST['product_id']);
 
-	$saved_product = $wpdb->get_row($wpdb->prepare("SELECT product_id, product_price, product_promo_price FROM $products_table_name WHERE product_id = %d", $product_id));
+	$saved_product = $wpdb->get_row($wpdb->prepare("SELECT * FROM $products_table_name WHERE product_id = %d", $product_id));
 
 	if ($saved_product) {
 		$regular_price = !is_null($saved_product->product_price) ? (float)$saved_product->product_price : null;
 		$promo_price = !is_null($saved_product->product_promo_price) ? (float)$saved_product->product_promo_price : null;
+		$variations = $saved_product->variations;
 		$product = wc_get_product($product_id);
 
 		if ($product) {
-			if (!is_null($regular_price)) {
-				if ($regular_price == 0) {
-					$product->set_regular_price('');
-				} else {
-					$product->set_regular_price($regular_price);
-				}
-			}
+			if (!is_null($variations)) {
+				$variations_data = json_decode($variations, true);
 
-			if (!is_null($promo_price)) {
-				if ($promo_price == 0) {
-					$product->set_sale_price('');
-				} else {
-					$product->set_sale_price($promo_price);
+				foreach ($variations_data as $variation) {
+					$variation_id = $variation['variation_id'];
+					$variation_data = new WC_Product_Variation($variation_id);
+					$variation_data->set_regular_price($variation['regular_price']);
+					$variation_data->set_sale_price($variation['sale_price']);
+					$variation_data->save();
 				}
-			}
+			} else {
+				if (!is_null($regular_price)) {
+					if ($regular_price == 0) {
+						$product->set_regular_price('');
+					} else {
+						$product->set_regular_price($regular_price);
+					}
+				}
 
-			$product->save();
+				if (!is_null($promo_price)) {
+					if ($promo_price == 0) {
+						$product->set_sale_price('');
+					} else {
+						$product->set_sale_price($promo_price);
+					}
+				}
+
+				$product->save();
+			}
 		} else {
 			error_log("Product with ID $product_id not found in WooCommerce.");
 			wp_send_json_error(array('message' => 'Product not found in WooCommerce.'));

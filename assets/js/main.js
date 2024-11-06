@@ -559,7 +559,7 @@ jQuery(document).ready(function ($) {
 					$("#variations-modal-body").html(response.data);
 					$("#variationsModal").show();
 
-					if (sessionStorage.getItem("editPricesType") !== "") {
+					if (sessionStorage.getItem("editPricesType") !== null && sessionStorage.getItem("editPricesType") !== "") {
 						$(".price-input").removeAttr("readonly");
 						if (sessionStorage.getItem("editPricesType") === "now") {
 							$("#save-modal-variation-prices").text("⚡ Промени текущите цени");
