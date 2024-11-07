@@ -576,6 +576,8 @@ jQuery(document).ready(function ($) {
 						$(".price-input").attr("readonly", "readonly");
 						$("#save-modal-variation-prices").hide();
 					}
+
+					massUpdateVariations();
 				} else {
 					frame_notifier.warning("Няма вариации за показване.");
 				}
@@ -1332,3 +1334,73 @@ function getLastCheckedProducts() {
 	}
 }
 getLastCheckedProducts();
+
+function massUpdateVariations() {
+	const updateButton = document.getElementById("variation-mass-prices");
+
+	if (updateButton) {
+		updateButton.addEventListener("click", function () {
+			const priceOperator = document.getElementById("variation-operator-price-select");
+			const priceinput = document.getElementById("variation-price-input");
+			const promoOperator = document.getElementById("variation-operator-promotion-select");
+			const promoinput = document.getElementById("variation-promotion-input");
+			const roundPrices = document.getElementById("variation-mass-round-prices");
+			const toPromo = document.getElementById("variation-prices-to-promo");
+			const savedPriceInputs = document.getElementsByClassName("variation-price");
+			const savedPromoInputs = document.getElementsByClassName("variation-promo-price");
+
+			if (priceinput.value != "") {
+				for (const price of savedPriceInputs) {
+					price.value = calculateVariation(
+						priceOperator.value,
+						toPromo.value == "promo-to-price" ? price.getAttribute("data-sale-price") : price.getAttribute("data-regular-price"),
+						priceinput.value,
+						roundPrices.checked
+					);
+				}
+			}
+
+			if (promoinput.value != "") {
+				for (const promo of savedPromoInputs) {
+					promo.value = calculateVariation(
+						promoOperator.value,
+						toPromo.value == "price-to-promo" ? promo.getAttribute("data-regular-price") : promo.getAttribute("data-sale-price"),
+						promoinput.value,
+						roundPrices.checked
+					);
+				}
+			}
+		});
+	}
+
+	function calculateVariation(operator, oldSumValue, newSumValue, round) {
+		let oldSum = parseFloat(oldSumValue);
+		let newSum = parseFloat(newSumValue);
+
+		switch (operator) {
+			case "+":
+				result = oldSum + newSum;
+				break;
+			case "-":
+				result = oldSum - newSum;
+				break;
+			case "+%":
+				result = (oldSum * (100 + newSum)) / 100;
+				break;
+			case "-%":
+				result = (oldSum * (100 - newSum)) / 100;
+				break;
+			case "=":
+				result = newSum;
+				break;
+			default:
+				break;
+		}
+
+		if (round) {
+			result = result % 1 >= 0.5 ? Math.ceil(result) : Math.floor(result);
+		}
+
+		return result;
+	}
+}

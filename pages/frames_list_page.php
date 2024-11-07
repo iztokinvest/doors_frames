@@ -1014,8 +1014,41 @@ function fetch_variation_prices()
 					'regular_price' => $saved_variation['regular_price']
 				);
 			}
+			
+$html = <<<HTML
+	<form id="mass-insert-form" class="mt-2">
+		<span class="badge bg-info">
+			<select id="variation-operator-price-select" class="operator-price-select" name="operator_price">
+				<option value="=">=</option>
+				<option value="+">+</option>
+				<option value="-">-</option>
+				<option value="+%">+%</option>
+				<option value="-%">-%</option>
+			</select>
+			<input type="number" id="variation-price-input" class="price-inputs" placeholder="Цена">
+		</span>
+		<span class="badge bg-info">
+			<select id="variation-operator-promotion-select" class="operator-promotion-select" name="operator_promotion">
+				<option value="=">=</option>
+				<option value="+">+</option>
+				<option value="-">-</option>
+				<option value="+%">+%</option>
+				<option value="-%">-%</option>
+			</select>
+			<input type="number" id="variation-promotion-input" class="price-inputs" placeholder="Промо" required="">
+		</span>
+		<span class="badge bg-info text-dark checkbox-badge">
+			<input type="checkbox" id="variation-mass-round-prices" checked="">Закръгли
+		</span>
+		<span class="badge bg-info text-dark checkbox-badge" id="mass-prices-to-promo-container" style="display: inline-block;">
+			<select id="variation-prices-to-promo"><option value=""></option><option value="promo-to-price" title="Базовата цена се изчислява според текущата промоционална цена на продукта.">Промо към цена</option><option value="price-to-promo" title="Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.">Цена към промо</option></select>
+		</span>
 
-			$html = <<<HTML
+		<button type="button" id="variation-mass-prices" class="btn btn-success">Промени</button>
+	</form>
+HTML;
+
+			$html .= <<<HTML
 <div class="m-1">
 	<table class="table table-secondary table-striped">
 		<thead>
@@ -1047,8 +1080,8 @@ HTML;
 	<tr class="variation-row" data-variation-id="$variation[variation_id]">
 		<td>$variation[variation_id]</td>
 		<td>$attributes</td>
-		<td>$saved_variation_price<input type="number" class="form-control price-input variation-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="regular" value="$variation[regular_price]" readonly></td>
-		<td>$saved_variation_promo<input type="number" class="form-control price-input variation-promo-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="sale" value="$variation[sale_price]" readonly></td>
+		<td>$saved_variation_price<input type="number" class="form-control price-input variation-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="regular" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" value="$variation[regular_price]" readonly></td>
+		<td>$saved_variation_promo<input type="number" class="form-control price-input variation-promo-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="sale" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" value="$variation[sale_price]" readonly></td>
 	</tr>
 HTML;
 			}
