@@ -559,11 +559,14 @@ jQuery(document).ready(function ($) {
 					$("#variations-modal-body").html(response.data);
 					$("#variationsModal").show();
 
-					if (sessionStorage.getItem("editPricesType") !== null && sessionStorage.getItem("editPricesType") !== "") {
+					if (
+						sessionStorage.getItem("editPricesType") !== null &&
+						sessionStorage.getItem("editPricesType") !== ""
+					) {
 						$(".price-input").removeAttr("readonly");
 						if (sessionStorage.getItem("editPricesType") === "now") {
 							$("#save-modal-variation-prices").text("⚡ Промени текущите цени");
-							$("#save-modal-variation-prices").attr("data-edit-type", 'now');
+							$("#save-modal-variation-prices").attr("data-edit-type", "now");
 						} else {
 							$("#save-modal-variation-prices").text("💾 Запази цените за по-късно");
 							$("#save-modal-variation-prices").attr("data-edit-type", "later");
@@ -1064,13 +1067,52 @@ jQuery(document).ready(function ($) {
 function changeFramesButtonColor() {
 	const lastProductId = sessionStorage.getItem("last_product_id");
 	const framesButton = document.querySelector(`.open-modal[data-id="${lastProductId}"]`);
+	const allFramesButtons = document.querySelectorAll(".open-modal");
 
 	if (framesButton) {
 		framesButton.classList.remove("btn-primary");
 		framesButton.classList.add("btn-success");
 	}
+
+	allFramesButtons.forEach((element) => {
+		element.addEventListener("click", function () {
+			allFramesButtons.forEach((btn) => {
+				btn.classList.remove("btn-warning");
+			});
+
+			this.classList.add("btn-warning");
+		});
+	});
 }
 changeFramesButtonColor();
+
+function changeVariationsButtonColor() {
+	const lastProductId = sessionStorage.getItem("last_variation_product_id");
+	const variationsButton = document.querySelectorAll(`.open-variations-modal[data-id="${lastProductId}"]`);
+	const allVariationsButtons = document.querySelectorAll(".open-variations-modal");
+
+	if (variationsButton) {
+		variationsButton.forEach((element) => {
+			element.classList.add("bg-success", "text-white");
+		});
+	}
+
+	allVariationsButtons.forEach((element) => {
+		element.addEventListener("click", function () {
+			allVariationsButtons.forEach((btn) => {
+				btn.classList.remove("bg-warning");
+			});
+
+			const tr = this.closest("tr");
+			const twinButtons = tr.querySelectorAll(".open-variations-modal");
+
+			twinButtons.forEach((btn) => {
+				btn.classList.add("bg-warning");
+			});
+		});
+	});
+}
+changeVariationsButtonColor();
 
 function searchProducts() {
 	const searchInput = document.getElementById("search-input");
