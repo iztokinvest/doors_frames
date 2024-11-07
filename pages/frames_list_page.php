@@ -976,29 +976,29 @@ function fetch_variation_prices()
 		$available_variations = $product->get_available_variations();
 		$html_product_title = "<h5 id='product-title' class='text-center'><mark>$product_title</mark></h5><input type='hidden' id='modal-product-id' value='$product_id'>";
 
+
+
+		usort($available_variations, function ($a, $b) {
+			return $a['menu_order'] - $b['menu_order'];
+		});
+
 		$variations_with_prices = array();
+
 		foreach ($available_variations as $variation) {
-			$variation_product = wc_get_product($variation['variation_id']);
+			$variation_id = $variation['variation_id'];
+			$variation_product = wc_get_product($variation_id);
 			$regular_price = floatval($variation_product->get_regular_price());
 			$sale_price = floatval($variation_product->get_sale_price());
 
-			$sort_price = $sale_price ? $sale_price : $regular_price;
-
-			$variations_with_prices[] = array(
-				'variation_id' => $variation['variation_id'],
+			$filtered_variation = array(
+				'variation_id' => $variation_id,
 				'regular_price' => $regular_price,
 				'sale_price' => $sale_price,
-				'sort_price' => $sort_price,
-				'variation_attributes' => $variation['attributes'],
+				'variation_attributes' => $variation['attributes']
 			);
-		}
 
-		usort($variations_with_prices, function ($a, $b) {
-			if ($a['sort_price'] == $b['sort_price']) {
-				return 0;
-			}
-			return ($a['sort_price'] < $b['sort_price']) ? -1 : 1;
-		});
+			$variations_with_prices[] = $filtered_variation;
+		}
 
 		if ($variations_with_prices) {
 
