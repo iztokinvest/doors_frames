@@ -530,11 +530,14 @@ jQuery(document).ready(function ($) {
 					$("#modal-body").html(response.data);
 					$("#frameModal").show();
 					initializeDatepickers();
+					getCopiedFrames();
 				} else {
 					frame_notifier.warning("Няма добавени цени на каси за този продукт.");
 				}
 			},
 		});
+		
+		
 	});
 
 	// Close Frames Modal
@@ -597,6 +600,50 @@ jQuery(document).ready(function ($) {
 		addNewFrame(data);
 		initializeDatepickers();
 	});
+
+	$(document).on("click", "#copy-frames", function () {
+		const pasteButton = document.getElementById("paste-frames");
+		
+		sessionStorage.setItem("copyFramesId", $(this).data("id"));
+		sessionStorage.setItem("copyFramesName", $(this).data("name"));
+		pasteButton.style.display = "none";
+		frame_notifier.success(`Касите от ${$(this).data("name")} са копирани. Можете да ги поставите в друг продукт.`);
+	});
+
+	$(document).on("click", "#paste-frames", function () {
+		const copyId = sessionStorage.getItem("copyFramesId");
+		const pasteId = $(this).data("id");
+
+		$.ajax({
+			url: ajaxurl,
+			method: "POST",
+			data: {
+				action: "paste_frames",
+				copy_id: copyId,
+				paste_id: pasteId,
+			},
+			success: function (response) {
+				if (response.success) {
+					sessionStorage.setItem("last_product_id", pasteId);
+					location.reload();
+				}
+			},
+			error: function () {
+				frame_notifier.alert(`Грешка.`);
+			},
+		});
+	});
+
+	function getCopiedFrames() {
+		const id = sessionStorage.getItem("copyFramesId");
+		const name = sessionStorage.getItem("copyFramesName");
+		const pasteButton = document.getElementById("paste-frames");
+
+		if (id && name) {
+			pasteButton.innerText = `Постави касите от ${name}`;
+			pasteButton.style.display = "inline-block";
+		}
+	}
 
 	$(document).on("click", ".frame-duplicate", function () {
 		var $row = $(this).closest("tr");
@@ -1404,3 +1451,4 @@ function massUpdateVariations() {
 		return result;
 	}
 }
+

@@ -841,7 +841,11 @@ function fetch_frame_prices()
 				<tbody></tbody>
 			</tbody>
 		</table>
-		<div><button class="btn btn-success mb-3 mx-3" id="add-new-frame" data-id="$product_id">Добави нова цена на каса</button></div>
+		<div>
+			<button class="btn btn-success mb-3 mx-3" id="add-new-frame" data-id="$product_id">Добави нова цена на каса</button>
+			<button class="btn btn-primary mb-3 mx-3" id="copy-frames" data-id="$product_id" data-name="$product_title">Копирай касите</button>
+			<button class="btn btn-primary mb-3 mx-3" id="paste-frames" data-id="$product_id" style='display: none;'></button>
+		</div>
 	</div>
 HTML;
 
@@ -1014,8 +1018,8 @@ function fetch_variation_prices()
 					'regular_price' => $saved_variation['regular_price']
 				);
 			}
-			
-$html = <<<HTML
+
+			$html = <<<HTML
 	<form id="mass-insert-form" class="mt-2">
 		<span class="badge bg-info">
 			<select id="variation-operator-price-select" class="operator-price-select" name="operator_price">
@@ -1165,6 +1169,40 @@ function order_by_price()
 		} else {
 			$_SESSION['order_by_price'] = 'ASC';
 		}
+		wp_send_json_success();
+	}
+}
+
+add_action('wp_ajax_paste_frames', 'paste_frames');
+function paste_frames()
+{
+	global $wpdb;
+
+	$frames_table_name = $wpdb->prefix . 'doors_frames';
+
+	$existing_records = $wpdb->get_results(
+		$wpdb->prepare("SELECT * FROM $frames_table_name WHERE product_id = %d", $_POST['copy_id'])
+	);
+
+	if ($existing_records) {
+		foreach ($existing_records as $record) {
+			// Prepare data for insertion, changing only the product_id
+			$data = array(
+				'product_id' => $_POST['paste_id'],
+				'frame_id' => $record->frame_id,
+				'frame_price' => $record->frame_price,
+				'frame_promo_price' => $record->frame_promo_price,
+				'frame_description' => $record->frame_description,
+				'frame_image' => $record->frame_image,
+				'active' => $record->active
+			);
+
+			// Insert the new record
+			$wpdb->insert($frames_table_name, $data);
+		}
+	}
+
+	if (!$wpdb->last_error) {
 		wp_send_json_success();
 	}
 }
