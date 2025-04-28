@@ -846,8 +846,20 @@ jQuery(document).ready(function ($) {
 		$(".variation-row").each(function () {
 			const data = {
 				variation_id: $(this).data("variation-id"),
+				variation_price_input: $("#variation-price-input").val(),
+				variation_promo_input: $("#variation-promotion-input").val(),
 				variation_price: $(this).find(".variation-price").val(),
 				variation_promo_price: $(this).find(".variation-promo-price").val(),
+				variation_price_badge: $(this)
+					.find(".variation-price")
+					.closest("td")
+					.find(".badge-container .badge")
+					.text(),
+				variation_promo_badge: $(this)
+					.find(".variation-promo-price")
+					.closest("td")
+					.find(".badge-container .badge")
+					.text(),
 			};
 
 			if (data.variation_price === "") {

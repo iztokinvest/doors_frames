@@ -1113,20 +1113,32 @@ function update_variation_prices()
 
 		foreach ($_POST['variations'] as $variation) {
 			$variation_id = $variation['variation_id'];
+			$variation_price_input = $variation['variation_price_input'];
+			$variation_promo_input = $variation['variation_promo_input'];
 			$variation_data = new WC_Product_Variation($variation_id);
 			$regular_price = $variation['variation_price'];
 			$sale_price = $variation['variation_promo_price'];
-
-			if ($sale_price == 0) {
-				$sale_price = "";
-			}
+			$variation_price_badge = $variation['variation_price_badge'];
+			$variation_promo_badge = $variation['variation_promo_badge'];
 
 			if ($_POST['edit_type'] == 'now') {
+				if ($sale_price == 0) {
+					$sale_price = "";
+				}
+
 				$variation_data->set_regular_price($regular_price);
 				$variation_data->set_sale_price($sale_price);
 
 				$variation_data->save();
 			} else {
+				if ($variation_price_input == '' && $variation_price_badge != '') {
+					$regular_price = $variation_price_badge;
+				}
+
+				if ($variation_promo_input == '' && $variation_promo_badge != '') {
+					$sale_price = $variation_promo_badge;
+				}
+
 				$variations_array[] = [
 					'variation_id' => $variation_id,
 					'regular_price' => $regular_price,
