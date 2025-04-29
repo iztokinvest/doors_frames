@@ -384,8 +384,10 @@ HTML;
 											}
 
 											$saved_regular_price = $min_regular_saved_price && $min_regular_saved_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$min_regular_saved_price</span></div>" : '';
-											$saved_sale_price = $min_sale_saved_price && $min_sale_saved_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$min_sale_saved_price</span></div>" : '';
+											$saved_sale_price = $min_sale_saved_price != '' ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$min_sale_saved_price</span></div>" : '';
 										}
+
+										
 
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal" role="button" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $saved_regular_price . $min_regular_price . '</td>';
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal" role="button" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $saved_sale_price . $min_sale_price . '</td>';
