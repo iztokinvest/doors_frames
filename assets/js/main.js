@@ -1412,9 +1412,12 @@ function massUpdateVariations() {
 				for (const price of savedPriceInputs) {
 					price.value = calculateVariation(
 						priceOperator.value,
-						toPromo.value == "promo-to-price" ? price.getAttribute("data-sale-price") : price.getAttribute("data-regular-price"),
+						toPromo.value == "promo-to-price"
+							? price.getAttribute("data-sale-price")
+							: price.getAttribute("data-regular-price"),
 						priceinput.value,
-						roundPrices.checked
+						roundPrices.checked,
+						toPromo.value == "promo-to-price" ? true : false
 					);
 				}
 			}
@@ -1432,7 +1435,7 @@ function massUpdateVariations() {
 		});
 	}
 
-	function calculateVariation(operator, oldSumValue, newSumValue, round) {
+	function calculateVariation(operator, oldSumValue, newSumValue, round, priceBeforeSale = false) {
 		let oldSum = parseFloat(oldSumValue);
 		let newSum = parseFloat(newSumValue);
 
@@ -1444,7 +1447,11 @@ function massUpdateVariations() {
 				result = oldSum - newSum;
 				break;
 			case "+%":
-				result = (oldSum * (100 + newSum)) / 100;
+				if (priceBeforeSale) {
+					result = oldSum / (1 - newSum / 100);
+				} else {
+					result = (oldSum * (100 + newSum)) / 100;
+				}
 				break;
 			case "-%":
 				result = (oldSum * (100 - newSum)) / 100;
