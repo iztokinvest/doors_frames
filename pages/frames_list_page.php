@@ -369,25 +369,23 @@ HTML;
 												}
 												$min_regular_price = $regular_price;
 											}
-											if ($sale_price && ($min_sale_price === null || $sale_price < $min_sale_price)) {
-												if ($saved_prices && is_array($variations_array)) {
-													foreach ($variations_array as $var) {
-														if ($var['variation_id'] == $variation['variation_id']) {
-															$min_sale_saved_price = $var['sale_price'];
-															break;
-														} else {
-															$min_sale_saved_price = null;
-														}
+											if ($saved_prices && is_array($variations_array)) {
+												foreach ($variations_array as $var) {
+													if ($var['variation_id'] == $variation['variation_id']) {
+														$min_sale_saved_price = $var['sale_price'];
+														break;
+													} else {
+														$min_sale_saved_price = null;
 													}
 												}
-												$min_sale_price = $sale_price;
 											}
+											$min_sale_price = $sale_price > 0 ? $sale_price : '';
 
 											$saved_regular_price = $min_regular_saved_price && $min_regular_saved_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$min_regular_saved_price</span></div>" : '';
-											$saved_sale_price = $min_sale_saved_price != '' ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$min_sale_saved_price</span></div>" : '';
+											$saved_sale_price = $min_sale_saved_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$min_sale_saved_price</span></div>" : '';
 										}
 
-										
+
 
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal" role="button" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $saved_regular_price . $min_regular_price . '</td>';
 										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . ' open-variations-modal" role="button" title="Виж вариациите на продукта" data-id="' . get_the_ID() . '">' . $saved_sale_price . $min_sale_price . '</td>';
