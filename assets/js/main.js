@@ -536,8 +536,6 @@ jQuery(document).ready(function ($) {
 				}
 			},
 		});
-		
-		
 	});
 
 	// Close Frames Modal
@@ -581,6 +579,7 @@ jQuery(document).ready(function ($) {
 					}
 
 					massUpdateVariations();
+					massVariationToPromoSelect();
 				} else {
 					frame_notifier.warning("Няма вариации за показване.");
 				}
@@ -603,7 +602,7 @@ jQuery(document).ready(function ($) {
 
 	$(document).on("click", "#copy-frames", function () {
 		const pasteButton = document.getElementById("paste-frames");
-		
+
 		sessionStorage.setItem("copyFramesId", $(this).data("id"));
 		sessionStorage.setItem("copyFramesName", $(this).data("name"));
 		pasteButton.style.display = "none";
@@ -1410,23 +1409,37 @@ function massUpdateVariations() {
 
 			if (priceinput.value != "") {
 				for (const price of savedPriceInputs) {
+					let basePrice;
+					if (toPromo.value == "promo-to-price") {
+						basePrice = price.getAttribute("data-sale-price");
+					} else if (toPromo.value == "new-promo-to-price") {
+						basePrice = price.getAttribute("data-saved-sale-price");
+					} else {
+						basePrice = price.getAttribute("data-regular-price");
+					}
 					price.value = calculateVariation(
 						priceOperator.value,
-						toPromo.value == "promo-to-price"
-							? price.getAttribute("data-sale-price")
-							: price.getAttribute("data-regular-price"),
+						basePrice,
 						priceinput.value,
 						roundPrices.checked,
-						toPromo.value == "promo-to-price" ? true : false
+						toPromo.value == "promo-to-price" || toPromo.value == "new-promo-to-price" ? true : false
 					);
 				}
 			}
 
 			if (promoinput.value != "") {
 				for (const promo of savedPromoInputs) {
+					let basePrice;
+					if (toPromo.value == "price-to-promo") {
+						basePrice = promo.getAttribute("data-regular-price");
+					} else if (toPromo.value == "new-price-to-promo") {
+						basePrice = promo.getAttribute("data-saved-regular-price");
+					} else {
+						basePrice = promo.getAttribute("data-sale-price");
+					}
 					promo.value = calculateVariation(
 						promoOperator.value,
-						toPromo.value == "price-to-promo" ? promo.getAttribute("data-regular-price") : promo.getAttribute("data-sale-price"),
+						basePrice,
 						promoinput.value,
 						roundPrices.checked
 					);
@@ -1471,3 +1484,49 @@ function massUpdateVariations() {
 	}
 }
 
+function massVariationToPromoSelect() {
+	const priceInput = document.getElementById("variation-price-input");
+	const promoInput = document.getElementById("variation-promotion-input");
+	const toPromoSelect = document.getElementById("variation-prices-to-promo");
+	const container = document.getElementById("mass-variation-prices-to-promo-container");
+
+	// Function to update select options and container visibility
+	function updateSelectOptions() {
+		// Check if inputs are empty
+		const isPriceEmpty = !priceInput.value.trim();
+		const isPromoEmpty = !promoInput.value.trim();
+
+		// Reset select options
+		toPromoSelect.innerHTML = '<option value=""></option>';
+
+		if ((!isPriceEmpty && isPromoEmpty) || (isPriceEmpty && !isPromoEmpty)) {
+			// Show container
+			container.style.display = "inline-block";
+
+			// Add options based on which input is not empty
+			if (!isPriceEmpty && isPromoEmpty) {
+				// Only price input is not empty
+				toPromoSelect.innerHTML += `
+                    <option value="promo-to-price" title="Базовата цена се изчислява според текущатаalker промоционална цена на продукта.">Промо към цена</option>
+                    <option value="new-promo-to-price" title="Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.">Запазено промо към цена</option>
+                `;
+			} else if (isPriceEmpty && !isPromoEmpty) {
+				// Only promo input is not empty
+				toPromoSelect.innerHTML += `
+                    <option value="price-to-promo" title="Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.">Цена към промо</option>
+                    <option value="new-price-to-promo" title="Промоционалната цена се изчислява според запазената за по-късно цена на продукта.">Запазена цена към промо</option>
+                `;
+			}
+		} else {
+			// Hide container when both are empty or both are not empty
+			container.style.display = "none";
+		}
+	}
+
+	// Add event listeners for input changes
+	priceInput.addEventListener("input", updateSelectOptions);
+	promoInput.addEventListener("input", updateSelectOptions);
+
+	// Initial call to set up the select options
+	updateSelectOptions();
+}

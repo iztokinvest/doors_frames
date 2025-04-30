@@ -1044,8 +1044,8 @@ function fetch_variation_prices()
 		<span class="badge bg-info text-dark checkbox-badge">
 			<input type="checkbox" id="variation-mass-round-prices" checked="">Закръгли
 		</span>
-		<span class="badge bg-info text-dark checkbox-badge" id="mass-prices-to-promo-container" style="display: inline-block;">
-			<select id="variation-prices-to-promo"><option value=""></option><option value="promo-to-price" title="Базовата цена се изчислява според текущата промоционална цена на продукта.">Промо към цена</option><option value="price-to-promo" title="Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.">Цена към промо</option></select>
+		<span class="badge bg-info text-dark checkbox-badge" id="mass-variation-prices-to-promo-container" style="display: none;">
+			<select id="variation-prices-to-promo"><option value=""></option><option value="promo-to-price" title="Базовата цена се изчислява според текущата промоционална цена на продукта.">Промо към цена</option><option value="new-promo-to-price" title="Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.">Запазено промо към цена</option><option value="price-to-promo" title="Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.">Цена към промо</option><option value="new-price-to-promo" title="Промоционалната цена се изчислява според запазената за по-късно цена на продукта.">Запазена цена към промо</option></select>
 		</span>
 
 		<button type="button" id="variation-mass-prices" class="btn btn-success">Промени</button>
@@ -1084,8 +1084,8 @@ HTML;
 	<tr class="variation-row" data-variation-id="$variation[variation_id]">
 		<td>$variation[variation_id]</td>
 		<td>$attributes</td>
-		<td>$saved_variation_price<input type="number" class="form-control price-input variation-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="regular" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" value="$variation[regular_price]" readonly></td>
-		<td>$saved_variation_promo<input type="number" class="form-control price-input variation-promo-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="sale" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" value="$variation[sale_price]" readonly></td>
+		<td>$saved_variation_price<input type="number" class="form-control price-input variation-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="regular" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" data-saved-regular-price="{$structuredVariations[$variation['variation_id']]['regular_price']}" data-saved-sale-price="{$structuredVariations[$variation['variation_id']]['sale_price']}" value="$variation[regular_price]" readonly></td>
+		<td>$saved_variation_promo<input type="number" class="form-control price-input variation-promo-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="sale" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" data-saved-regular-price="{$structuredVariations[$variation['variation_id']]['regular_price']}" data-saved-sale-price="{$structuredVariations[$variation['variation_id']]['sale_price']}" value="$variation[sale_price]" readonly></td>
 	</tr>
 HTML;
 			}
