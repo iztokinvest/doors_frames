@@ -296,14 +296,20 @@ function changePriceVisual() {
 			if (column.classList.contains("frame-table-promo") || column.classList.contains("product-promo-input")) {
 				if (massPriceSelect.value === "new-to-promo") {
 					oldSum = parseFloat(column.getAttribute("data-saved-price"));
+				} else if (massPriceSelect.value === "new-promo-to-promo") {
+					oldSum = parseFloat(column.getAttribute("data-saved-promo-price"));
 				} else {
 					oldSum = parseFloat(column.getAttribute("data-price"));
 				}
 			} else {
-				priceBeforeSale = true;
+				if (massPriceSelect.value !== "new-to-price") {
+					priceBeforeSale = true;
+				}
 
 				if (massPriceSelect.value === "new-promo-to-price") {
 					oldSum = parseFloat(column.getAttribute("data-saved-promo-price"));
+				} else if (massPriceSelect.value === "new-to-price") {
+					oldSum = parseFloat(column.getAttribute("data-saved-price"));
 				} else {
 					oldSum = parseFloat(column.getAttribute("data-promo-price"));
 				}
@@ -1262,6 +1268,11 @@ function priceToPromoSelect() {
 			title: "Промоционалната цена се изчислява според запазената за по-късно цена на продукта.",
 		},
 		{
+			value: "new-promo-to-promo",
+			text: "Запазено промо към промо",
+			title: "Промоционалната цена се изчислява според запазената за по-късно промоционална цена на продукта.",
+		},
+		{
 			value: "old-promo-to-price",
 			text: "Промо към цена",
 			title: "Базовата цена се изчислява според текущата промоционална цена на продукта.",
@@ -1270,6 +1281,11 @@ function priceToPromoSelect() {
 			value: "new-promo-to-price",
 			text: "Запазено промо към цена",
 			title: "Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.",
+		},
+		{
+			value: "new-to-price",
+			text: "Запазена цена към цена",
+			title: "Базовата цена се изчислява според запазената за по-късно цена на продукта.",
 		},
 	];
 
@@ -1290,7 +1306,9 @@ function priceToPromoSelect() {
 
 			massPricesToPromoContainer.style.display = "inline-block";
 			updateSelectOptions(
-				priceFilled ? ["old-to-promo", "new-to-promo"] : ["old-promo-to-price", "new-promo-to-price"]
+				priceFilled
+					? ["old-to-promo", "new-to-promo", "new-promo-to-promo"]
+					: ["old-promo-to-price", "new-promo-to-price", "new-to-price"]
 			);
 		} else {
 			massPricesToPromoContainer.style.display = "none";
@@ -1414,6 +1432,8 @@ function massUpdateVariations() {
 						basePrice = price.getAttribute("data-sale-price");
 					} else if (toPromo.value == "new-promo-to-price") {
 						basePrice = price.getAttribute("data-saved-sale-price");
+					} else if (toPromo.value == "new-price-to-price") {
+						basePrice = price.getAttribute("data-saved-regular-price");
 					} else {
 						basePrice = price.getAttribute("data-regular-price");
 					}
@@ -1434,9 +1454,12 @@ function massUpdateVariations() {
 						basePrice = promo.getAttribute("data-regular-price");
 					} else if (toPromo.value == "new-price-to-promo") {
 						basePrice = promo.getAttribute("data-saved-regular-price");
+					} else if (toPromo.value == "new-promo-to-promo") {
+						basePrice = promo.getAttribute("data-saved-sale-price");
 					} else {
 						basePrice = promo.getAttribute("data-sale-price");
 					}
+					console.log(basePrice);
 					promo.value = calculateVariation(
 						promoOperator.value,
 						basePrice,
@@ -1507,14 +1530,16 @@ function massVariationToPromoSelect() {
 			if (!isPriceEmpty && isPromoEmpty) {
 				// Only price input is not empty
 				toPromoSelect.innerHTML += `
-                    <option value="promo-to-price" title="Базовата цена се изчислява според текущатаalker промоционална цена на продукта.">Промо към цена</option>
+                    <option value="promo-to-price" title="Базовата цена се изчислява според текущата промоционална цена на продукта.">Промо към цена</option>
                     <option value="new-promo-to-price" title="Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.">Запазено промо към цена</option>
+					<option value="new-price-to-price" title="Базовата цена се изчислява според запазената за по-късно базова цена на продукта.">Запазена цена към цена</option>
                 `;
 			} else if (isPriceEmpty && !isPromoEmpty) {
 				// Only promo input is not empty
 				toPromoSelect.innerHTML += `
                     <option value="price-to-promo" title="Базовата цена се изчислява според запазената за по-късно промоционална цена на продукта.">Цена към промо</option>
                     <option value="new-price-to-promo" title="Промоционалната цена се изчислява според запазената за по-късно цена на продукта.">Запазена цена към промо</option>
+					<option value="new-promo-to-promo" title="Промоционалната цена се изчислява според запазената за по-късно промоционална цена на продукта.">Запазено промо към промо</option>
                 `;
 			}
 		} else {

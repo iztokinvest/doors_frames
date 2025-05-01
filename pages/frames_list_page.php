@@ -400,8 +400,8 @@ HTML;
 										$saved_regular_price = $saved_prices && $saved_prices->product_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_price</span></div>" : '';
 										$saved_sale_price = $saved_prices && $saved_prices->product_promo_price >= 0 ? "<div><span class='badge bg-warning text-dark' id='price-promo-badge-" . get_the_ID() . "' title='Запазена цена за по-късно'>$saved_prices->product_promo_price</span></div>" : '';
 
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "false"' : '') . ' data-promo-price="' . esc_attr($sale_price) . '" data-saved-promo-price="' . ($saved_prices ? esc_attr($saved_prices->product_promo_price) : '') . '" data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
-										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "false"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-saved-price="' . ($saved_prices ? esc_attr($saved_prices->product_price) : '') . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" title="' . $salePercent . '" readonly></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_regular_price . '<input type="number" class="price-inputs product-price-input" data-product-id="' . get_the_ID() . '" data-type="regular" ' . (!$selected_frame_ids ? 'data-change-price = "false"' : '') . ' data-promo-price="' . esc_attr($sale_price) . '" data-saved-promo-price="' . ($saved_prices ? esc_attr($saved_prices->product_promo_price) : '') . '" data-saved-price="' . ($saved_prices ? esc_attr($saved_prices->product_price) : '') . '" data-value = "' . esc_attr($regular_price) . '" value="' . esc_attr($regular_price) . '" readonly></td>';
+										echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $saved_sale_price . '<input type="number" class="price-inputs product-promo-input" data-product-id="' . get_the_ID() . '" data-type="sale" ' . (!$selected_frame_ids ? 'data-change-price = "false"' : '') . ' data-price="' . esc_attr($regular_price) . '" data-saved-price="' . ($saved_prices ? esc_attr($saved_prices->product_price) : '') . '" data-saved-promo-price="' . ($saved_prices ? esc_attr($saved_prices->product_promo_price) : '') . '" data-value = "' . esc_attr($sale_price) . '" value="' . esc_attr($sale_price) . '" title="' . $salePercent . '" readonly></td>';
 									}
 
 									$modal_button = '<button class="frames-button btn btn-primary open-modal" data-id="' . get_the_ID() . '">Цени на каси</button>';
@@ -457,8 +457,8 @@ HTML;
 													echo '<td class="' . $active_status . ' ' . $product_row_class . '">' . $saved_sale_price . esc_attr($sale_price) . '</td>';
 												}
 											} else {
-												echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-promo-price = "' . $frame_data->frame_promo_price . '" data-saved-promo-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_promo_price : '') . '" data-change-price="false" data-product-id="' . get_the_ID() . '">' . $saved_frame_price . '<span class="saved">' . $frame_data->frame_price . '</span></td>';
-												echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_price : '') . '" data-change-price="false" data-product-id="' . get_the_ID() . '">' . $saved_frame_promo_price . '<span class="saved">' . $frame_data->frame_promo_price . '</span></td>';
+												echo '<td class="frame-table-price ' . $active_status . ' ' . $product_row_class . '" data-promo-price = "' . $frame_data->frame_promo_price . '" data-saved-promo-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_promo_price : '') . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_price : '') . '" data-change-price="false" data-product-id="' . get_the_ID() . '">' . $saved_frame_price . '<span class="saved">' . $frame_data->frame_price . '</span></td>';
+												echo '<td class="frame-table-promo ' . $active_status . ' ' . $product_row_class . '" data-price = "' . $frame_data->frame_price . '" data-saved-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_price : '') . '" data-saved-promo-price = "' . ($saved_frame_prices ? $saved_frame_prices->frame_promo_price : '') . '" data-change-price="false" data-product-id="' . get_the_ID() . '">' . $saved_frame_promo_price . '<span class="saved">' . $frame_data->frame_promo_price . '</span></td>';
 											}
 
 											if ($first_frame) {
@@ -1263,12 +1263,19 @@ function mass_insert_frames()
 						case 'new-to-promo':
 							$target_value = $saved_prices->frame_price;
 							break;
+						case 'new-promo-to-promo':
+							$target_value =	$saved_prices->frame_promo_price;
+							break;
 						case 'old-promo-to-price':
 							$target_value =	$current_value->frame_promo_price;
 							$priceBeforeSale = true;
 							break;
 						case 'new-promo-to-price':
 							$target_value = $saved_prices->frame_promo_price;
+							$priceBeforeSale = true;
+							break;
+						case 'new-to-price':
+							$target_value = $saved_prices->frame_price;
 							$priceBeforeSale = true;
 							break;
 						default:
@@ -1366,6 +1373,9 @@ function mass_insert_frames()
 					case 'new-to-promo':
 						$target_value =	$saved_prices->product_price;
 						break;
+					case 'new-promo-to-promo':
+						$target_value =	$saved_prices->product_promo_price;
+						break;
 					case 'old-promo-to-price':
 						$target_value =	$sale_price;
 						$priceBeforeSale = true;
@@ -1373,6 +1383,9 @@ function mass_insert_frames()
 					case 'new-promo-to-price':
 						$target_value = $saved_prices->product_promo_price;
 						$priceBeforeSale = true;
+						break;
+					case 'new-to-price':
+						$target_value = $saved_prices->product_price;
 						break;
 					default:
 						$target_value = null;
