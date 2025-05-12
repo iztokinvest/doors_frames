@@ -1527,6 +1527,9 @@ function activate_single_price()
 				$variations_data = json_decode($variations, true);
 
 				foreach ($variations_data as $variation) {
+					if ($variation['sale_price'] == 0) {
+						$variation['sale_price'] = '';
+					}
 					$variation_id = $variation['variation_id'];
 					$variation_data = new WC_Product_Variation($variation_id);
 					$variation_data->set_regular_price($variation['regular_price']);
