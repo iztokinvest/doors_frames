@@ -1448,6 +1448,8 @@ function mass_insert_frames()
 
 					$wpdb->query($sql);
 				}
+
+				usleep(200000);
 			}
 		}
 

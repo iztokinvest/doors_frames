@@ -927,6 +927,8 @@ jQuery(document).ready(function ($) {
 			sum_promotion = -1;
 		}
 
+		document.getElementById("products-table").classList.add("blurred-unclickable");
+
 		$.ajax({
 			url: ajaxurl,
 			method: "POST",
