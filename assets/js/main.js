@@ -1557,3 +1557,32 @@ function massVariationToPromoSelect() {
 	// Initial call to set up the select options
 	updateSelectOptions();
 }
+
+function changeProductStatus() { 
+	const changeStatusSelects = document.querySelectorAll(".product-status");
+
+	changeStatusSelects.forEach((select) => {
+		select.addEventListener("change", function () {
+			const productId = select.getAttribute("data-product-id");
+			const status = select.value;
+
+			$.ajax({
+				url: ajaxurl,
+				type: "POST",
+				data: {
+					action: "change_product_status",
+					product_id: productId,
+					status: status,
+				},
+				success: function (response) {
+					if (response.success) {
+						frame_notifier.success(`Статусът на продукта е променен.`);
+					} else {
+						frame_notifier.alert(`Статусът на продукта не е променен.`);
+					}
+				},
+			});
+		});
+	});
+}
+changeProductStatus();

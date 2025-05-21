@@ -191,6 +191,7 @@ HTML;
 									</span></th>
 								<th>🖼️</th>
 								<th><span class="badge bg-secondary">Име</span></th>
+								<th><span class="badge bg-secondary">Статус</span></th>
 								<th><span class="badge bg-secondary">Цена</span> <span id="order-by-price-icon" class="pointer text-primary"><?php echo $icon; ?></span></th>
 								<th><span class="badge bg-secondary">Промоция</span></th>
 								<?php if ($selected_frame_ids) : ?>
@@ -330,6 +331,7 @@ HTML;
 									</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '">' . $product_image . '</td>';
 									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><a class="product-title" target="_blank" href="' . get_the_permalink() . '">' . get_the_title() . '</a></td>';
+									echo '<td rowspan="' . $rowspan . '" class="' . $product_row_class . '"><select class="product-status" data-product-id="' . get_the_ID() . '"><option value="publish"' . (get_post_status() == 'publish' ? 'selected' : '') . '>Публична</option><option value="draft" ' . (get_post_status() == 'draft' ? 'selected' : '') . '>Чернова</option></select></td>';
 
 									$products_table_name = $wpdb->prefix . 'doors_frames_products';
 									$saved_prices = $wpdb->get_row($wpdb->prepare(
