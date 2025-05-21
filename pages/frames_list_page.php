@@ -583,6 +583,25 @@ function update_tab()
 	}
 }
 
+add_action('wp_ajax_change_product_status', 'change_product_status');
+function change_product_status()
+{
+	if (isset($_POST['product_id']) && isset($_POST['status'])) {
+		$product_id = intval($_POST['product_id']);
+		$status = sanitize_text_field($_POST['status']);
+
+		$post_data = [
+			'ID' => $product_id,
+			'post_status' => $status
+		];
+		wp_update_post($post_data);
+
+		wp_send_json_success();
+	} else {
+		wp_send_json_error();
+	}
+}
+
 add_action('wp_ajax_update_product_price', 'update_product_price');
 function update_product_price()
 {
