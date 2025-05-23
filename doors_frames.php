@@ -209,3 +209,4 @@ include_once(plugin_dir_path(__FILE__) . 'includes/menu.php');
 
 include_once(plugin_dir_path(__FILE__) . 'pages/frames_list_page.php');
 include_once(plugin_dir_path(__FILE__) . 'pages/frames_tab.php');
+include_once(plugin_dir_path(__FILE__) . 'pages/external_cart.php');
