@@ -67,6 +67,12 @@ function custom_product_tab_content()
 		}
 	}
 
+	function euroPrice($sum) {
+		$euroPrice = $sum / 1.95583;
+		// return "(" . number_format($euroPrice, 2, '.', ' ') . " €)";
+		return "";
+	}
+
 	if (!empty($product_frames)) {
 		$frame_rows = '';
 		foreach ($product_frames as $frame) {
@@ -106,11 +112,11 @@ function custom_product_tab_content()
 			}
 
 			if ($priceExists) {
-				$price = floatval($frame_price) > 0 ? price($frame_price) . 'лв.' : '';
+				$price = floatval($frame_price) > 0 ? price($frame_price) . 'лв.' . euroPrice($frame_price) : '';
 				$promo_price = '';
 
 				if (floatval($frame_promo_price) > 0) {
-					$promo_price = price($frame_promo_price) . 'лв.';
+					$promo_price = price($frame_promo_price) . 'лв.' . euroPrice($frame_promo_price);
 					$price = "<del>" . price($frame_price) . "лв.</del>";
 				}
 

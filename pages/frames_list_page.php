@@ -1621,4 +1621,133 @@ function activate_frame_prices()
 
 	wp_send_json_success();
 }
+
+/* Две цени в лев и евро
+
+add_filter('woocommerce_get_price_html', 'custom_dual_currency_price', 100, 2);
+
+function custom_dual_currency_price($price, $product)
+{
+	// Фиксиран курс EUR/BGN
+	$convert_rate = 1.95583;
+
+	// За вариативни продукти намираме най-ниската цена
+	if ($product->is_type('variable')) {
+		$prices = $product->get_variation_prices();
+		$regular_price = ! empty($prices['regular_price']) ? min($prices['regular_price']) : 0;
+		$sale_price = ! empty($prices['sale_price']) ? min($prices['sale_price']) : 0;
+	} else {
+		$regular_price = $product->get_regular_price();
+		$sale_price = $product->get_sale_price();
+	}
+
+	// Ако няма валидна редовна цена, връщаме оригиналната
+	if (! is_numeric($regular_price) || $regular_price <= 0) {
+		return $price;
+	}
+
+	// Форматиране на редовната цена в лева
+	$regular_price_html = wc_price($regular_price, array('currency' => 'BGN'));
+
+	// Проверка за промоция
+	if ($product->is_on_sale() && is_numeric($sale_price) && $sale_price > 0) {
+		$sale_price_eur = $sale_price / $convert_rate;
+		$sale_price_html = wc_price($sale_price, array('currency' => 'BGN'));
+		$sale_price_eur_html = wc_price($sale_price_eur, array('currency' => 'EUR'));
+		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> (' . $sale_price_eur_html . ')';
+	}
+
+	// Без промоция
+	$regular_price_eur = $regular_price / $convert_rate;
+	$regular_price_eur_html = wc_price($regular_price_eur, array('currency' => 'EUR'));
+	return $regular_price_html . ' (' . $regular_price_eur_html . ')';
+}
+
+// Цени в падащия списък на вариациите
+add_filter('woocommerce_dropdown_variation_attribute_options_html', 'custom_variation_dropdown_price', 100, 2);
+function custom_variation_dropdown_price($html, $args)
+{
+	$product = $args['product'];
+	$options = $args['options'];
+	$attribute = $args['attribute'];
+
+	if (empty($options) || ! $product) {
+		return $html;
+	}
+
+	// Фиксиран курс EUR/BGN
+	$convert_rate = 1.95583;
+
+	// Извличане на вариациите
+	$variations = $product->get_available_variations();
+	$new_options_html = '';
+
+	foreach ($options as $option) {
+		$option_html = esc_html($option);
+		foreach ($variations as $variation_data) {
+			// Нормализиране на името на атрибута
+			$attribute_key = 'attribute_' . wc_attribute_taxonomy_name($attribute);
+			if (! isset($variation_data['attributes'][$attribute_key])) {
+				// Опитваме с ненормализирано име (за нестандартни атрибути)
+				$attribute_key = 'attribute_' . $attribute;
+			}
+
+			if (isset($variation_data['attributes'][$attribute_key]) && $variation_data['attributes'][$attribute_key] === $option) {
+				$variation_obj = wc_get_product($variation_data['variation_id']);
+				$regular_price = $variation_obj->get_regular_price();
+				$sale_price = $variation_obj->get_sale_price();
+
+				if (! is_numeric($regular_price) || $regular_price <= 0) {
+					continue;
+				}
+
+				$regular_price_html = wc_price($regular_price, array('currency' => 'BGN'));
+
+				if ($variation_obj->is_on_sale() && is_numeric($sale_price) && $sale_price > 0) {
+					$sale_price_eur = $sale_price / $convert_rate;
+					$sale_price_html = wc_price($sale_price, array('currency' => 'BGN'));
+					$sale_price_eur_html = wc_price($sale_price_eur, array('currency' => 'EUR'));
+					$option_html .= ' - <del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> (' . $sale_price_eur_html . ')';
+				} else {
+					$regular_price_eur = $regular_price / $convert_rate;
+					$regular_price_eur_html = wc_price($regular_price_eur, array('currency' => 'EUR'));
+					$option_html .= ' - ' . $regular_price_html . ' (' . $regular_price_eur_html . ')';
+				}
+			}
+		}
+		$new_options_html .= '<option value="' . esc_attr($option) . '">' . $option_html . '</option>';
+	}
+
+	// Замяна на HTML в падащия списък
+	$html = str_replace('<select', '<select data-variation-prices="1"', $html);
+	$html = preg_replace('/<option value="([^"]*)">([^<]*)<\/option>/', $new_options_html, $html);
+
+	return $html;
+}
+
+// Добавяне на валутни символи за BGN и EUR
+add_filter('woocommerce_currencies', 'add_bgn_currency');
+function add_bgn_currency($currencies)
+{
+	$currencies['BGN'] = __('Bulgarian Lev', 'woocommerce');
+	return $currencies;
+}
+
+add_filter('woocommerce_currency_symbol', 'add_bgn_currency_symbol', 10, 2);
+function add_bgn_currency_symbol($currency_symbol, $currency)
+{
+	switch ($currency) {
+		case 'BGN':
+			$currency_symbol = 'лв.';
+			break;
+		case 'EUR':
+			$currency_symbol = '€';
+			break;
+	}
+	return $currency_symbol;
+}
+
+// Край на две цени в лев и евро
+*/
+
 ?>
