@@ -1139,6 +1139,8 @@ function update_variation_prices()
 			$variation_data = new WC_Product_Variation($variation_id);
 			$regular_price = $variation['variation_price'];
 			$sale_price = $variation['variation_promo_price'];
+			$old_regular_price = $variation['variation_old_price'];
+			$old_sale_price = $variation['variation_old_promo_price'];
 			$variation_price_badge = $variation['variation_price_badge'];
 			$variation_promo_badge = $variation['variation_promo_badge'];
 
@@ -1152,11 +1154,11 @@ function update_variation_prices()
 
 				$variation_data->save();
 			} else {
-				if ($variation_price_input == '' && $variation_price_badge != '') {
+				if ($regular_price == $old_regular_price) {
 					$regular_price = $variation_price_badge;
 				}
 
-				if ($variation_promo_input == '' && $variation_promo_badge != '') {
+				if ($sale_price == $old_sale_price) {
 					$sale_price = $variation_promo_badge;
 				}
 

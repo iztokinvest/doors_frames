@@ -855,6 +855,8 @@ jQuery(document).ready(function ($) {
 				variation_promo_input: $("#variation-promotion-input").val(),
 				variation_price: $(this).find(".variation-price").val(),
 				variation_promo_price: $(this).find(".variation-promo-price").val(),
+				variation_old_price: $(this).find(".variation-price").data("regular-price"),
+				variation_old_promo_price: $(this).find(".variation-promo-price").data("sale-price"),
 				variation_price_badge: $(this)
 					.find(".variation-price")
 					.closest("td")
