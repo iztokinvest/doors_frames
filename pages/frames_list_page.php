@@ -1105,7 +1105,7 @@ HTML;
 
 				$html .= <<<HTML
 	<tr class="variation-row" data-variation-id="$variation[variation_id]">
-		<td>$variation[variation_id]</td>
+		<td><input type="checkbox" checked> $variation[variation_id]</td>
 		<td>$attributes</td>
 		<td>$saved_variation_price<input type="number" class="form-control price-input variation-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="regular" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" data-saved-regular-price="{$structuredVariations[$variation['variation_id']]['regular_price']}" data-saved-sale-price="{$structuredVariations[$variation['variation_id']]['sale_price']}" value="$variation[regular_price]" readonly></td>
 		<td>$saved_variation_promo<input type="number" class="form-control price-input variation-promo-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="sale" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" data-saved-regular-price="{$structuredVariations[$variation['variation_id']]['regular_price']}" data-saved-sale-price="{$structuredVariations[$variation['variation_id']]['sale_price']}" value="$variation[sale_price]" readonly></td>

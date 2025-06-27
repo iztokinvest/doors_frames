@@ -1446,67 +1446,83 @@ getLastCheckedProducts();
 
 function massUpdateVariations() {
 	const updateButton = document.getElementById("variation-mass-prices");
+	const checklists = document.querySelectorAll(".variation-row input[type=checkbox]");
+
+	checklists.forEach((element) => {
+		element.addEventListener("change", updateVariationPrices);
+	});
 
 	if (updateButton) {
-		updateButton.addEventListener("click", function () {
-			const priceOperator = document.getElementById("variation-operator-price-select");
-			const priceinput = document.getElementById("variation-price-input");
-			const promoOperator = document.getElementById("variation-operator-promotion-select");
-			const promoinput = document.getElementById("variation-promotion-input");
-			const roundPrices = document.getElementById("variation-mass-round-prices");
-			const toPromo = document.getElementById("variation-prices-to-promo");
-			const savedPriceInputs = document.getElementsByClassName("variation-price");
-			const savedPromoInputs = document.getElementsByClassName("variation-promo-price");
-
-			if (priceinput.value != "") {
-				for (const price of savedPriceInputs) {
-					let basePrice;
-					if (toPromo.value == "promo-to-price") {
-						basePrice = price.getAttribute("data-sale-price");
-					} else if (toPromo.value == "new-promo-to-price") {
-						basePrice = price.getAttribute("data-saved-sale-price");
-					} else if (toPromo.value == "new-price-to-price") {
-						basePrice = price.getAttribute("data-saved-regular-price");
-					} else {
-						basePrice = price.getAttribute("data-regular-price");
-					}
-					price.value = calculateVariation(
-						priceOperator.value,
-						basePrice,
-						priceinput.value,
-						roundPrices.checked,
-						toPromo.value == "promo-to-price" || toPromo.value == "new-promo-to-price" ? true : false
-					);
-				}
-			}
-
-			if (promoinput.value != "") {
-				for (const promo of savedPromoInputs) {
-					let basePrice;
-					if (toPromo.value == "price-to-promo") {
-						basePrice = promo.getAttribute("data-regular-price");
-					} else if (toPromo.value == "new-price-to-promo") {
-						basePrice = promo.getAttribute("data-saved-regular-price");
-					} else if (toPromo.value == "new-promo-to-promo") {
-						basePrice = promo.getAttribute("data-saved-sale-price");
-					} else {
-						basePrice = promo.getAttribute("data-sale-price");
-					}
-					console.log(basePrice);
-					promo.value = calculateVariation(
-						promoOperator.value,
-						basePrice,
-						promoinput.value,
-						roundPrices.checked
-					);
-				}
-			}
-		});
+		updateButton.addEventListener("click", updateVariationPrices);
 	}
 
-	function calculateVariation(operator, oldSumValue, newSumValue, round, priceBeforeSale = false) {
+	function updateVariationPrices() {
+		const priceOperator = document.getElementById("variation-operator-price-select");
+		const priceinput = document.getElementById("variation-price-input");
+		const promoOperator = document.getElementById("variation-operator-promotion-select");
+		const promoinput = document.getElementById("variation-promotion-input");
+		const roundPrices = document.getElementById("variation-mass-round-prices");
+		const toPromo = document.getElementById("variation-prices-to-promo");
+		const savedPriceInputs = document.getElementsByClassName("variation-price");
+		const savedPromoInputs = document.getElementsByClassName("variation-promo-price");
+
+		if (priceinput.value != "") {
+			for (const price of savedPriceInputs) {
+				const closestCheckbox = price.closest("tr").querySelector("input[type=checkbox]");
+
+				let basePrice;
+				if (toPromo.value == "promo-to-price") {
+					basePrice = price.getAttribute("data-sale-price");
+				} else if (toPromo.value == "new-promo-to-price") {
+					basePrice = price.getAttribute("data-saved-sale-price");
+				} else if (toPromo.value == "new-price-to-price") {
+					basePrice = price.getAttribute("data-saved-regular-price");
+				} else {
+					basePrice = price.getAttribute("data-regular-price");
+				}
+
+				price.value = calculateVariation(
+					closestCheckbox.checked,
+					priceOperator.value,
+					basePrice,
+					priceinput.value,
+					roundPrices.checked,
+					toPromo.value == "promo-to-price" || toPromo.value == "new-promo-to-price" ? true : false
+				);
+			}
+		}
+
+		if (promoinput.value != "") {
+			for (const promo of savedPromoInputs) {
+				const closestCheckbox = promo.closest("tr").querySelector("input[type=checkbox]");
+				let basePrice;
+				if (toPromo.value == "price-to-promo") {
+					basePrice = promo.getAttribute("data-regular-price");
+				} else if (toPromo.value == "new-price-to-promo") {
+					basePrice = promo.getAttribute("data-saved-regular-price");
+				} else if (toPromo.value == "new-promo-to-promo") {
+					basePrice = promo.getAttribute("data-saved-sale-price");
+				} else {
+					basePrice = promo.getAttribute("data-sale-price");
+				}
+				promo.value = calculateVariation(
+					closestCheckbox.checked,
+					promoOperator.value,
+					basePrice,
+					promoinput.value,
+					roundPrices.checked
+				);
+			}
+		}
+	}
+
+	function calculateVariation(checked, operator, oldSumValue, newSumValue, round, priceBeforeSale = false) {
 		let oldSum = parseFloat(oldSumValue);
 		let newSum = parseFloat(newSumValue);
+
+		if (!checked) {
+			return oldSum;
+		}
 
 		switch (operator) {
 			case "+":
