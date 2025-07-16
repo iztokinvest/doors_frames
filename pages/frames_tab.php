@@ -69,7 +69,7 @@ function custom_product_tab_content()
 
 	function euroPrice($sum) {
 		$euroPrice = $sum / 1.95583;
-		// return "(" . number_format($euroPrice, 2, '.', ' ') . " €)";
+		return " <span class='price-euro-frame'>" . number_format($euroPrice, 2, '.', ' ') . " €</span>";
 		return "";
 	}
 

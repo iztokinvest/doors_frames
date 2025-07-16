@@ -1626,7 +1626,7 @@ function activate_frame_prices()
 	wp_send_json_success();
 }
 
-/* Две цени в лев и евро
+//Две цени в лев и евро
 
 add_filter('woocommerce_get_price_html', 'custom_dual_currency_price', 100, 2);
 
@@ -1658,13 +1658,13 @@ function custom_dual_currency_price($price, $product)
 		$sale_price_eur = $sale_price / $convert_rate;
 		$sale_price_html = wc_price($sale_price, array('currency' => 'BGN'));
 		$sale_price_eur_html = wc_price($sale_price_eur, array('currency' => 'EUR'));
-		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> (' . $sale_price_eur_html . ')';
+		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-euro">' . $sale_price_eur_html . '</span>';
 	}
 
 	// Без промоция
 	$regular_price_eur = $regular_price / $convert_rate;
 	$regular_price_eur_html = wc_price($regular_price_eur, array('currency' => 'EUR'));
-	return $regular_price_html . ' (' . $regular_price_eur_html . ')';
+	return $regular_price_html . ' <span class="price-euro">' . $regular_price_eur_html . '</span>';
 }
 
 // Цени в падащия списък на вариациите
@@ -1715,7 +1715,7 @@ function custom_variation_dropdown_price($html, $args)
 				} else {
 					$regular_price_eur = $regular_price / $convert_rate;
 					$regular_price_eur_html = wc_price($regular_price_eur, array('currency' => 'EUR'));
-					$option_html .= ' - ' . $regular_price_html . ' (' . $regular_price_eur_html . ')';
+					$option_html .= ' - ' . $regular_price_html . ' <span class="price-euro">' . $regular_price_eur_html . '</span>';
 				}
 			}
 		}
@@ -1752,6 +1752,5 @@ function add_bgn_currency_symbol($currency_symbol, $currency)
 }
 
 // Край на две цени в лев и евро
-*/
 
 ?>
