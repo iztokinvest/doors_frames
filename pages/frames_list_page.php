@@ -1657,14 +1657,14 @@ function custom_dual_currency_price($price, $product)
 	if ($product->is_on_sale() && is_numeric($sale_price) && $sale_price > 0) {
 		$sale_price_eur = $sale_price / $convert_rate;
 		$sale_price_html = wc_price($sale_price, array('currency' => 'BGN'));
-		$sale_price_eur_html = wc_price($sale_price_eur, array('currency' => 'EUR'));
-		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-euro">' . $sale_price_eur_html . '</span>';
+		$sale_price_eur_html = euroPriceFormat($sale_price_eur);
+		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-euro woocommerce-Price-amount amount">' . $sale_price_eur_html . '</span>';
 	}
 
 	// Без промоция
 	$regular_price_eur = $regular_price / $convert_rate;
-	$regular_price_eur_html = wc_price($regular_price_eur, array('currency' => 'EUR'));
-	return $regular_price_html . ' <span class="price-euro">' . $regular_price_eur_html . '</span>';
+	$regular_price_eur_html = euroPriceFormat($regular_price_eur);
+	return $regular_price_html . ' <span class="price-euro woocommerce-Price-amount amount">' . $regular_price_eur_html . '</span>';
 }
 
 // Цени в падащия списък на вариациите
@@ -1710,12 +1710,12 @@ function custom_variation_dropdown_price($html, $args)
 				if ($variation_obj->is_on_sale() && is_numeric($sale_price) && $sale_price > 0) {
 					$sale_price_eur = $sale_price / $convert_rate;
 					$sale_price_html = wc_price($sale_price, array('currency' => 'BGN'));
-					$sale_price_eur_html = wc_price($sale_price_eur, array('currency' => 'EUR'));
-					$option_html .= ' - <del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> (' . $sale_price_eur_html . ')';
+					$sale_price_eur_html = euroPriceFormat($sale_price_eur);
+					$option_html .= ' - <del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-euro woocommerce-Price-amount amount">' . $sale_price_eur_html . '</span>';
 				} else {
 					$regular_price_eur = $regular_price / $convert_rate;
-					$regular_price_eur_html = wc_price($regular_price_eur, array('currency' => 'EUR'));
-					$option_html .= ' - ' . $regular_price_html . ' <span class="price-euro">' . $regular_price_eur_html . '</span>';
+					$regular_price_eur_html = euroPriceFormat($regular_price_eur);
+					$option_html .= ' - ' . $regular_price_html . ' <span class="price-euro woocommerce-Price-amount amount">' . $regular_price_eur_html . '</span>';
 				}
 			}
 		}
@@ -1749,6 +1749,14 @@ function add_bgn_currency_symbol($currency_symbol, $currency)
 			break;
 	}
 	return $currency_symbol;
+}
+
+function euroPriceFormat($price)
+{
+	if (is_numeric($price)) {
+		return number_format($price, 0, ',', ' ') . ' €';
+	}
+	return $price;
 }
 
 // Край на две цени в лев и евро
