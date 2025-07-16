@@ -1604,3 +1604,36 @@ function massVariationToPromoSelect() {
 	// Initial call to set up the select options
 	updateSelectOptions();
 }
+
+// Евро
+document.addEventListener("DOMContentLoaded", function () {
+	setTimeout(function () {
+		// Обменен курс: 1 BGN = 0.5113 EUR
+		const exchangeRate = 0.5113;
+
+		// Функция за преобразуване и добавяне на цена в евро
+		function addEuroPrice(element, priceText, regex) {
+			const match = priceText.match(regex);
+			if (match) {
+				const priceInBGN = parseFloat(match[1]);
+				const priceInEUR = (priceInBGN * exchangeRate).toFixed(2);
+				return priceText.replace(regex, `${match[1]} лв. | ${priceInEUR} €`);
+			}
+			return priceText;
+		}
+
+		// Обработка на price-old и price-new
+		const priceElements = document.querySelectorAll(".price-old, .price-new");
+		priceElements.forEach((element) => {
+			const priceText = element.textContent;
+			element.textContent = addEuroPrice(element, priceText, /(\d+)\s*лв\./);
+		});
+
+		// Обработка на frame_table_text
+		const textElements = document.querySelectorAll(".frame_table_text div");
+		textElements.forEach((element) => {
+			const priceText = element.textContent;
+			element.textContent = addEuroPrice(element, priceText, /(\d+)\s*лв\./);
+		});
+	}, 1000);
+});

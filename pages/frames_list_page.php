@@ -1626,7 +1626,7 @@ function activate_frame_prices()
 	wp_send_json_success();
 }
 
-//Две цени в лев и евро
+//Евро
 
 add_filter('woocommerce_get_price_html', 'custom_dual_currency_price', 100, 2);
 
