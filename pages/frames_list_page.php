@@ -1629,7 +1629,6 @@ function activate_frame_prices()
 //Евро
 
 add_filter('woocommerce_get_price_html', 'custom_dual_currency_price', 100, 2);
-
 function custom_dual_currency_price($price, $product)
 {
 	// Фиксиран курс EUR/BGN
@@ -1667,66 +1666,11 @@ function custom_dual_currency_price($price, $product)
 	return $regular_price_html . ' <span class="price-euro woocommerce-Price-amount amount">' . $regular_price_eur_html . '</span>';
 }
 
-// Цени в падащия списък на вариациите
+// Оставяме падащите списъци без промяна в опциите
 add_filter('woocommerce_dropdown_variation_attribute_options_html', 'custom_variation_dropdown_price', 100, 2);
 function custom_variation_dropdown_price($html, $args)
 {
-	$product = $args['product'];
-	$options = $args['options'];
-	$attribute = $args['attribute'];
-
-	if (empty($options) || ! $product) {
-		return $html;
-	}
-
-	// Фиксиран курс EUR/BGN
-	$convert_rate = 1.95583;
-
-	// Извличане на вариациите
-	$variations = $product->get_available_variations();
-	$new_options_html = '';
-
-	foreach ($options as $option) {
-		$option_html = esc_html($option);
-		foreach ($variations as $variation_data) {
-			// Нормализиране на името на атрибута
-			$attribute_key = 'attribute_' . wc_attribute_taxonomy_name($attribute);
-			if (! isset($variation_data['attributes'][$attribute_key])) {
-				// Опитваме с ненормализирано име (за нестандартни атрибути)
-				$attribute_key = 'attribute_' . $attribute;
-			}
-
-			if (isset($variation_data['attributes'][$attribute_key]) && $variation_data['attributes'][$attribute_key] === $option) {
-				$variation_obj = wc_get_product($variation_data['variation_id']);
-				$regular_price = $variation_obj->get_regular_price();
-				$sale_price = $variation_obj->get_sale_price();
-
-				if (! is_numeric($regular_price) || $regular_price <= 0) {
-					continue;
-				}
-
-				$regular_price_html = wc_price($regular_price, array('currency' => 'BGN'));
-
-				if ($variation_obj->is_on_sale() && is_numeric($sale_price) && $sale_price > 0) {
-					$sale_price_eur = $sale_price / $convert_rate;
-					$sale_price_html = wc_price($sale_price, array('currency' => 'BGN'));
-					$sale_price_eur_html = euroPriceFormat($sale_price_eur);
-					$option_html .= ' - <del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-euro woocommerce-Price-amount amount">' . $sale_price_eur_html . '</span>';
-				} else {
-					$regular_price_eur = $regular_price / $convert_rate;
-					$regular_price_eur_html = euroPriceFormat($regular_price_eur);
-					$option_html .= ' - ' . $regular_price_html . ' <span class="price-euro woocommerce-Price-amount amount">' . $regular_price_eur_html . '</span>';
-				}
-			}
-		}
-		$new_options_html .= '<option value="' . esc_attr($option) . '">' . $option_html . '</option>';
-	}
-
-	// Замяна на HTML в падащия списък
-	$html = str_replace('<select', '<select data-variation-prices="1"', $html);
-	$html = preg_replace('/<option value="([^"]*)">([^<]*)<\/option>/', $new_options_html, $html);
-
-	return $html;
+	return $html; // Няма модификация на опциите, оставяме ги стандартни
 }
 
 // Добавяне на валутни символи за BGN и EUR
