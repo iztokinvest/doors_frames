@@ -1519,6 +1519,8 @@ function calculate_new_value($current_value, $operator, $sum, $round, $target_va
 			break;
 		case '+%':
 			if ($priceBeforeSale) {
+			
+
 				$total = $current_value / (1 - $sum / 100);
 			} else {
 				$total =  $current_value + ($current_value * $sum / 100);
@@ -1686,52 +1688,83 @@ function fetch_image_gallery()
 			}
 		}
 
-		function get_file_info($url) {
-			if (!$url) return ['size' => 0, 'ext' => ''];
-			$headers = get_headers($url, 1);
-			$size = isset($headers['Content-Length']) ? $headers['Content-Length'] : 0;
-			$path = parse_url($url, PHP_URL_PATH);
-			$ext = pathinfo($path, PATHINFO_EXTENSION);
-			return ['size' => $size, 'ext' => $ext];
+		// Prefer reading file info from attachment files (reliable on server).
+		function get_attachment_info($attachment_id, $fallback_url = '') {
+			$result = array('size' => 0, 'ext' => '');
+
+			if ($attachment_id) {
+				$local_path = get_attached_file($attachment_id);
+				if ($local_path && file_exists($local_path)) {
+					$result['size'] = filesize($local_path);
+					$result['ext'] = pathinfo($local_path, PATHINFO_EXTENSION);
+					return $result;
+				}
+			}
+
+			// Fallback to URL HEAD request
+			$url = $fallback_url;
+			if (!$url) return $result;
+
+			$headers = @get_headers($url, 1);
+			if ($headers && is_array($headers)) {
+				// Content-Length can be array when there are redirects
+				if (isset($headers['Content-Length'])) {
+					$len = $headers['Content-Length'];
+					if (is_array($len)) {
+						// take the last non-empty value
+						$len = array_pop($len);
+					}
+					$result['size'] = intval($len);
+				} elseif (isset($headers['content-length'])) {
+					$len = $headers['content-length'];
+					if (is_array($len)) $len = array_pop($len);
+					$result['size'] = intval($len);
+				}
+				$path = parse_url($url, PHP_URL_PATH);
+				$result['ext'] = pathinfo($path, PATHINFO_EXTENSION);
+			}
+
+			return $result;
 		}
 
-		$full_image_info = get_file_info($full_image);
+		$full_image_id = get_post_thumbnail_id($product_id);
+		$full_image_info = get_attachment_info($full_image_id, $full_image);
 		$gallery_info = array();
-		foreach ($gallery_urls as $url) {
-			$gallery_info[] = get_file_info($url);
+		foreach ($gallery_ids as $id) {
+			$id = intval($id);
+			if (!$id) continue;
+			$url = wp_get_attachment_url($id);
+			$gallery_info[] = get_attachment_info($id, $url);
 		}
 
-		$html = "<div class='container-fluid p-3'>";
-		$html .= "<div class='row'>";
+		$html = "<div class='p-3' style='width:100%;'>";
 		if ($full_image) {
 			$size_kb = round($full_image_info['size'] / 1024, 1);
-			$html .= "<div class='col-12 mb-3 text-center'><img src='$full_image' class='img-fluid rounded' style='max-height:400px;'><br><a href='$full_image' download class='btn btn-sm mt-2'>⬇️</a> <small class='text-muted'>{$full_image_info['ext']} ({$size_kb} KB)</small></div>";
+			$html .= "<div class='mb-3' style='width:100%;'><div class='card-body text-center'><img src='$full_image' class='img-fluid rounded' style='max-height:400px;'><br><a href='$full_image' download class='btn btn-sm mt-2'>⬇️</a> <small class='text-muted'>{$full_image_info['ext']} ({$size_kb} KB)</small></div></div>";
 		}
 		if (!empty($gallery_urls)) {
-			$html .= "<div class='col-12 mb-3'>";
-			$html .= "<h6 class='text-center'>Галерия:</h6>";
-			$html .= "<div class='d-flex flex-wrap justify-content-center gap-2'>";
+			$html .= "<div class='mb-3' style='width:100%;'><div class='card-header'><h6 class='text-center mb-0'>Галерия:</h6></div><div class='card-body'><div class='d-flex flex-wrap justify-content-center gap-2'>";
 			foreach ($gallery_urls as $index => $url) {
 				$info = $gallery_info[$index];
 				$size_kb = round($info['size'] / 1024, 1);
 				$html .= "<div class='text-center'><img src='$url' class='img-thumbnail' style='max-width:150px; max-height:150px; cursor:pointer;' onclick='window.open(this.src)'><br><a href='$url' download class='btn btn-sm mt-1'>⬇️</a> <small class='text-muted'>{$info['ext']} ({$size_kb} KB)</small></div>";
 			}
-			$html .= "</div></div>";
+			$html .= "</div></div></div>";
 		}
 		if (!empty($category_names)) {
-			$html .= "<div class='col-12 mb-3'><h6>Категории:</h6><div>";
+			$html .= "<div class='mb-3' style='width:100%;'><div class='card-header'><h6 class='mb-0'>Категории:</h6></div><div class='card-body'>";
 			foreach ($category_names as $cat_name) {
 				$html .= "<span class='badge bg-secondary me-1'>$cat_name</span>";
 			}
 			$html .= "</div></div>";
 		}
 		if ($short_description) {
-			$html .= "<div class='col-12 mb-3'><h6>Кратко описание:</h6><div class='border p-2 rounded'>$short_description</div></div>";
+			$html .= "<div class='mb-3' style='width:100%;'><div class='card-header'><h6 class='mb-0'>Кратко описание:</h6></div><div class='card-body'>$short_description</div></div>";
 		}
 		if ($description) {
-			$html .= "<div class='col-12 mb-3'><h6>Основно описание:</h6><div class='border p-2 rounded'>$description</div></div>";
+			$html .= "<div class='mb-3' style='width:100%;'><div class='card-header'><h6 class='mb-0'>Основно описание:</h6></div><div class='card-body'>$description</div></div>";
 		}
-		$html .= "</div></div>";
+		$html .= "</div>";
 
 		wp_send_json_success(array('html' => $html, 'title' => $product_title));
 	} else {
