@@ -598,6 +598,47 @@ jQuery(document).ready(function ($) {
 		$("#variationsModal").hide();
 	});
 
+	// Image Modal
+	$(document).on("click", ".open-image-modal", function () {
+		const $this = $(this);
+		if ($this.hasClass('loading')) return;
+		$this.addClass('loading').hide().after('<div class="spinner-border spinner-border-sm ms-2" role="status"><span class="visually-hidden">Loading...</span></div>');
+
+		const productId = $this.data("id");
+
+		// Fetch data from the server
+		$.ajax({
+			url: ajaxurl,
+			type: "POST",
+			data: {
+				action: "fetch_image_gallery",
+				product_id: productId,
+			},
+			success: function (response) {
+				$this.removeClass('loading').show().next('.spinner-border').remove();
+				if (response.success) {
+					$("#image-modal-body").html(response.data.html);
+					$("#imageModal .modal-title").text(response.data.title);
+					const editUrl = ajaxurl.replace('admin-ajax.php', 'post.php?post=') + productId + '&action=edit';
+					$("#imageModal .modal-footer").prepend('<a href="' + editUrl + '" class="btn btn-primary me-2" target="_blank" onclick="jQuery(\'#imageModal\').hide();">Редактирай продукта</a>');
+					$("#imageModal").show();
+				} else {
+					frame_notifier.warning("Няма изображение за този продукт.");
+				}
+			},
+			error: function () {
+				$this.removeClass('loading').show().next('.spinner-border').remove();
+				frame_notifier.warning("Грешка при зареждане.");
+			},
+		});
+	});
+
+	// Close Image Modal
+	$("#imageModal .close, #imageModal .btn-close").on("click", function () {
+		$("#imageModal").hide();
+		$("#imageModal .modal-footer .btn-primary").remove();
+	});
+
 	$(document).on("click", "#add-new-frame", function () {
 		var data = {
 			data_id: $(this).data("id"),

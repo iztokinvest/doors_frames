@@ -320,7 +320,7 @@ HTML;
 									}
 
 									if ($product_image_thumbnail) {
-										$product_image = "<a target='_blank' href='$product_image_full'><img src='$product_image_thumbnail' class='product-image-thumb' loading='lazy'></a>";
+										$product_image = "<img src='$product_image_thumbnail' class='product-image-thumb open-image-modal' data-id='" . get_the_ID() . "' loading='lazy' style='cursor:pointer;'>";
 									} else {
 										$product_image = "";
 									}
@@ -529,6 +529,22 @@ HTML;
 				<div class=" modal-footer">
 					<button type="button" class="btn btn-secondary closeVariations" data-bs-dismiss="modal">Затвори</button>
 					<button type="button" id="save-modal-variation-prices" class="btn btn-primary" style="display:none;">Запази промените</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="imageModal" class="modal" style="display:none;">
+		<div class="modal-dialog modal-xl">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Изображение на продукта</h4>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div id="image-modal-body" style="max-height: calc(100vh - 200px); overflow-y: auto;">
+					<!-- Dynamic content will be loaded here -->
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary close" data-bs-dismiss="modal">Затвори</button>
 				</div>
 			</div>
 		</div>
@@ -1624,6 +1640,103 @@ function activate_frame_prices()
 	}
 
 	wp_send_json_success();
+}
+
+add_action('wp_ajax_fetch_image_gallery', 'fetch_image_gallery');
+function fetch_image_gallery()
+{
+	if (isset($_POST['product_id'])) {
+		$product_id = intval($_POST['product_id']);
+		$product_title = get_the_title($product_id);
+		$product = wc_get_product($product_id);
+		$short_description = do_shortcode(htmlspecialchars_decode($product->get_short_description()));
+		$description = do_shortcode(htmlspecialchars_decode($product->get_description()));
+
+		function get_all_product_categories($product_id) {
+			$categories = get_the_terms($product_id, 'product_cat');
+			$all_cats = array();
+			if ($categories && !is_wp_error($categories)) {
+				foreach ($categories as $cat) {
+					$all_cats[] = $cat;
+					$parent_id = $cat->parent;
+					while ($parent_id > 0) {
+						$parent_cat = get_term($parent_id, 'product_cat');
+						if ($parent_cat && !is_wp_error($parent_cat)) {
+							$all_cats[] = $parent_cat;
+						}
+						$parent_id = $parent_cat->parent;
+					}
+				}
+			}
+			// Remove duplicates
+			$unique_cats = array_unique($all_cats, SORT_REGULAR);
+			$names = array_map(function($cat) { return $cat->name; }, $unique_cats);
+			return $names;
+		}
+
+		$category_names = get_all_product_categories($product_id);
+
+		$full_image = get_the_post_thumbnail_url($product_id, 'full');
+		$gallery = get_post_meta($product_id, '_product_image_gallery', true);
+		$gallery_ids = explode(',', $gallery);
+		$gallery_urls = array();
+		foreach ($gallery_ids as $id) {
+			if ($id) {
+				$gallery_urls[] = wp_get_attachment_url($id);
+			}
+		}
+
+		function get_file_info($url) {
+			if (!$url) return ['size' => 0, 'ext' => ''];
+			$headers = get_headers($url, 1);
+			$size = isset($headers['Content-Length']) ? $headers['Content-Length'] : 0;
+			$path = parse_url($url, PHP_URL_PATH);
+			$ext = pathinfo($path, PATHINFO_EXTENSION);
+			return ['size' => $size, 'ext' => $ext];
+		}
+
+		$full_image_info = get_file_info($full_image);
+		$gallery_info = array();
+		foreach ($gallery_urls as $url) {
+			$gallery_info[] = get_file_info($url);
+		}
+
+		$html = "<div class='container-fluid p-3'>";
+		$html .= "<div class='row'>";
+		if ($full_image) {
+			$size_kb = round($full_image_info['size'] / 1024, 1);
+			$html .= "<div class='col-12 mb-3 text-center'><img src='$full_image' class='img-fluid rounded' style='max-height:400px;'><br><a href='$full_image' download class='btn btn-sm mt-2'>⬇️</a> <small class='text-muted'>{$full_image_info['ext']} ({$size_kb} KB)</small></div>";
+		}
+		if (!empty($gallery_urls)) {
+			$html .= "<div class='col-12 mb-3'>";
+			$html .= "<h6 class='text-center'>Галерия:</h6>";
+			$html .= "<div class='d-flex flex-wrap justify-content-center gap-2'>";
+			foreach ($gallery_urls as $index => $url) {
+				$info = $gallery_info[$index];
+				$size_kb = round($info['size'] / 1024, 1);
+				$html .= "<div class='text-center'><img src='$url' class='img-thumbnail' style='max-width:150px; max-height:150px; cursor:pointer;' onclick='window.open(this.src)'><br><a href='$url' download class='btn btn-sm mt-1'>⬇️</a> <small class='text-muted'>{$info['ext']} ({$size_kb} KB)</small></div>";
+			}
+			$html .= "</div></div>";
+		}
+		if (!empty($category_names)) {
+			$html .= "<div class='col-12 mb-3'><h6>Категории:</h6><div>";
+			foreach ($category_names as $cat_name) {
+				$html .= "<span class='badge bg-secondary me-1'>$cat_name</span>";
+			}
+			$html .= "</div></div>";
+		}
+		if ($short_description) {
+			$html .= "<div class='col-12 mb-3'><h6>Кратко описание:</h6><div class='border p-2 rounded'>$short_description</div></div>";
+		}
+		if ($description) {
+			$html .= "<div class='col-12 mb-3'><h6>Основно описание:</h6><div class='border p-2 rounded'>$description</div></div>";
+		}
+		$html .= "</div></div>";
+
+		wp_send_json_success(array('html' => $html, 'title' => $product_title));
+	} else {
+		wp_send_json_error();
+	}
 }
 
 //Евро
