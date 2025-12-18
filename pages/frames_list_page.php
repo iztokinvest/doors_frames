@@ -1795,21 +1795,21 @@ function custom_dual_currency_price($price, $product)
 		return $price;
 	}
 
-	// Форматиране на редовната цена в лева
-	$regular_price_html = wc_price($regular_price, array('currency' => 'BGN'));
+	// Форматиране на редовната цена в евро (основната цена)
+	$regular_price_html = wc_price($regular_price, array('currency' => 'EUR'));
 
 	// Проверка за промоция
 	if ($product->is_on_sale() && is_numeric($sale_price) && $sale_price > 0) {
-		$sale_price_eur = $sale_price / $convert_rate;
-		$sale_price_html = wc_price($sale_price, array('currency' => 'BGN'));
-		$sale_price_eur_html = euroPriceFormat($sale_price_eur);
-		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-euro woocommerce-Price-amount amount">' . $sale_price_eur_html . '</span>';
+		$sale_price_bgn = $sale_price * $convert_rate;
+		$sale_price_html = wc_price($sale_price, array('currency' => 'EUR'));
+		$sale_price_bgn_html = bgnPriceFormat($sale_price_bgn);
+		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-bgn woocommerce-Price-amount amount">' . $sale_price_bgn_html . '</span>';
 	}
 
 	// Без промоция
-	$regular_price_eur = $regular_price / $convert_rate;
-	$regular_price_eur_html = euroPriceFormat($regular_price_eur);
-	return $regular_price_html . ' <span class="price-euro woocommerce-Price-amount amount">' . $regular_price_eur_html . '</span>';
+	$regular_price_bgn = $regular_price * $convert_rate;
+	$regular_price_bgn_html = bgnPriceFormat($regular_price_bgn);
+	return $regular_price_html . ' <span class="price-bgn woocommerce-Price-amount amount">' . $regular_price_bgn_html . '</span>';
 }
 
 // Оставяме падащите списъци без промяна в опциите
@@ -1845,6 +1845,14 @@ function euroPriceFormat($price)
 {
 	if (is_numeric($price)) {
 		return number_format($price, 2, '.', ' ') . ' €';
+	}
+	return $price;
+}
+
+function bgnPriceFormat($price)
+{
+	if (is_numeric($price)) {
+		return number_format($price, 2, '.', ' ') . ' лв.';
 	}
 	return $price;
 }
