@@ -1803,13 +1803,13 @@ function custom_dual_currency_price($price, $product)
 		$sale_price_bgn = $sale_price * $convert_rate;
 		$sale_price_html = wc_price($sale_price, array('currency' => 'EUR'));
 		$sale_price_bgn_html = bgnPriceFormat($sale_price_bgn);
-		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-bgn woocommerce-Price-amount amount">' . $sale_price_bgn_html . '</span>';
+		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-euro woocommerce-Price-amount amount">' . $sale_price_bgn_html . '</span>';
 	}
 
 	// Без промоция
 	$regular_price_bgn = $regular_price * $convert_rate;
 	$regular_price_bgn_html = bgnPriceFormat($regular_price_bgn);
-	return $regular_price_html . ' <span class="price-bgn woocommerce-Price-amount amount">' . $regular_price_bgn_html . '</span>';
+	return $regular_price_html . ' <span class="price-euro woocommerce-Price-amount amount">' . $regular_price_bgn_html . '</span>';
 }
 
 // Оставяме падащите списъци без промяна в опциите

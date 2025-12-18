@@ -76,7 +76,7 @@ function custom_product_tab_content()
 
 	function bgnPrice($sum) {
 		$bgnPrice = $sum * 1.95583;
-		return " <span class='price-bgn-frame'>" . number_format($bgnPrice, 2, '.', ' ') . " лв.</span>";
+		return " <span class='price-euro-frame'>" . number_format($bgnPrice, 2, '.', ' ') . " лв.</span>";
 		return "";
 	}
 
