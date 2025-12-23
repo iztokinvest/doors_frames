@@ -708,6 +708,41 @@ jQuery(document).ready(function ($) {
 		initializeDatepickers();
 	});
 
+	// Delete button for existing rows: confirm via notifier + AJAX delete
+	$(document).on('click', '.frame-delete-btn', function () {
+		const $btn = $(this);
+		const $row = $btn.closest('tr');
+		const frameId = $row.data('id');
+
+		frame_notifier.confirm(
+			'Сигурни ли сте, че искате да изтриете тази каса?',
+			function () {
+				$.ajax({
+					url: ajaxurl,
+					method: 'POST',
+					data: {
+						action: 'delete_frame',
+						id: frameId,
+					},
+					success: function (response) {
+						if (response.success) {
+							frame_notifier.success('Касата е изтрита.');
+							$row.remove();
+						} else {
+							frame_notifier.alert('Грешка при изтриването.');
+						}
+					},
+					error: function () {
+						frame_notifier.alert('Грешка при изтриването.');
+					},
+				});
+			},
+			function () {
+				frame_notifier.info('Действието е отменено.');
+			}
+		);
+	});
+
 	$(document).on("click", ".new-frame-duplicate", function () {
 		var $row = $(this).closest("tr");
 		var data = {};
@@ -725,6 +760,16 @@ jQuery(document).ready(function ($) {
 		initializeDatepickers();
 	});
 
+// helper to return copy SVG markup
+function copyIconSvg() {
+	return `
+		<svg class="copy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+			<rect x="9" y="4" width="11" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+			<rect x="4" y="8" width="11" height="14" rx="2" fill="currentColor" opacity="0.6"/>
+		</svg>
+	`;
+}
+
 	$(document).on("click", ".new-frame-delete", function () {
 		$(this).closest("tr").remove();
 	});
@@ -733,7 +778,7 @@ jQuery(document).ready(function ($) {
 		const newId = new Date().getTime();
 		$("#new-frame-table").show();
 		$("#new-frame-table tbody").append(`
-			<tr class="new-frame" data-id="${copyData.data_id}">>
+			<tr class="new-frame" data-id="${copyData.data_id}">
 				<td>
 					<select class="form-control price-input frame-id">
 						<option value=""></option>
@@ -763,9 +808,16 @@ jQuery(document).ready(function ($) {
 				<td><input type="number" class="form-control price-input new-frame-promo-price" placeholder="Промо" value="${
 					copyData.frame_promo_price || ""
 				}"></td>
-				<td><button class="btn btn-primary btn-sm new-frame-duplicate" data-id="${
-					copyData.data_id
-				}">Дублирай</button> <span class="new-frame-delete btn">❌</span></td>
+                	<td class="text-center">
+                		<div class="new-frame-controls-wrapper">
+                			<div class="new-frame-checkbox-container">
+                				<input class="form-check-input new-frame-active" type="checkbox" id="new-frame-active-${newId}" checked>
+                				<label class="new-frame-active-label" for="new-frame-active-${newId}">Активно</label>
+                			</div>
+                			<button class="btn btn-link new-frame-duplicate text-primary" data-id="${copyData.data_id}" title="Дублирай" aria-label="Дублирай">${copyIconSvg()}</button>
+                			<button class="btn btn-link text-danger new-frame-delete" title="Изтрий" aria-label="Изтрий">❌</button>
+                		</div>
+                	</td>
 			</tr>
     `);
 
@@ -793,7 +845,6 @@ jQuery(document).ready(function ($) {
 				frame_promo_price: $(this).find(".frame-promo-price").val(),
 				frame_image: $(this).find(".frame-image").val(),
 				frame_description: $(this).find(".frame-description").val(),
-				delete_frame: $(this).find(".delete-frame").prop("checked"),
 				is_new: false, // Indicate this is not a new frame
 			};
 
@@ -830,6 +881,7 @@ jQuery(document).ready(function ($) {
 				frame_image: $(this).find(".new-frame-image").val(),
 				frame_description: $(this).find(".new-frame-description").val(),
 				is_new: true, // Indicate this is a new frame
+				active: $(this).find(".new-frame-active").prop("checked") ? 1 : 0,
 			};
 
 			if (data.frame_id === "") {

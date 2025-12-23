@@ -697,6 +697,8 @@ function update_frame_prices()
 				$frame_price = floatval($frame['frame_price']);
 				$frame_promo_price = floatval($frame['frame_promo_price']);
 
+				$active = isset($frame['active']) ? intval($frame['active']) : 1;
+
 				$result = $wpdb->insert(
 					$table_name,
 					array(
@@ -706,20 +708,12 @@ function update_frame_prices()
 						'frame_promo_price' => $frame_promo_price,
 						'frame_image' => $frame_image,
 						'frame_description' => $frame_description,
+						'active' => $active,
 					),
-					array('%d', '%d', '%f', '%f', '%s', '%s')
+					array('%d', '%d', '%f', '%f', '%s', '%s', '%d')
 				);
 			} else {
 				$id = intval($frame['id']);
-				$delete_frame = sanitize_text_field($frame['delete_frame']);
-
-				if ($delete_frame === 'true') {
-					$result = $wpdb->delete($table_name, array('id' => $id), array('%d'));
-					if ($result === false) {
-						$errors = true;
-					}
-					continue;
-				}
 
 				if ($frame_id > 0) {
 					$frame_price = floatval($frame['frame_price']);
@@ -768,6 +762,25 @@ function update_frame_prices()
 	}
 }
 
+add_action('wp_ajax_delete_frame', 'delete_frame');
+function delete_frame()
+{
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'doors_frames';
+
+	if (isset($_POST['id'])) {
+		$id = intval($_POST['id']);
+		$result = $wpdb->delete($table_name, array('id' => $id), array('%d'));
+		if ($result !== false) {
+			wp_send_json_success();
+		} else {
+			wp_send_json_error();
+		}
+	} else {
+		wp_send_json_error();
+	}
+}
+
 add_action('wp_ajax_add_frame_prices', 'add_frame_prices');
 function add_frame_prices()
 {
@@ -794,8 +807,9 @@ function add_frame_prices()
 					'frame_promo_price' => $new_frame_promo_price,
 					'frame_image' => $new_frame_image,
 					'frame_description' => $new_frame_description,
+					'active' => 1,
 				),
-				array('%d', '%d', '%f', '%f', '%s', '%s')
+				array('%d', '%d', '%f', '%f', '%s', '%s', '%d')
 			);
 		} else {
 			$result = $wpdb->insert(
@@ -805,8 +819,9 @@ function add_frame_prices()
 					'frame_id' => $frame_id,
 					'frame_image' => $new_frame_image,
 					'frame_description' => $new_frame_description
+					,'active' => 1
 				),
-				array('%d', '%d', '%s', '%s')
+				array('%d', '%d', '%s', '%s', '%d')
 			);
 		}
 
@@ -970,24 +985,33 @@ HTML;
 				}
 
 				$html .= <<<HTML
-	<tr class="frame-id $frame_status" data-id="$result->id">
-		<td>
-			<select class="form-control price-input frame-id">
-				$frame_id_options
-			</select>
-		</td>
-		<td class="frame-image-container">
-			<img id="frame-img-$result->id" src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
-			<select class="form-control frame-image change-frame-image" data-image-id="frame-img-$result->id">
-				$image_options
-			</select>
-		</td>
-		<td><textarea class="form-control frame-description" cols="30" rows="3">$result->frame_description</textarea></td>
-		$show_prices
-		<td><input type="checkbox" class="form-control delete-frame"></td>
-		<td><button class="btn btn-primary btn-sm frame-duplicate" data-id="$product_id">Дублирай</button></td>
-	</tr>
-HTML;
+		<tr class="frame-id $frame_status" data-id="$result->id">
+			<td>
+				<select class="form-control price-input frame-id">
+					$frame_id_options
+				</select>
+			</td>
+			<td class="frame-image-container">
+				<img id="frame-img-$result->id" src="{$upload_dir['baseurl']}/doors_frames/$result->frame_image" class="frame-img">
+				<select class="form-control frame-image change-frame-image" data-image-id="frame-img-$result->id">
+					$image_options
+				</select>
+			</td>
+			<td><textarea class="form-control frame-description" cols="30" rows="3">$result->frame_description</textarea></td>
+			$show_prices
+			<td class="text-center">
+				<div class="d-flex align-items-center justify-content-center gap-2">
+					<button class="btn btn-link p-0 frame-duplicate text-primary" data-id="$product_id" title="Дублирай" aria-label="Дублирай">
+						<svg class="copy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+							<rect x="9" y="4" width="11" height="14" rx="2" fill="currentColor" opacity="0.9"/>
+							<rect x="4" y="8" width="11" height="14" rx="2" fill="currentColor" opacity="0.6"/>
+						</svg>
+					</button>
+					<button class="btn btn-link p-0 text-danger frame-delete-btn" title="Изтрий" aria-label="Изтрий">❌</button>
+				</div>
+			</td>
+		</tr>
+	HTML;
 			}
 
 			$html .= <<<HTML
@@ -1148,49 +1172,45 @@ function update_variation_prices()
 	global $wpdb;
 
 	if (isset($_POST['variations'])) {
-		$product_id = $_POST['product_id'];
+		$product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+		$edit_type = isset($_POST['edit_type']) ? sanitize_text_field($_POST['edit_type']) : '';
+		$variations_array = array();
 
 		foreach ($_POST['variations'] as $variation) {
-			$variation_id = $variation['variation_id'];
-			$variation_price_input = $variation['variation_price_input'];
-			$variation_promo_input = $variation['variation_promo_input'];
+			$variation_id = isset($variation['variation_id']) ? intval($variation['variation_id']) : 0;
 			$variation_data = new WC_Product_Variation($variation_id);
-			$regular_price = $variation['variation_price'];
-			$sale_price = $variation['variation_promo_price'];
-			$old_regular_price = $variation['variation_old_price'];
-			$old_sale_price = $variation['variation_old_promo_price'];
-			$variation_price_badge = $variation['variation_price_badge'];
-			$variation_promo_badge = $variation['variation_promo_badge'];
+			$regular_price = isset($variation['variation_price']) ? floatval($variation['variation_price']) : 0;
+			$sale_price = isset($variation['variation_promo_price']) ? floatval($variation['variation_promo_price']) : 0;
+			$old_regular_price = isset($variation['variation_old_price']) ? floatval($variation['variation_old_price']) : null;
+			$old_sale_price = isset($variation['variation_old_promo_price']) ? floatval($variation['variation_old_promo_price']) : null;
+			$variation_price_badge = isset($variation['variation_price_badge']) ? $variation['variation_price_badge'] : '';
+			$variation_promo_badge = isset($variation['variation_promo_badge']) ? $variation['variation_promo_badge'] : '';
 
-			if ($_POST['edit_type'] == 'now') {
+			if ($edit_type === 'now') {
 				if ($sale_price == 0) {
-					$sale_price = "";
+					$sale_price = '';
 				}
-
 				$variation_data->set_regular_price($regular_price);
 				$variation_data->set_sale_price($sale_price);
-
 				$variation_data->save();
 			} else {
-				if ($regular_price == $old_regular_price) {
+				if ($old_regular_price !== null && $regular_price == $old_regular_price) {
 					$regular_price = $variation_price_badge;
 				}
-
-				if ($sale_price == $old_sale_price) {
+				if ($old_sale_price !== null && $sale_price == $old_sale_price) {
 					$sale_price = $variation_promo_badge;
 				}
 
-				$variations_array[] = [
+				$variations_array[] = array(
 					'variation_id' => $variation_id,
 					'regular_price' => $regular_price,
 					'sale_price' => $sale_price,
-				];
+				);
 			}
 		}
 
 		if (!empty($variations_array)) {
 			$products_table_name = $wpdb->prefix . 'doors_frames_products';
-
 			$variations_json = json_encode($variations_array);
 
 			$sql = $wpdb->prepare(
