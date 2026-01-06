@@ -210,3 +210,39 @@ include_once(plugin_dir_path(__FILE__) . 'includes/menu.php');
 include_once(plugin_dir_path(__FILE__) . 'pages/frames_list_page.php');
 include_once(plugin_dir_path(__FILE__) . 'pages/frames_tab.php');
 include_once(plugin_dir_path(__FILE__) . 'pages/external_cart.php');
+
+/**
+ * Format WooCommerce prices: if price is an integer show no decimals,
+ * otherwise show the normal number of decimals (e.g. 2).
+ */
+if (! function_exists('doors_frames_format_price')) {
+	function doors_frames_format_price($formatted_price, $price, $args)
+	{
+		if ($price === '' || ! is_numeric($price)) {
+			return $formatted_price;
+		}
+
+		$float_price = (float) $price;
+
+		// Decide decimals: 0 when integer, otherwise use at least 2 decimals
+		// This overrides WooCommerce decimals if it is set to 0, so fractional prices like 3.50 keep two decimals
+		$wc_decimals = function_exists('wc_get_price_decimals') ? wc_get_price_decimals() : 2;
+		$decimals_default = max(2, intval($wc_decimals));
+		$decimals = (floor($float_price) == $float_price) ? 0 : $decimals_default;
+
+		// Localized number formatting
+		$formatted_number = number_format_i18n($float_price, $decimals);
+
+		// Replace the first numeric occurrence in the formatted price (preserve currency symbol/placement)
+		$new = preg_replace('/[0-9][0-9\.,\s]*/', $formatted_number, $formatted_price, 1);
+
+		return $new === null ? $formatted_price : $new;
+	}
+
+	// Attach the filter only if the option is enabled
+	add_action('init', function() {
+		if (get_option('doors_frames_remove_decimal_for_integers', 0)) {
+			add_filter('formatted_woocommerce_price', 'doors_frames_format_price', 10, 3);
+		}
+	});
+}
