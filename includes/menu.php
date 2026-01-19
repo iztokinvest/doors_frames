@@ -56,7 +56,7 @@ function doors_frames_settings_page()
 	echo '<h1>Настройки - Doors Frames</h1>';
 	echo '<form method="post" action="">';
 	wp_nonce_field('doors_frames_save_settings', 'doors_frames_nonce');
-	echo '<table class="form-table"><tr><th scope="row">Премахване на десетичната запетая за цели числа</th><td><label><input type="checkbox" name="doors_frames_remove_decimal_for_integers" value="1" ' . checked(1, $enabled, false) . ' /> Включено</label></td></tr></table>';
+	echo '<table class="form-table"><tr><th scope="row">Премахване на нулите след десетичната запетая за цели числа</th><td><label><input type="checkbox" name="doors_frames_remove_decimal_for_integers" value="1" ' . checked(1, $enabled, false) . ' /> Включено</label></td></tr></table>';
 	echo '<input type="hidden" name="doors_frames_settings_submitted" value="1" />';
 	submit_button();
 	echo '</form>';
