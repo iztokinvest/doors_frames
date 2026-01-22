@@ -1011,7 +1011,7 @@ HTML;
 				</div>
 			</td>
 		</tr>
-	HTML;
+HTML;
 			}
 
 			$html .= <<<HTML
