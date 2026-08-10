@@ -67,19 +67,6 @@ function custom_product_tab_content()
 		}
 	}
 
-	// Евро
-	function euroPrice($sum) {
-		$euroPrice = $sum / 1.95583;
-		return " <span class='price-euro-frame'>" . number_format($euroPrice, 2, '.', ' ') . " €</span>";
-		return "";
-	}
-
-	function bgnPrice($sum) {
-		$bgnPrice = $sum * 1.95583;
-		return " <span class='price-euro-frame'>" . number_format($bgnPrice, 2, '.', ' ') . " лв.</span>";
-		return "";
-	}
-
 	if (!empty($product_frames)) {
 		$frame_rows = '';
 		foreach ($product_frames as $frame) {
@@ -119,11 +106,11 @@ function custom_product_tab_content()
 			}
 
 			if ($priceExists) {
-				$price = floatval($frame_price) > 0 ? price($frame_price) . '€' . bgnPrice($frame_price) : '';
+				$price = floatval($frame_price) > 0 ? price($frame_price) . '€' : '';
 				$promo_price = '';
 
 				if (floatval($frame_promo_price) > 0) {
-					$promo_price = price($frame_promo_price) . '€' . bgnPrice($frame_promo_price);
+					$promo_price = price($frame_promo_price) . '€';
 					$price = "<del>" . price($frame_price) . "€</del>";
 				}
 

@@ -1797,9 +1797,6 @@ function fetch_image_gallery()
 add_filter('woocommerce_get_price_html', 'custom_dual_currency_price', 100, 2);
 function custom_dual_currency_price($price, $product)
 {
-	// Фиксиран курс EUR/BGN
-	$convert_rate = 1.95583;
-
 	// За вариативни продукти намираме най-ниската цена
 	if ($product->is_type('variable')) {
 		$prices = $product->get_variation_prices();
@@ -1820,16 +1817,12 @@ function custom_dual_currency_price($price, $product)
 
 	// Проверка за промоция
 	if ($product->is_on_sale() && is_numeric($sale_price) && $sale_price > 0) {
-		$sale_price_bgn = $sale_price * $convert_rate;
 		$sale_price_html = wc_price($sale_price, array('currency' => 'EUR'));
-		$sale_price_bgn_html = bgnPriceFormat($sale_price_bgn);
-		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins> <span class="price-euro woocommerce-Price-amount amount">' . $sale_price_bgn_html . '</span>';
+		return '<del>' . $regular_price_html . '</del> <ins>' . $sale_price_html . '</ins>';
 	}
 
 	// Без промоция
-	$regular_price_bgn = $regular_price * $convert_rate;
-	$regular_price_bgn_html = bgnPriceFormat($regular_price_bgn);
-	return $regular_price_html . ' <span class="price-euro woocommerce-Price-amount amount">' . $regular_price_bgn_html . '</span>';
+	return $regular_price_html;
 }
 
 // Оставяме падащите списъци без промяна в опциите
@@ -1839,42 +1832,15 @@ function custom_variation_dropdown_price($html, $args)
 	return $html; // Няма модификация на опциите, оставяме ги стандартни
 }
 
-// Добавяне на валутни символи за BGN и EUR
-add_filter('woocommerce_currencies', 'add_bgn_currency');
-function add_bgn_currency($currencies)
-{
-	$currencies['BGN'] = __('Bulgarian Lev', 'woocommerce');
-	return $currencies;
-}
-
-add_filter('woocommerce_currency_symbol', 'add_bgn_currency_symbol', 10, 2);
-function add_bgn_currency_symbol($currency_symbol, $currency)
+add_filter('woocommerce_currency_symbol', 'set_eur_currency_symbol', 10, 2);
+function set_eur_currency_symbol($currency_symbol, $currency)
 {
 	switch ($currency) {
-		case 'BGN':
-			$currency_symbol = 'лв.';
-			break;
 		case 'EUR':
 			$currency_symbol = '€';
 			break;
 	}
 	return $currency_symbol;
-}
-
-function euroPriceFormat($price)
-{
-	if (is_numeric($price)) {
-		return number_format($price, 2, '.', ' ') . ' €';
-	}
-	return $price;
-}
-
-function bgnPriceFormat($price)
-{
-	if (is_numeric($price)) {
-		return number_format($price, 2, '.', ' ') . ' лв.';
-	}
-	return $price;
 }
 
 // Край на две цени в лев и евро
