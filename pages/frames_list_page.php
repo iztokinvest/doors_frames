@@ -1135,9 +1135,13 @@ HTML;
 				}, $variation['variation_attributes']);
 				$attributes = implode(' ', $attributes);
 
-				if (count($structuredVariations) > 0) {
-					$saved_variation_price = '<div class="badge-container" bis_skin_checked="1"><span id="price-badge-60" class="badge bg-warning text-dark">' . $structuredVariations[$variation['variation_id']]['regular_price'] . '</span></div>';
-					$saved_variation_promo = '<div class="badge-container" bis_skin_checked="1"><span id="price-badge-60" class="badge bg-warning text-dark">' . $structuredVariations[$variation['variation_id']]['sale_price'] . '</span></div>';
+				$has_saved_variation = isset($structuredVariations[$variation['variation_id']]);
+				$saved_regular_for_variation = $has_saved_variation ? $structuredVariations[$variation['variation_id']]['regular_price'] : $variation['regular_price'];
+				$saved_sale_for_variation = $has_saved_variation ? $structuredVariations[$variation['variation_id']]['sale_price'] : $variation['sale_price'];
+
+				if ($has_saved_variation) {
+					$saved_variation_price = '<div class="badge-container" bis_skin_checked="1"><span id="price-badge-60" class="badge bg-warning text-dark">' . $saved_regular_for_variation . '</span></div>';
+					$saved_variation_promo = '<div class="badge-container" bis_skin_checked="1"><span id="price-badge-60" class="badge bg-warning text-dark">' . $saved_sale_for_variation . '</span></div>';
 				} else {
 					$saved_variation_price = '';
 					$saved_variation_promo = '';
@@ -1147,8 +1151,8 @@ HTML;
 	<tr class="variation-row" data-variation-id="$variation[variation_id]">
 		<td><input type="checkbox" checked> $variation[variation_id]</td>
 		<td>$attributes</td>
-		<td>$saved_variation_price<input type="number" class="form-control price-input variation-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="regular" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" data-saved-regular-price="{$structuredVariations[$variation['variation_id']]['regular_price']}" data-saved-sale-price="{$structuredVariations[$variation['variation_id']]['sale_price']}" value="$variation[regular_price]" readonly></td>
-		<td>$saved_variation_promo<input type="number" class="form-control price-input variation-promo-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="sale" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" data-saved-regular-price="{$structuredVariations[$variation['variation_id']]['regular_price']}" data-saved-sale-price="{$structuredVariations[$variation['variation_id']]['sale_price']}" value="$variation[sale_price]" readonly></td>
+		<td>$saved_variation_price<input type="number" class="form-control price-input variation-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="regular" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" data-saved-regular-price="$saved_regular_for_variation" data-saved-sale-price="$saved_sale_for_variation" value="$variation[regular_price]" readonly></td>
+		<td>$saved_variation_promo<input type="number" class="form-control price-input variation-promo-price" data-variation-id="$variation[variation_id]" data-product-id="$product_id" data-type="sale" data-regular-price="$variation[regular_price]" data-sale-price="$variation[sale_price]" data-saved-regular-price="$saved_regular_for_variation" data-saved-sale-price="$saved_sale_for_variation" value="$variation[sale_price]" readonly></td>
 	</tr>
 HTML;
 			}

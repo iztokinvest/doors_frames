@@ -1613,6 +1613,10 @@ function massUpdateVariations() {
 		let oldSum = parseFloat(oldSumValue);
 		let newSum = parseFloat(newSumValue);
 
+		if (isNaN(oldSum)) {
+			oldSum = 0;
+		}
+
 		if (!checked) {
 			return oldSum;
 		}
