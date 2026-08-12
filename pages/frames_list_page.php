@@ -1195,10 +1195,10 @@ function update_variation_prices()
 				$variation_data->save();
 			} else {
 				if ($old_regular_price !== null && $regular_price == $old_regular_price) {
-					$regular_price = $variation_price_badge;
+					$regular_price = $variation_price_badge !== '' ? $variation_price_badge : $old_regular_price;
 				}
 				if ($old_sale_price !== null && $sale_price == $old_sale_price) {
-					$sale_price = $variation_promo_badge;
+					$sale_price = $variation_promo_badge !== '' ? $variation_promo_badge : $old_sale_price;
 				}
 
 				$variations_array[] = array(
