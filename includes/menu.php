@@ -285,19 +285,40 @@ function doors_frames_get_image_directories($base_directory)
 		return $directories;
 	}
 
-	$iterator = new RecursiveIteratorIterator(
-		new RecursiveDirectoryIterator($base_directory, RecursiveDirectoryIterator::SKIP_DOTS),
-		RecursiveIteratorIterator::SELF_FIRST
-	);
-
-	foreach ($iterator as $item) {
-		if ($item->isDir()) {
-			$directories[] = str_replace('\\', '/', $iterator->getSubPathname());
-		}
-	}
+	doors_frames_collect_image_directories($base_directory, '', $directories);
 
 	natcasesort($directories);
 	return array_values($directories);
+}
+
+function doors_frames_collect_image_directories($base_directory, $relative_directory, &$directories)
+{
+	$current_directory = $relative_directory
+		? trailingslashit($base_directory) . $relative_directory
+		: $base_directory;
+	$entries = @scandir($current_directory);
+
+	if (false === $entries) {
+		return;
+	}
+
+	foreach ($entries as $entry) {
+		if ('.' === $entry || '..' === $entry) {
+			continue;
+		}
+
+		$absolute_path = trailingslashit($current_directory) . $entry;
+		if (! is_dir($absolute_path) || is_link($absolute_path)) {
+			continue;
+		}
+
+		$child_directory = $relative_directory
+			? trailingslashit($relative_directory) . $entry
+			: $entry;
+		$child_directory = str_replace('\\', '/', $child_directory);
+		$directories[] = $child_directory;
+		doors_frames_collect_image_directories($base_directory, $child_directory, $directories);
+	}
 }
 
 function doors_frames_get_images($base_directory, $relative_directory = '')
