@@ -359,7 +359,7 @@ function doors_frames_get_child_directories($directories, $current_directory)
 	$prefix = $current_directory ? trailingslashit($current_directory) : '';
 
 	foreach ($directories as $directory) {
-		if (! $directory || 0 !== strpos($directory, $prefix)) {
+		if (! $directory || ($prefix && 0 !== strpos($directory, $prefix))) {
 			continue;
 		}
 
