@@ -846,17 +846,24 @@ function fetch_frame_prices()
 		$product_title = get_the_title($product_id);
 
 		$folderPath = "{$upload_dir['basedir']}/doors_frames";
-		$iterator = new RecursiveIteratorIterator(
-			new RecursiveDirectoryIterator($folderPath, RecursiveDirectoryIterator::SKIP_DOTS),
-			RecursiveIteratorIterator::SELF_FIRST
-		);
-
 		$imageFiles = [];
-		foreach ($iterator as $file) {
-			if ($file->isFile() && in_array($file->getExtension(), ['jpg', 'png'])) {
-				// Get the relative path from the base directory
-				$relativePath = $iterator->getSubPathname();
-				$imageFiles[] = $relativePath;
+
+		if (! is_dir($folderPath)) {
+			wp_mkdir_p($folderPath);
+		}
+
+		if (is_dir($folderPath) && is_readable($folderPath)) {
+			$iterator = new RecursiveIteratorIterator(
+				new RecursiveDirectoryIterator($folderPath, RecursiveDirectoryIterator::SKIP_DOTS),
+				RecursiveIteratorIterator::SELF_FIRST
+			);
+
+			foreach ($iterator as $file) {
+				if ($file->isFile() && in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'webp'], true)) {
+					// Get the relative path from the base directory
+					$relativePath = $iterator->getSubPathname();
+					$imageFiles[] = $relativePath;
+				}
 			}
 		}
 
