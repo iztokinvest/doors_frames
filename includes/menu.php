@@ -2,7 +2,7 @@
 
 function menu()
 {
-	add_menu_page(
+	$prices_hook = add_menu_page(
 		'Цени и Каси',
 		'Цени и Каси',
 		'manage_options',
@@ -12,8 +12,17 @@ function menu()
 		1.1
 	);
 
+	$history_hook = add_submenu_page(
+		'frames-list-page',
+		'Хронология на цените',
+		'Хронология',
+		'manage_options',
+		'doors-frames-price-history',
+		'doors_frames_price_history_page'
+	);
+
 	// Settings submenu
-	add_submenu_page(
+	$settings_hook = add_submenu_page(
 		'frames-list-page',
 		'Настройки',
 		'Настройки',
@@ -21,6 +30,11 @@ function menu()
 		'doors-frames-settings',
 		'doors_frames_settings_page'
 	);
+	foreach (array($prices_hook, $history_hook, $settings_hook) as $hook) {
+		if ($hook) {
+			add_action('load-' . $hook, 'doors_frames_cleanup_price_history');
+		}
+	}
 }
 add_action('admin_menu', 'menu');
 

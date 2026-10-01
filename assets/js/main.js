@@ -1107,6 +1107,10 @@ function copyIconSvg() {
 			`Сигурни ли сте, че искате да замените цените на всички продукти? Това действие е необратимо.`,
 			function () {
 				var productIds;
+				const historyOperationId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+					const r = Math.floor(Math.random() * 16);
+					return (c === 'x' ? r : (r & 3) | 8).toString(16);
+				});
 				let startTime = new Date().getTime();
 				var processed = 0;
 				let lastProcessTime = startTime;
@@ -1147,6 +1151,7 @@ function copyIconSvg() {
 						data: {
 							action: "activate_single_price",
 							product_id: productIds[processed],
+							history_operation_id: historyOperationId,
 						},
 						success: function (response) {
 							if (response.success) {

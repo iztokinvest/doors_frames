@@ -632,17 +632,20 @@ function update_product_price()
 		$product = wc_get_product($product_id);
 		if ($product) {
 			if ($edit_prices_type == 'now') {
+				$history_before = doors_frames_history_product_snapshot($product);
 				if ($price_type == 'regular') {
 					$product->set_regular_price($new_price != 0 ? $new_price : '');
 				} elseif ($price_type == 'sale') {
 					$product->set_sale_price($new_price != 0 ? $new_price : '');
 				}
-				$product->save();
+				$saved = $product->save();
+				doors_frames_history_product($product, $history_before, 'changed', $saved);
 			}
 
 			if ($edit_prices_type == 'later') {
 				global $wpdb;
 				$products_table_name = $wpdb->prefix . 'doors_frames_products';
+				$history_before = doors_frames_history_pending_snapshot($product_id);
 
 				if ($price_type == 'regular') {
 					$sql = $wpdb->prepare(
@@ -664,7 +667,8 @@ function update_product_price()
 					);
 				}
 
-				$wpdb->query($sql);
+				$saved = $wpdb->query($sql);
+				doors_frames_history_pending_product($product, $history_before, 'prepared', $saved, array($price_type));
 			}
 
 			wp_send_json_success();
@@ -687,6 +691,8 @@ function update_frame_prices()
 		$errors = false;
 
 		foreach ($frames as $frame) {
+			$history_before = !empty($frame['is_new']) && filter_var($frame['is_new'], FILTER_VALIDATE_BOOLEAN)
+				? null : doors_frames_history_frame_snapshot(intval($frame['id']));
 			$frame_id = intval($frame['frame_id']);
 			$frame_image = sanitize_text_field($frame['frame_image']);
 			$frame_description = $frame['frame_description'];
@@ -747,6 +753,13 @@ function update_frame_prices()
 				}
 			}
 
+			$history_id = $is_new ? $wpdb->insert_id : $id;
+			if ($result) {
+				$history_after = doors_frames_history_frame_snapshot($history_id);
+				if ($history_after) {
+					doors_frames_history_frame($history_before, $history_after, $history_after->active ? 'changed' : 'prepared', $result);
+				}
+			}
 			if ($result === false) {
 				$errors = true;
 			}
@@ -770,7 +783,9 @@ function delete_frame()
 
 	if (isset($_POST['id'])) {
 		$id = intval($_POST['id']);
+		$history_before = doors_frames_history_frame_snapshot($id);
 		$result = $wpdb->delete($table_name, array('id' => $id), array('%d'));
+		doors_frames_history_frame($history_before, null, 'deleted', $result);
 		if ($result !== false) {
 			wp_send_json_success();
 		} else {
@@ -825,6 +840,12 @@ function add_frame_prices()
 			);
 		}
 
+		if ($result && $frame_id > 0) {
+			$history_after = doors_frames_history_frame_snapshot($wpdb->insert_id);
+			if ($history_after) {
+				doors_frames_history_frame(null, $history_after, 'created', $result);
+			}
+		}
 		if ($result !== false) {
 			wp_send_json_success();
 		} else {
@@ -1186,6 +1207,7 @@ function update_variation_prices()
 		$product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
 		$edit_type = isset($_POST['edit_type']) ? sanitize_text_field($_POST['edit_type']) : '';
 		$variations_array = array();
+		$history_pending_before = $edit_type !== 'now' ? doors_frames_history_pending_snapshot($product_id) : null;
 
 		foreach ($_POST['variations'] as $variation) {
 			$variation_id = isset($variation['variation_id']) ? intval($variation['variation_id']) : 0;
@@ -1198,12 +1220,14 @@ function update_variation_prices()
 			$variation_promo_badge = isset($variation['variation_promo_badge']) ? $variation['variation_promo_badge'] : '';
 
 			if ($edit_type === 'now') {
+				$history_before = doors_frames_history_product_snapshot($variation_data);
 				if ($sale_price == 0) {
 					$sale_price = '';
 				}
 				$variation_data->set_regular_price($regular_price);
 				$variation_data->set_sale_price($sale_price);
-				$variation_data->save();
+				$saved = $variation_data->save();
+				doors_frames_history_product($variation_data, $history_before, 'changed', $saved);
 			} else {
 				if ($old_regular_price !== null && $regular_price == $old_regular_price) {
 					$regular_price = $variation_price_badge !== '' ? $variation_price_badge : $old_regular_price;
@@ -1233,7 +1257,11 @@ function update_variation_prices()
 				$variations_json
 			);
 
-			$wpdb->query($sql);
+			$saved = $wpdb->query($sql);
+			$history_product = wc_get_product($product_id);
+			if ($saved && $history_product) {
+				doors_frames_history_pending_variations($history_product, $history_pending_before, 'prepared', $saved);
+			}
 		}
 
 		wp_send_json_success();
@@ -1282,7 +1310,13 @@ function paste_frames()
 			);
 
 			// Insert the new record
-			$wpdb->insert($frames_table_name, $data);
+			$saved = $wpdb->insert($frames_table_name, $data);
+			if ($saved) {
+				$history_after = doors_frames_history_frame_snapshot($wpdb->insert_id);
+				if ($history_after) {
+					doors_frames_history_frame(null, $history_after, $history_after->active ? 'copied' : 'copy_prepared', $saved);
+				}
+			}
 		}
 	}
 
@@ -1321,6 +1355,7 @@ function mass_insert_frames()
 				$current_values = $wpdb->get_results($current_values_sql);
 
 				foreach ($current_values as $current_value) {
+					$priceBeforeSale = false;
 					$frames_table_name = $wpdb->prefix . 'doors_frames';
 					$saved_prices = $wpdb->get_row($wpdb->prepare(
 						"SELECT frame_price, frame_promo_price FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 0",
@@ -1372,10 +1407,16 @@ function mass_insert_frames()
 							active_status($_POST['active'])
 						);
 
-						$wpdb->query($update_query);
+						$saved = $wpdb->query($update_query);
+						if ($saved) {
+							$history_after = doors_frames_history_frame_snapshot($current_value->id);
+							if ($history_after) {
+								doors_frames_history_frame($current_value, $history_after, 'bulk_changed', $saved);
+							}
+						}
 					} else {
 						if ($_POST['sum_price'] == '-1') {
-							if ($saved_prices->frame_price) {
+							if ($saved_prices && $saved_prices->frame_price) {
 								$new_price = $saved_prices->frame_price;
 							} else {
 								$new_price = $current_value->frame_price;
@@ -1383,7 +1424,7 @@ function mass_insert_frames()
 						}
 
 						if ($_POST['sum_promotion'] == '-1') {
-							if ($saved_prices->frame_promo_price) {
+							if ($saved_prices && $saved_prices->frame_promo_price) {
 								$new_promo_price = $saved_prices->frame_promo_price;
 							} else {
 								$new_promo_price = $current_value->frame_promo_price;
@@ -1412,15 +1453,25 @@ function mass_insert_frames()
 						);
 
 						if ($existing_record) {
-							$wpdb->update(
+							$history_before = doors_frames_history_frame_snapshot($existing_record->ID);
+							$saved = $wpdb->update(
 								$frames_table_name,
 								$data,
 								array('ID' => $existing_record->ID),
 								$data_format,
 								array('%d')
 							);
+							$history_id = $existing_record->ID;
 						} else {
-							$wpdb->insert($frames_table_name, $data, $data_format);
+							$history_before = null;
+							$saved = $wpdb->insert($frames_table_name, $data, $data_format);
+							$history_id = $wpdb->insert_id;
+						}
+						if ($saved) {
+							$history_after = doors_frames_history_frame_snapshot($history_id);
+							if ($history_after) {
+								doors_frames_history_frame($history_before, $history_after, 'bulk_prepared', $saved, $current_value);
+							}
 						}
 					}
 				}
@@ -1429,6 +1480,9 @@ function mass_insert_frames()
 
 			foreach ($product_ids as $product_id) {
 				$product = wc_get_product($product_id);
+				$priceBeforeSale = false;
+				$history_before = doors_frames_history_product_snapshot($product);
+				$history_pending_before = $price_edit !== 'true' ? doors_frames_history_pending_snapshot($product_id) : null;
 				$regular_price = floatval($product->get_regular_price());
 				$sale_price = floatval($product->get_sale_price());
 
@@ -1489,7 +1543,8 @@ function mass_insert_frames()
 
 					$product->set_regular_price($new_price);
 					$product->set_sale_price($new_promo_price);
-					$product->save();
+					$saved = $product->save();
+					doors_frames_history_product($product, $history_before, 'bulk_changed', $saved);
 				} else {
 					if ($_POST['sum_price'] == '-1') {
 						if ($saved_prices) {
@@ -1518,7 +1573,8 @@ function mass_insert_frames()
 						$new_promo_price
 					);
 
-					$wpdb->query($sql);
+					$saved = $wpdb->query($sql);
+					doors_frames_history_pending_product($product, $history_pending_before, 'bulk_prepared', $saved);
 				}
 
 				usleep(200000);
@@ -1608,11 +1664,14 @@ function activate_single_price()
 					}
 					$variation_id = $variation['variation_id'];
 					$variation_data = new WC_Product_Variation($variation_id);
+					$history_before = doors_frames_history_product_snapshot($variation_data);
 					$variation_data->set_regular_price($variation['regular_price']);
 					$variation_data->set_sale_price($variation['sale_price']);
-					$variation_data->save();
+					$saved = $variation_data->save();
+					doors_frames_history_product($variation_data, $history_before, 'activated', $saved, $saved_product->id);
 				}
 			} else {
+				$history_before = doors_frames_history_product_snapshot($product);
 				if (!is_null($regular_price)) {
 					if ($regular_price == 0) {
 						$product->set_regular_price('');
@@ -1629,7 +1688,8 @@ function activate_single_price()
 					}
 				}
 
-				$product->save();
+				$saved = $product->save();
+				doors_frames_history_product($product, $history_before, 'activated', $saved, $saved_product->id);
 			}
 		} else {
 			error_log("Product with ID $product_id not found in WooCommerce.");
@@ -1658,6 +1718,10 @@ function activate_frame_prices()
 		$id = $frame->id;
 		$product_id = $frame->product_id;
 		$frame_id = $frame->frame_id;
+		$history_prepared = doors_frames_history_frame_snapshot($id);
+		$history_before = doors_frames_history_db(function ($db) use ($frames_table_name, $product_id, $frame_id) {
+			return $db->get_row($db->prepare("SELECT * FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 1 ORDER BY id DESC LIMIT 1", $product_id, $frame_id));
+		});
 
 		$wpdb->query($wpdb->prepare(
 			"DELETE FROM $frames_table_name WHERE product_id = %d AND frame_id = %d AND active = 1",
@@ -1665,11 +1729,15 @@ function activate_frame_prices()
 			$frame_id
 		));
 
-		$wpdb->update(
+		$saved = $wpdb->update(
 			$frames_table_name,
 			array('active' => 1),
 			array('id' => $id)
 		);
+		if ($saved && $history_prepared) {
+			$history_prepared->active = 1;
+			doors_frames_history_frame($history_before, $history_prepared, 'activated', $saved);
+		}
 	}
 
 	wp_send_json_success();
