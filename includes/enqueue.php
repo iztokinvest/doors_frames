@@ -21,6 +21,9 @@ if (is_admin() && (!isset($_GET['page']) || $_GET['page'] !== 'doors-frames-pric
 		'../assets/css/main.css', array(), $css_version);
 	$js_version = filemtime(plugin_dir_path(__FILE__) . '../assets/js/main.js');
 	wp_enqueue_script('main-js', plugins_url('../assets/js/main.js', __FILE__), array('jquery', 'slim-select-js'), $js_version, true);
+	wp_localize_script('main-js', 'doorsFramesAdmin', array(
+		'orderByPriceNonce' => wp_create_nonce('doors_frames_order_by_price'),
+	));
 }
 
 function doors_frames_enqueue_history_filters($hook)

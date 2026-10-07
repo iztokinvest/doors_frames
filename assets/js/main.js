@@ -1088,6 +1088,7 @@ function copyIconSvg() {
 			data: {
 				action: "order_by_price",
 				toggle_order_by_price: true,
+				nonce: doorsFramesAdmin.orderByPriceNonce,
 			},
 			success: function (response) {
 				if (response.success) {

@@ -1,5 +1,4 @@
 <?php
-session_start();
 
 function frames_list_page()
 {
@@ -178,7 +177,8 @@ HTML;
 	</form>
 HTML;
 
-				$order = isset($_SESSION['order_by_price']) ? $_SESSION['order_by_price'] : 'ASC';
+				$order = get_user_meta(get_current_user_id(), 'doors_frames_order_by_price', true);
+				$order = in_array($order, array('ASC', 'DESC'), true) ? $order : 'ASC';
 				$icon = $order === 'ASC' ? '▲' : '▼';
 				?>
 				<div id="products-table" class="mt-4">
@@ -1273,16 +1273,19 @@ function update_variation_prices()
 add_action('wp_ajax_order_by_price', 'order_by_price');
 function order_by_price()
 {
-	if (isset($_POST['toggle_order_by_price'])) {
-		if (!isset($_SESSION['order_by_price'])) {
-			$_SESSION['order_by_price'] = 'DESC';
-		} elseif ($_SESSION['order_by_price'] === 'ASC') {
-			$_SESSION['order_by_price'] = 'DESC';
-		} else {
-			$_SESSION['order_by_price'] = 'ASC';
-		}
-		wp_send_json_success();
+	if (!current_user_can('manage_options')) {
+		wp_send_json_error(array('message' => 'You do not have permission to change the price order.'), 403);
 	}
+
+	check_ajax_referer('doors_frames_order_by_price', 'nonce');
+
+	$current_order = get_user_meta(get_current_user_id(), 'doors_frames_order_by_price', true);
+	$current_order = in_array($current_order, array('ASC', 'DESC'), true) ? $current_order : 'ASC';
+	$new_order = $current_order === 'ASC' ? 'DESC' : 'ASC';
+
+	update_user_meta(get_current_user_id(), 'doors_frames_order_by_price', $new_order);
+
+	wp_send_json_success(array('order' => $new_order));
 }
 
 add_action('wp_ajax_paste_frames', 'paste_frames');
