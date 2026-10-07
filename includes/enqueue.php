@@ -1,6 +1,11 @@
 <?php
 
-if (is_admin() && (!isset($_GET['page']) || $_GET['page'] !== 'doors-frames-price-history')) {
+function doors_frames_enqueue_admin_assets()
+{
+	if (isset($_GET['page']) && $_GET['page'] === 'doors-frames-price-history') {
+		return;
+	}
+
 	wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css', array(), '5.0.2');
 	wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js', array('jquery'), null, true);
 
@@ -25,6 +30,7 @@ if (is_admin() && (!isset($_GET['page']) || $_GET['page'] !== 'doors-frames-pric
 		'orderByPriceNonce' => wp_create_nonce('doors_frames_order_by_price'),
 	));
 }
+add_action('admin_enqueue_scripts', 'doors_frames_enqueue_admin_assets');
 
 function doors_frames_enqueue_history_filters($hook)
 {
